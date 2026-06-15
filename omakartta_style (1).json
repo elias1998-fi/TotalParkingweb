@@ -1,3385 +1,1428 @@
-{
-  "version": 8,
-  "name": "HSL v2.0",
-  "metadata": {"maputnik:renderer": "mbgljs"},
-  "sources": {
-    "vector": {
-      "type": "vector",
-      "url": "https://api.digitransit.fi/map/v3/hsl-vector-map/index.json?digitransit-subscription-key=a002614565b24559b3feddfca8d01918"
-    },
-    "parkandride": {
-      "url": "https://api.digitransit.fi/map/v3/hsl/fi/vehicleParking/tilejson.json",
-      "type": "vector"
-    },
-    "borders": {
-      "data": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/kuntarajat.json",
-      "type": "geojson"
-    },
-    "routes": {
-      "url": "https://kartat.hsl.fi/jore/tiles/routes/index.json",
-      "type": "vector"
-    },
-    "subway": {
-      "data": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/subway.geojson",
-      "type": "geojson"
-    },
-    "rail": {
-      "data": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/rail.geojson",
-      "type": "geojson"
-    },
-    "ticketzones": {
-      "data": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/ticket-zones.json",
-      "type": "geojson"
-    },
-    "ticketzone-labels": {
-      "data": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/ticket-zone-labels.json",
-      "type": "geojson"
-    },
-    "ticket-sales": {
-      "data": "https://data-hslhrt.opendata.arcgis.com/datasets/f9388fc8a8f848fda3bc584b607afe97_0.geojson",
-      "type": "geojson"
-    },
-    "stops": {
-      "url": "https://kartat.hsl.fi/jore/tiles/stops/index.json",
-      "type": "vector"
-    },
-    "stops-by-routes": {
-      "url": "https://kartat.hsl.fi/jore/tiles/stops-by-routes/index.json",
-      "type": "vector"
-    },
-    "citybike": {
-      "url": "https://api.digitransit.fi/map/v3/hsl/fi/rentalStations/tilejson.json",
-      "type": "vector"
-    },
-    "terminals": {
-      "url": "https://kartat.hsl.fi/jore/tiles/terminals/index.json",
-      "type": "vector"
-    },
-    "4y1k84tcc": {
-      "type": "vector",
-      "url": "https://api.digitransit.fi/map/v3/hsl-vector-map/index.json"
-    }
-  },
-  "sprite": "https://hslstoragekarttatuotanto.z6.web.core.windows.net/sprite",
-  "glyphs": "https://hslstoragestatic.azureedge.net/mapfonts/{fontstack}/{range}.pbf",
-  "layers": [
-    {
-      "id": "background",
-      "type": "background",
-      "layout": {"visibility": "visible"},
-      "paint": {
-        "background-color": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          7,
-          "#d3e3bb",
-          9,
-          "#f0f1f2"
-        ]
-      }
-    },
-    {
-      "id": "landuse_hospital",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "filter": ["==", "class", "hospital"],
-      "paint": {"fill-color": "#fbe6e0"}
-    },
-    {
-      "id": "landuse_school",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "filter": ["in", "class", "university", "school", "kindergarten"],
-      "paint": {"fill-color": "#f9f4d2"}
-    },
-    {
-      "id": "landuse_aeroway",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "aeroway",
-      "filter": ["!=", "class", "aerodrome"],
-      "paint": {"fill-color": "#e3e3e3", "fill-outline-color": "#ccc"}
-    },
-    {
-      "id": "landuse_park",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["all", ["==", "class", "grass"], ["==", "subclass", "park"]],
-      "paint": {"fill-color": "#dceacc"}
-    },
-    {
-      "id": "landuse_grass",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": [
-        "all",
-        ["==", "class", "grass"],
-        ["!in", "subclass", "park", "scrub"]
-      ],
-      "paint": {"fill-color": "#ddeacd"}
-    },
-    {
-      "id": "landuse_wood",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["==", "class", "wood"],
-      "paint": {"fill-color": "#d0e3b8"}
-    },
-    {
-      "id": "landuse_scrub",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["all", ["==", "class", "grass"], ["==", "subclass", "scrub"]],
-      "paint": {"fill-color": "#cbdeb4"}
-    },
-    {
-      "id": "landuse_playground",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "filter": ["==", "class", "playground"],
-      "paint": {"fill-color": "#f9f4d2"}
-    },
-    {
-      "id": "landuse_agriculture",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "minzoom": 10,
-      "filter": ["==", "class", "farmland"],
-      "paint": {"fill-color": "#e3ecc5"}
-    },
-    {
-      "id": "landuse_sand",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["==", "class", "sand"],
-      "paint": {"fill-color": "#e0dfcc"}
-    },
-    {
-      "id": "landuse_cemetery",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "filter": ["==", "class", "cemetery"],
-      "paint": {"fill-color": "#cbdeb4", "fill-outline-color": "#b8d19b"}
-    },
-    {
-      "id": "landuse_industrial",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "filter": ["==", "class", "industrial"],
-      "paint": {"fill-color": "#ede6e3"}
-    },
-    {
-      "id": "landuse_athletics",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "minzoom": 13,
-      "filter": ["==", "class", "pitch"],
-      "paint": {"fill-color": "#cde0b6", "fill-outline-color": "#acc78b"}
-    },
-    {
-      "id": "landuse_athletics_track",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landuse",
-      "minzoom": 13,
-      "filter": ["==", "class", "track"],
-      "paint": {"fill-color": "#f0c2c2", "fill-outline-color": "#cca5a5"}
-    },
-    {
-      "id": "waterway_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "waterway",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "canal", "river", "stream"],
-        ["!=", "brunnel", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#a6d8f4",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          8,
-          1,
-          20,
-          17
-        ]
-      }
-    },
-    {
-      "id": "water_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "water",
-      "paint": {"line-color": "#a6d8f4"}
-    },
-    {
-      "id": "waterway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "waterway",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "canal", "river", "stream"],
-        ["!=", "brunnel", "tunnel"]
-      ],
-      "paint": {
-        "line-color": "#bee4f8",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          8,
-          0.5,
-          20,
-          15
-        ]
-      }
-    },
-    {
-      "id": "water",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "water",
-      "paint": {"fill-color": "#bee4f8"}
-    },
-    {
-      "id": "landuse_wetland",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["==", "class", "wetland"],
-      "paint": {"fill-pattern": "icon-wetland"}
-    },
-    {
-      "id": "landuse_rock",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "landcover",
-      "filter": ["==", "class", "rock"],
-      "paint": {"fill-color": "#e3e3e3", "fill-outline-color": "#d6d6d6"}
-    },
-    {
-      "id": "aeroway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "aeroway",
-      "filter": ["==", "class", "runway"],
-      "layout": {"line-cap": "square", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          10,
-          2.5,
-          20,
-          240
-        ]
-      }
-    },
-    {
-      "id": "aeroway_taxiway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "aeroway",
-      "minzoom": 11,
-      "filter": ["==", "class", "taxiway"],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          10,
-          1,
-          22,
-          8
-        ],
-        "line-dasharray": [1, 2]
-      }
-    },
-    {
-      "id": "road_service_area",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "Polygon"],
-        [
-          "any",
-          ["in", "class", "service", "pier"],
-          ["in", "subclass", "pedestrian", "platform"]
-        ]
-      ],
-      "paint": {"fill-color": "#f7f7f7"}
-    },
-    {
-      "id": "road_bridge_area",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": ["all", ["==", "$type", "Polygon"], ["==", "class", "bridge"]],
-      "paint": {"fill-color": "#f7f7f7"}
-    },
-    {
-      "id": "building_shadow",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "building",
-      "layout": {"visibility": "visible"},
-      "paint": {
-        "fill-color": "#c2c3cc",
-        "fill-outline-color": {"stops": [[13, "#dde1e9"], [17, "#c2c3cc"]]},
-        "fill-translate": {"stops": [[13, [0, 0]], [22, [0, 8]]]}
-      }
-    },
-    {
-      "id": "building",
-      "type": "fill",
-      "source": "vector",
-      "source-layer": "building",
-      "layout": {"visibility": "visible"},
-      "paint": {
-        "fill-color": "#e2e4e9",
-        "fill-outline-color": {"stops": [[13, "#dde1e9"], [17, "#c2c3cc"]]}
-      }
-    },
-    {
-      "id": "tunnel_walk",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 16,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["!in", "subclass", "cycleway", "pedestrian", "platform"],
-        ["==", "brunnel", "tunnel"],
-        ["any", ["!has", "layer"], [">=", "layer", 0]]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#bfc2c9",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          0,
-          1.25,
-          22,
-          20
-        ],
-        "line-dasharray": [0, 1.5]
-      }
-    },
-    {
-      "id": "tunnel_cycleway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["in", "subclass", "cycleway", "pedestrian"],
-        ["==", "brunnel", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          4,
-          0.25,
-          20,
-          2
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          22,
-          34
-        ],
-        "line-dasharray": [6, 5]
-      }
-    },
-    {
-      "id": "tunnel_service",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 17,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "service", "track"],
-        ["!in", "service", "parking_aisle"],
-        ["==", "brunnel", "tunnel"],
-        ["any", ["!has", "layer"], [">=", "layer", 0]]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          4,
-          0.25,
-          20,
-          2
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          22,
-          34
-        ],
-        "line-dasharray": [6, 5]
-      }
-    },
-    {
-      "id": "tunnel_street",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "minor"],
-        ["==", "brunnel", "tunnel"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          4,
-          0.25,
-          20,
-          2
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          40
-        ],
-        "line-dasharray": [10, 3]
-      }
-    },
-    {
-      "id": "tunnel_primary",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["==", "brunnel", "tunnel"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          2
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          40
-        ],
-        "line-dasharray": [10, 3]
-      }
-    },
-    {
-      "id": "tunnel_motorway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["==", "brunnel", "tunnel"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          2
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          40
-        ],
-        "line-dasharray": [10, 3]
-      }
-    },
-    {
-      "id": "tunnel_rail",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "rail", "transit"],
-        ["==", "brunnel", "tunnel"]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          4
-        ],
-        "line-gap-width": {"stops": [[12, 0], [22, 6]]},
-        "line-dasharray": [10, 3]
-      }
-    },
-    {
-      "id": "road_ferry",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "ferry"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#72d3f0",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          6
-        ],
-        "line-dasharray": {"stops": [[11, [2, 2]], [22, [4, 4]]]}
-      }
-    },
-    {
-      "id": "road_path",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["!in", "subclass", "cycleway", "steps", "platform"],
-        ["!in", "brunnel", "bridge", "tunnel"],
-        ["any", ["!has", "layer"], [">=", "layer", 0]]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1.5,
-          22,
-          26
-        ],
-        "line-dasharray": [0, 1.5]
-      }
-    },
-    {
-      "id": "road_cycleway_track",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "any",
-          ["all", ["==", "class", "path"], ["in", "subclass", "cycleway"]],
-          ["in", "class", "track"]
-        ],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "road_service",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "service"],
-        ["!in", "service", "parking_aisle"],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "road_link_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["==", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          44
-        ]
-      }
-    },
-    {
-      "id": "road_motorway_link_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["==", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#f4d880",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          20,
-          44
-        ]
-      }
-    },
-    {
-      "id": "road_street_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "minor"],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          54
-        ]
-      }
-    },
-    {
-      "id": "road_primary_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["!=", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          84
-        ]
-      }
-    },
-    {
-      "id": "road_motorway_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["!=", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#f4d880",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          20,
-          84
-        ]
-      }
-    },
-    {
-      "id": "road_path_steps_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["==", "subclass", "steps"],
-        ["!in", "brunnel", "bridge", "tunnel"],
-        ["any", ["!has", "layer"], [">=", "layer", 0]]
-      ],
-      "layout": {"line-cap": "butt", "line-join": "miter"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          13,
-          0.5,
-          20,
-          4
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          13,
-          2,
-          20,
-          32
-        ]
-      }
-    },
-    {
-      "id": "road_path_steps",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["==", "subclass", "steps"],
-        ["!in", "brunnel", "bridge", "tunnel"],
-        ["any", ["!has", "layer"], [">=", "layer", 0]]
-      ],
-      "layout": {"line-cap": "butt", "line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          13,
-          1.5,
-          20,
-          40
-        ],
-        "line-dasharray": {"stops": [[13, [0.125, 0.125]], [20, [0.125, 0.25]]]}
-      }
-    },
-    {
-      "id": "road_construction",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "in",
-          "class",
-          "motorway_construction",
-          "trunk_construction",
-          "primary_construction",
-          "secondary_construction",
-          "tertiary_construction",
-          "minor_construction"
-        ]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.25,
-          20,
-          4
-        ],
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          10,
-          2,
-          20,
-          40
-        ],
-        "line-dasharray": [1, 1]
-      }
-    },
-    {
-      "id": "road_link",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["==", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          40
-        ]
-      }
-    },
-    {
-      "id": "road_motorway_link",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["==", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fef2c6",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          40
-        ]
-      }
-    },
-    {
-      "id": "road_street",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "minor"],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          50
-        ]
-      }
-    },
-    {
-      "id": "road_primary",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["!=", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          80
-        ]
-      }
-    },
-    {
-      "id": "road_motorway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["!=", "ramp", 1],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": {"stops": [[7, "#fff"], [9, "#fef2c6"]]},
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          80
-        ]
-      }
-    },
-    {
-      "id": "road_minor_rail",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "transit"],
-        ["any", ["has", "service"], ["==", "subclass", "tram"]],
-        ["!in", "brunnel", "tunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": {"stops": [[15, 0.5], [22, 4]]},
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          4,
-          0.25,
-          20,
-          12
-        ]
-      }
-    },
-    {
-      "id": "road_subway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "transit"],
-        [
-          "all",
-          [
-            "any",
-            ["!has", "service"],
-            [
-              "all",
-              ["==", "service", "crossover"],
-              ["==", "subclass", "light_rail"]
-            ]
-          ],
-          ["!=", "subclass", "tram"]
-        ],
-        ["!in", "brunnel", "tunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          22,
-          40
-        ]
-      }
-    },
-    {
-      "id": "road_rail",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "rail"],
-        ["!in", "brunnel", "bridge", "tunnel"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": {"stops": [[13, 1], [22, 8]]}
-      }
-    },
-    {
-      "id": "bridge_path_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["!=", "subclass", "cycleway"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2.5,
-          22,
-          60
-        ]
-      }
-    },
-    {
-      "id": "bridge_path_bg",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["!=", "subclass", "cycleway"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#f0f1f2",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          22,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_path",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "path"],
-        ["!=", "subclass", "cycleway"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1.5,
-          22,
-          26
-        ],
-        "line-dasharray": [0, 1.5]
-      }
-    },
-    {
-      "id": "bridge_cycleway_track_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "any",
-          ["all", ["==", "class", "path"], ["in", "subclass", "cycleway"]],
-          ["in", "class", "track"]
-        ],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2.5,
-          22,
-          60
-        ]
-      }
-    },
-    {
-      "id": "bridge_cycleway_track_bg",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "any",
-          ["all", ["==", "class", "path"], ["in", "subclass", "cycleway"]],
-          ["in", "class", "track"]
-        ],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#f0f1f2",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          22,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_cycleway_track",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "any",
-          ["all", ["==", "class", "path"], ["in", "subclass", "cycleway"]],
-          ["in", "class", "track"]
-        ],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1.5,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "bridge_service_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "service"],
-        ["!in", "service", "parking_aisle"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2.5,
-          22,
-          60
-        ]
-      }
-    },
-    {
-      "id": "bridge_service_bg",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "service"],
-        ["!in", "service", "parking_aisle"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#f0f1f2",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          22,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_service",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "service"],
-        ["!in", "service", "parking_aisle"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1.5,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "bridge_road_motorway_link_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        [
-          "in",
-          "class",
-          "motorway",
-          "trunk",
-          "primary",
-          "secondary",
-          "tertiary"
-        ],
-        ["==", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          55
-        ]
-      }
-    },
-    {
-      "id": "bridge_street_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "minor"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          65
-        ]
-      }
-    },
-    {
-      "id": "bridge_primary_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          100
-        ]
-      }
-    },
-    {
-      "id": "bridge_motorway_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-join": "round"},
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          1,
-          20,
-          100
-        ]
-      }
-    },
-    {
-      "id": "bridge_link",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["==", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_motorway_link",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["==", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fef2c6",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_street",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "minor"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          50
-        ]
-      }
-    },
-    {
-      "id": "bridge_primary",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "primary", "secondary", "tertiary"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#fff",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          80
-        ]
-      }
-    },
-    {
-      "id": "bridge_motorway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": {"stops": [[7, "#fff"], [9, "#fef2c6"]]},
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          20,
-          80
-        ]
-      }
-    },
-    {
-      "id": "bridge_rail_case",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "transit", "rail"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2.5,
-          22,
-          65
-        ]
-      }
-    },
-    {
-      "id": "bridge_rail_bg",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "transit", "rail"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#f0f1f2",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          2,
-          22,
-          50
-        ]
-      }
-    },
-    {
-      "id": "bridge_minor_rail",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "transit"],
-        ["any", ["has", "service"], ["==", "subclass", "tram"]],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": {"stops": [[15, 0.5], [22, 4]]},
-        "line-gap-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          4,
-          0.25,
-          20,
-          12
-        ]
-      }
-    },
-    {
-      "id": "bridge_subway",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "transit"],
-        ["all", ["!has", "service"], ["!=", "subclass", "tram"]],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.55],
-          ["zoom"],
-          6,
-          0.5,
-          22,
-          40
-        ]
-      }
-    },
-    {
-      "id": "bridge_rail",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "class", "rail"],
-        ["==", "brunnel", "bridge"]
-      ],
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": {"stops": [[13, 1], [22, 8]]}
-      }
-    },
-    {
-      "id": "road_minor_one-way",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "transportation",
-      "minzoom": 16,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["==", "oneway", 1],
-        ["any", ["==", "ramp", 1], ["==", "class", "minor"]]
-      ],
-      "layout": {
-        "icon-image": "icon-one-way",
-        "symbol-placement": "line",
-        "symbol-spacing": 100,
-        "icon-rotation-alignment": "map",
-        "icon-size": {"stops": [[16, 0.5], [22, 1.5]]}
-      }
-    },
-    {
-      "id": "building_3d",
-      "type": "fill-extrusion",
-      "source": "vector",
-      "source-layer": "building",
-      "layout": {"visibility": "none"},
-      "paint": {
-        "fill-extrusion-color": "#dcd9d6",
-        "fill-extrusion-height": {
-          "property": "render_height",
-          "type": "identity"
-        },
-        "fill-extrusion-base": {
-          "property": "render_min_height",
-          "type": "identity"
-        },
-        "fill-extrusion-opacity": 0.8
-      }
-    },
-    {
-      "id": "admin_country",
-      "type": "line",
-      "source": "vector",
-      "source-layer": "boundary",
-      "minzoom": 0,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["<=", "admin_level", 2],
-        ["==", "maritime", 0]
-      ],
-      "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {
-        "line-color": "#8b8a8a",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.3],
-          ["zoom"],
-          3,
-          0.5,
-          22,
-          15
-        ]
-      }
-    },
-    {
-      "id": "municipal_border",
-      "type": "line",
-      "source": "borders",
-      "minzoom": 7,
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#ccc",
-        "line-width": {"stops": [[10, 3], [18, 6]]},
-        "line-dasharray": [2, 2]
-      }
-    },
-    {
-      "id": "route_bus_case",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["!=", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#fff",
-        "line-width": {"stops": [[10, 4], [22, 8]]}
-      }
-    },
-    {
-      "id": "route_bus",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["!=", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "line-round-limit": 1,
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#007ac9",
-        "line-width": {"stops": [[10, 2], [22, 6]]}
-      }
-    },
-    {
-      "id": "route_bus_inner",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["!=", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#3395d4",
-        "line-width": {"stops": [[10, 0.5], [22, 2]]}
-      }
-    },
-    {
-      "id": "route_tram_case",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "TRAM"],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#fff",
-        "line-width": {"stops": [[10, 4], [22, 8]]}
-      }
-    },
-    {
-      "id": "route_tram",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "TRAM"],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "line-round-limit": 1,
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#00985F",
-        "line-width": {"stops": [[10, 2], [22, 6]]}
-      }
-    },
-    {
-      "id": "route_tram_inner",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "TRAM"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#00bb75",
-        "line-width": {"stops": [[10, 0.5], [22, 2]]}
-      }
-    },
-    {
-      "id": "route_trunk_case",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["==", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#fff",
-        "line-width": {"stops": [[10, 4], [22, 8]]}
-      }
-    },
-    {
-      "id": "route_trunk",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["==", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "line-round-limit": 1,
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#CA4300",
-        "line-width": {"stops": [[10, 2], [22, 6]]}
-      }
-    },
-    {
-      "id": "route_trunk_inner",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": [
-        "all",
-        ["==", ["get", "trunk_route"], "1"],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#FF6319",
-        "line-width": {"stops": [[10, 1], [22, 4]]}
-      }
-    },
-    {
-      "id": "route_lrail_case",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "L_RAIL"],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#fff",
-        "line-width": {"stops": [[10, 4], [22, 8]]}
-      }
-    },
-    {
-      "id": "route_lrail",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "L_RAIL"],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "line-round-limit": 1,
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#0098A1",
-        "line-width": {"stops": [[10, 2], [22, 6]]}
-      }
-    },
-    {
-      "id": "route_lrail_inner",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "L_RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#19a2aa",
-        "line-width": {"stops": [[10, 0.5], [22, 2]]}
-      }
-    },
-    {
-      "id": "route_ferry",
-      "type": "line",
-      "source": "routes",
-      "source-layer": "routes",
-      "filter": ["==", ["get", "mode"], "FERRY"],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#00B9E4",
-        "line-dasharray": [0, 4],
-        "line-width": {"stops": [[10, 4], [22, 8]]}
-      }
-    },
-    {
-      "id": "route_subway_case",
-      "type": "line",
-      "source": "subway",
-      "filter": [
-        "any",
-        ["==", ["get", "underground"], "false"],
-        ["all", ["==", ["get", "underground"], "true"], ["<", ["zoom"], 11]]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#FF6319",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          11,
-          3,
-          16,
-          12,
-          19,
-          24
-        ]
-      }
-    },
-    {
-      "id": "route_subway",
-      "type": "line",
-      "source": "subway",
-      "filter": [
-        "any",
-        ["==", ["get", "underground"], "false"],
-        ["all", ["==", ["get", "underground"], "true"], ["<", ["zoom"], 11]]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#fff",
-        "line-dasharray": [2.3, 1.5],
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          11,
-          2,
-          16,
-          8,
-          19,
-          18
-        ]
-      }
-    },
-    {
-      "id": "route_subway_underground",
-      "type": "line",
-      "source": "subway",
-      "minzoom": 11,
-      "filter": ["==", ["get", "underground"], "true"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#FF6319",
-        "line-dasharray": [2.3, 1.5],
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          11,
-          1,
-          16,
-          8,
-          19,
-          20
-        ]
-      }
-    },
-    {
-      "id": "route_rail_case",
-      "type": "line",
-      "source": "rail",
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#8C4799",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          11,
-          3,
-          16,
-          12,
-          19,
-          24
-        ]
-      }
-    },
-    {
-      "id": "route_rail",
-      "type": "line",
-      "source": "rail",
-      "layout": {"visibility": "none"},
-      "paint": {
-        "line-color": "#fff",
-        "line-dasharray": [2.3, 1.5],
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          11,
-          2,
-          16,
-          8,
-          19,
-          18
-        ]
-      }
-    },
-    {
-      "id": "ticket-zones_case",
-      "type": "line",
-      "source": "ticketzones",
-      "layout": {
-        "line-join": "round",
-        "line-cap": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#333333",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.2],
-          ["zoom"],
-          10,
-          4,
-          22,
-          80
-        ],
-        "line-opacity": 0.2
-      }
-    },
-    {
-      "id": "ticket-zones",
-      "type": "line",
-      "source": "ticketzones",
-      "layout": {
-        "line-join": "round",
-        "line-cap": "round",
-        "visibility": "none"
-      },
-      "paint": {
-        "line-color": "#333333",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.2],
-          ["zoom"],
-          10,
-          1,
-          22,
-          6
-        ]
-      }
-    },
-    {
-      "id": "ticket-zone-labels",
-      "type": "symbol",
-      "source": "ticketzone-labels",
-      "minzoom": 8,
-      "maxzoom": 13,
-      "layout": {
-        "icon-image": ["concat", "icon-zone-", ["get", "Zone"]],
-        "icon-rotation-alignment": "map",
-        "icon-size": 0.7,
-        "icon-padding": 1,
-        "symbol-avoid-edges": false,
-        "icon-allow-overlap": true,
-        "visibility": "none"
-      },
-      "paint": {"icon-translate-anchor": "viewport"}
-    },
-    {
-      "id": "park-and-ride_icon_hub",
-      "type": "symbol",
-      "source": "parkandride",
-      "source-layer": "vehicleParking",
-      "minzoom": 13,
-      "filter": ["==", ["get", "carPlaces"], true],
-      "layout": {
-        "icon-image": "icon-park-and-ride",
-        "icon-allow-overlap": false,
-        "icon-size": 1,
-        "visibility": "none"
-      },
-      "paint": {"icon-translate": [0, -5.25]}
-    },
-    {
-      "id": "label_entrance",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "housenumber",
-      "minzoom": 16,
-      "filter": ["all", ["==", "$type", "Point"], ["!=", "entrance", ""]],
-      "layout": {
-        "text-field": [
-          "concat",
-          ["get", "housenumber"],
-          ["coalesce", ["get", "unit"], ["get", "ref"]]
-        ],
-        "text-size": {"stops": [[15, 8], [22, 17]]},
-        "text-font": ["Gotham Rounded Book"],
-        "visibility": "none"
-      },
-      "paint": {"text-color": "#999", "text-opacity": 0.7}
-    },
-    {
-      "id": "label_housenum",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "housenumber",
-      "minzoom": 13,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "entrance", ""]],
-      "layout": {
-        "text-field": "{housenumber}",
-        "text-size": {"stops": [[15, 8], [22, 17]]},
-        "text-font": ["Gotham Rounded Book"],
-        "visibility": "none"
-      },
-      "paint": {"text-color": "#999", "text-opacity": 0.7}
-    },
-    {
-      "id": "label_poi_general",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        [
-          "any",
-          ["in", "class", "school", "college", "place_of_worship", "swimming"],
-          [
-            "in",
-            "subclass",
-            "hotel",
-            "cemetery",
-            "library",
-            "theatre",
-            "playground",
-            "arts_centre",
-            "museum",
-            "stadium",
-            "sports_centre",
-            "monument",
-            "theme_park",
-            "mall",
-            "townhall",
-            "castle",
-            "zoo",
-            "swimming_area",
-            "marketplace",
-            "conference_centre",
-            "pedestrian",
-            "government",
-            "beach"
-          ]
-        ]
-      ],
-      "layout": {
-        "text-size": 10,
-        "text-font": ["Gotham Rounded Medium"],
-        "text-anchor": "top",
-        "text-field": "{name}",
-        "text-max-width": 8
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_poi_park",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "park",
-      "minzoom": 13,
-      "filter": ["all", ["==", "$type", "Point"], ["in", "class", "park"]],
-      "layout": {
-        "text-size": 11,
-        "text-max-width": 8,
-        "text-font": ["Gotham Rounded Medium Italic"],
-        "text-anchor": "top",
-        "text-field": "{name}"
-      },
-      "paint": {
-        "text-color": "#8ea66d",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_poi_harbour",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "ferry_terminal"]
-      ],
-      "layout": {
-        "text-size": 11,
-        "text-max-width": 8,
-        "text-font": ["Gotham Rounded Book"],
-        "text-anchor": "top",
-        "text-field": "{name}"
-      },
-      "paint": {
-        "text-color": "#888",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_water_point",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "water_name",
-      "minzoom": 5,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "water", "lake", "bay", "strait", "cape"]
-      ],
-      "layout": {
-        "text-size": ["interpolate", ["linear"], ["zoom"], 0, 8, 15, 11],
-        "text-max-width": 8,
-        "text-font": ["Gotham Rounded Medium Italic"],
-        "text-anchor": "top",
-        "text-field": "{name}"
-      },
-      "paint": {
-        "text-color": "#39c6ea",
-        "text-halo-color": "rgba(255,255,255,0.5)",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_water_line",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "water_name",
-      "minzoom": 5,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "water", "lake", "bay", "strait", "cape"]
-      ],
-      "layout": {
-        "symbol-placement": "line-center",
-        "text-size": ["interpolate", ["linear"], ["zoom"], 0, 8, 15, 11],
-        "text-max-width": 8,
-        "text-font": ["Gotham Rounded Medium Italic"],
-        "text-anchor": "top",
-        "text-field": "{name}",
-        "text-rotation-alignment": "viewport"
-      },
-      "paint": {
-        "text-color": "#39c6ea",
-        "text-halo-color": "rgba(255,255,255,0.5)",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_place_island",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "place",
-      "minzoom": 11,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "island", "islet"]
-      ],
-      "layout": {
-        "text-size": {"stops": [[0, 8], [15, 11]]},
-        "text-max-width": 8,
-        "text-font": ["Gotham Rounded Book"],
-        "text-offset": [0, 0.5],
-        "text-anchor": "top",
-        "text-field": "{name}"
-      },
-      "paint": {
-        "text-color": "#777",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_road_path_cycleway_track_service",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "transportation_name",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["!in", "name", "Harakan talvipolku", "Suomenlinnan Huoltotunneli"],
-        ["in", "class", "path", "track", "service"]
-      ],
-      "layout": {
-        "symbol-placement": "line",
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-letter-spacing": 0.1,
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          10,
-          8,
-          20,
-          14
-        ],
-        "text-rotation-alignment": "map"
-      },
-      "paint": {
-        "text-color": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          13,
-          "#999",
-          15,
-          "#333"
-        ],
-        "text-halo-color": "rgba(255,255,255,0.85)",
-        "text-halo-width": 2
-      }
-    },
-    {
-      "id": "label_road_street",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "transportation_name",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "minor"]
-      ],
-      "layout": {
-        "symbol-placement": "line",
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-letter-spacing": 0.1,
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          10,
-          8,
-          20,
-          14
-        ],
-        "text-rotation-alignment": "map"
-      },
-      "paint": {
-        "text-color": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          13,
-          "#999",
-          15,
-          "#333"
-        ],
-        "text-halo-color": "rgba(255,255,255,0.85)",
-        "text-halo-width": 2
-      }
-    },
-    {
-      "id": "label_road_primary",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "transportation_name",
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "tertiary", "secondary", "primary", "trunk", "motorway"]
-      ],
-      "layout": {
-        "symbol-placement": "line",
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-letter-spacing": 0.1,
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          10,
-          8,
-          20,
-          14
-        ],
-        "text-rotation-alignment": "map"
-      },
-      "paint": {
-        "text-color": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          13,
-          "#999",
-          15,
-          "#333"
-        ],
-        "text-halo-color": "rgba(255,255,255,0.85)",
-        "text-halo-width": 2
-      }
-    },
-    {
-      "id": "label_place_other",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "place",
-      "minzoom": 10,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "hamlet", "neighbourhood", "suburb", "village"]
-      ],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Book"],
-        "text-max-width": 6,
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.2],
-          ["zoom"],
-          10,
-          10,
-          16,
-          18
-        ]
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_place_town",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "place",
-      "minzoom": 8,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "class", "town"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Book"],
-        "text-max-width": 6,
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.2],
-          ["zoom"],
-          10,
-          12,
-          16,
-          20
-        ],
-        "visibility": "visible"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_place_city",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "place",
-      "minzoom": 0,
-      "maxzoom": 13,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "class", "city"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": [
-          "interpolate",
-          ["exponential", 1.4],
-          ["zoom"],
-          6,
-          10,
-          10,
-          16
-        ],
-        "text-transform": "uppercase",
-        "text-letter-spacing": 0.125,
-        "visibility": "visible"
-      },
-      "paint": {
-        "text-color": "#777",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1.5
-      }
-    },
-    {
-      "id": "label_country",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "place",
-      "maxzoom": 8,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["==", "class", "country"],
-        ["has", "iso_a2"]
-      ],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": {"stops": [[3, 10], [8, 30]]},
-        "text-transform": "uppercase"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1.5
-      }
-    },
-    {
-      "id": "subway-entrance_icon",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 16,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "entrance"],
-        ["in", "subclass", "subway_entrance"]
-      ],
-      "layout": {
-        "icon-image": "icon-entrance-subway",
-        "icon-allow-overlap": true,
-        "icon-anchor": "bottom",
-        "icon-size": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          15,
-          0.533,
-          20,
-          0.8
-        ],
-        "visibility": "none"
-      },
-      "paint": {"icon-translate": [0, -5.25]}
-    },
-    {
-      "id": "subway-entrance_letter",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 17,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "entrance"],
-        ["in", "subclass", "subway_entrance"],
-        ["has", "ref"]
-      ],
-      "layout": {
-        "icon-image": ["concat", "icon-letter-", ["get", "ref"]],
-        "icon-allow-overlap": true,
-        "icon-anchor": "bottom",
-        "icon-size": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          13,
-          0.8,
-          20,
-          1.2
-        ],
-        "visibility": "none"
-      },
-      "paint": {"icon-translate": [0, -5.25]}
-    },
-    {
-      "id": "subway-entrance_accessibility",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 17,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "entrance"],
-        ["in", "subclass", "subway_entrance"],
-        ["==", "wheelchair", 1]
-      ],
-      "layout": {
-        "icon-image": "icon-entrance-wheelchair",
-        "icon-allow-overlap": true,
-        "icon-anchor": "top",
-        "icon-size": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          13,
-          0.8,
-          20,
-          1.2
-        ],
-        "visibility": "none"
-      },
-      "paint": {"icon-translate": [0, -5.25]}
-    },
-    {
-      "id": "icon_bus-station",
-      "type": "symbol",
-      "source": "terminals",
-      "source-layer": "terminals",
-      "minzoom": 11,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "mode", "BUS"]],
-      "layout": {
-        "text-optional": true,
-        "text-size": 10,
-        "text-field": "{nameFi}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-anchor": "top",
-        "text-max-width": 8,
-        "text-offset": [0, 0.5],
-        "icon-image": "icon-terminal-bus",
-        "icon-size": 0.9,
-        "visibility": "none"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1,
-        "icon-translate": [0, -5.25]
-      }
-    },
-    {
-      "id": "icon_subway-station",
-      "type": "symbol",
-      "source": "terminals",
-      "source-layer": "terminals",
-      "minzoom": 11,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "mode", "SUBWAY"]],
-      "layout": {
-        "text-optional": true,
-        "text-size": 10,
-        "text-field": "{nameFi}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-anchor": "top",
-        "text-max-width": 8,
-        "text-offset": [0, 0.5],
-        "icon-image": "icon-terminal-subway",
-        "icon-size": 0.9,
-        "visibility": "none"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1,
-        "icon-translate": [0, -5.25]
-      }
-    },
-    {
-      "id": "icon_railway-station",
-      "type": "symbol",
-      "source": "terminals",
-      "source-layer": "terminals",
-      "minzoom": 11,
-      "filter": ["all", ["==", "$type", "Point"], ["==", "mode", "RAIL"]],
-      "layout": {
-        "text-optional": true,
-        "text-size": 10,
-        "text-field": "{nameFi}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-anchor": "top",
-        "text-max-width": 8,
-        "text-offset": [0, 0.75],
-        "icon-image": "icon-terminal-train",
-        "icon-size": 0.9,
-        "visibility": "none"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1,
-        "icon-translate": [0, -5.25]
-      }
-    },
-    {
-      "id": "icon_aerodrome",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "aerodrome_label",
-      "minzoom": 5,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "class", "international", "public", "regional"]
-      ],
-      "layout": {
-        "text-optional": true,
-        "text-size": 10,
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-anchor": "top",
-        "text-max-width": 8,
-        "text-offset": [0, 0.5],
-        "icon-image": "icon-terminal-aerodrome",
-        "icon-size": 0.9
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1,
-        "icon-translate": [0, -5.25]
-      }
-    },
-    {
-      "id": "ticket-sales_icon_sales-point",
-      "type": "symbol",
-      "source": "ticket-sales",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "Tyyppi", "Myyntipiste", "myyntipiste"]
-      ],
-      "layout": {"icon-image": "icon-tickets-sales-point", "visibility": "none"}
-    },
-    {
-      "id": "ticket-sales_icon_ticket-machine",
-      "type": "symbol",
-      "source": "ticket-sales",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["in", "Tyyppi", "Kertalippuautomaatti", "Monilippuautomaatti"]
-      ],
-      "layout": {"icon-image": "icon-tickets-machine", "visibility": "none"}
-    },
-    {
-      "id": "ticket-sales_icon_ticket-machine-parking",
-      "type": "symbol",
-      "source": "ticket-sales",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["==", "Tyyppi", "Pysäköintiautomaatti"]
-      ],
-      "layout": {
-        "icon-image": "icon-tickets-machine-parking",
-        "visibility": "none"
-      }
-    },
-    {
-      "id": "ticket-sales_icon_service-point",
-      "type": "symbol",
-      "source": "ticket-sales",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "$type", "Point"],
-        ["==", "Tyyppi", "Palvelupiste"]
-      ],
-      "layout": {
-        "icon-image": "icon-tickets-service-point",
-        "visibility": "none"
-      }
-    },
-    {
-      "id": "stops_case",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["!=", ["get", "mode"], "RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fff",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1.5,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "stops_rail_case",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 15,
-      "filter": ["==", ["get", "mode"], "RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fff",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1.5,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "stops_rail",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 15,
-      "filter": ["==", ["get", "mode"], "RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#8c54a2",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_bus",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": [
-        "all",
-        ["!", ["get", "isTrunkStop"]],
-        ["==", ["get", "mode"], "BUS"]
-      ],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#007ac9",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_trunk",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["all", ["get", "isTrunkStop"], ["==", ["get", "mode"], "BUS"]],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#CA4300",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_ferry",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["==", ["get", "mode"], "FERRY"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#00b9e4",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_tram",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["==", ["get", "mode"], "TRAM"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#00985f",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_lrail",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["==", ["get", "mode"], "L_RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#00b2a9",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_subway",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["==", ["get", "mode"], "SUBWAY"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#ff6319",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "stops_hub",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["!=", ["get", "mode"], "RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fff",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          13,
-          2,
-          22,
-          20
-        ]
-      }
-    },
-    {
-      "id": "stops_rail_hub",
-      "type": "circle",
-      "source": "stops",
-      "source-layer": "stops",
-      "minzoom": 15,
-      "filter": ["==", ["get", "mode"], "RAIL"],
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fff",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          13,
-          2,
-          22,
-          20
-        ]
-      }
-    },
-    {
-      "id": "stops_timing_icon",
-      "type": "symbol",
-      "source": "stops-by-routes",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["all", ["!=", ["get", "timingStopType"], 0]],
-      "layout": {
-        "icon-image": ["concat", "icon-time", ["get", "direction"]],
-        "icon-size": 1.2,
-        "icon-allow-overlap": true,
-        "visibility": "none"
-      }
-    },
-    {
-      "id": "stops_start_icon",
-      "type": "symbol",
-      "source": "stops-by-routes",
-      "source-layer": "stops",
-      "minzoom": 13,
-      "filter": ["all", ["==", ["get", "stopIndex"], 1]],
-      "layout": {
-        "icon-image": ["concat", "icon-direction", ["get", "direction"]],
-        "icon-size": 1.2,
-        "icon-anchor": "bottom",
-        "icon-allow-overlap": true,
-        "visibility": "none"
-      }
-    },
-    {
-      "id": "citybike_stops_case",
-      "type": "circle",
-      "source": "citybike",
-      "source-layer": "rentalStations",
-      "minzoom": 13,
-      "maxzoom": 13,
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fff",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1.5,
-          22,
-          26
-        ]
-      }
-    },
-    {
-      "id": "citybike_stops",
-      "type": "circle",
-      "source": "citybike",
-      "source-layer": "rentalStations",
-      "minzoom": 13,
-      "maxzoom": 13,
-      "layout": {"visibility": "none"},
-      "paint": {
-        "circle-color": "#fcbc19",
-        "circle-radius": [
-          "interpolate",
-          ["exponential", 1.15],
-          ["zoom"],
-          12,
-          1,
-          22,
-          24
-        ]
-      }
-    },
-    {
-      "id": "citybike_icon",
-      "type": "symbol",
-      "source": "citybike",
-      "source-layer": "rentalStations",
-      "minzoom": 13,
-      "layout": {
-        "icon-offset": [0, -6],
-        "icon-image": "icon-citybike-station",
-        "icon-allow-overlap": false,
-        "icon-size": {"stops": [[13, 0.8], [20, 1.2]]},
-        "visibility": "none"
-      }
-    },
-    {
-      "id": "omat_ravintolat",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 16,
-      "filter": ["all", ["==", "class", "restaurant"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-size": 10,
-        "text-font": ["Gotham Rounded Medium"]
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "omat_kaupat",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 15,
-      "filter": ["all", ["==", "class", "grocery"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": 10,
-        "visibility": "visible"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "omat_fast food",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 15,
-      "filter": ["all", ["==", "class", "fast_food"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": 10
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "omat_convenience",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 15,
-      "filter": [
-        "all",
-        ["==", "class", "shop"],
-        ["==", "subclass", "convenience"]
-      ],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": 10,
-        "visibility": "visible"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "omat_liikkeet",
-      "type": "symbol",
-      "source": "vector",
-      "source-layer": "poi",
-      "minzoom": 16,
-      "filter": ["all", ["==", "class", "shop"]],
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Gotham Rounded Medium"],
-        "text-size": 10,
-        "visibility": "visible"
-      },
-      "paint": {
-        "text-color": "#666",
-        "text-halo-color": "#fff",
-        "text-halo-width": 1
-      }
-    }
-  ],
-  "id": "wrpgdbqby"
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E5A4E">
+<title>TotalParking — Pysäköinti ja sähkölataus yhdellä kartalla</title>
+<meta name="description" content="TotalParking yhdistää kaupungin pysäköinnin ja sähköauton latauksen yhteen palveluun Helsingissä ja Tampereella. Kuluttajille, yrityksille ja yhteisöille.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E5A4E'/%3E%3Ctext x='16' y='23' font-family='Arial,sans-serif' font-size='20' font-weight='700' text-anchor='middle' fill='%23FF6B3D'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E2A26; --ink-soft:#33433F; --muted:#5B6B66;
+  --brand:#0E5A4E; --brand-700:#093E36; --brand-50:#E8F1EE; --brand-100:#D3E5E0;
+  --charge:#13B17C; --charge-700:#0C8A60; --charge-50:#E3F6EE;
+  --park:#FF6B3D; --park-700:#E5511F; --park-50:#FFEDE6;
+  --paper:#F7F6F1; --card:#FFFFFF; --line:#E3E6E1; --line-soft:#EEEFEA;
+  --amber:#F2A93B;
+  --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-body:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --r-sm:10px; --r:14px; --r-lg:22px; --r-pill:999px;
+  --shadow:0 1px 2px rgba(14,42,38,.05), 0 10px 28px rgba(14,42,38,.06);
+  --shadow-lg:0 24px 60px rgba(9,62,54,.18);
+  --topbar-h:64px;
+  --ease:cubic-bezier(.4,.0,.2,1);
 }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--font-body); color:var(--ink); background:var(--paper);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body.no-scroll{overflow:hidden}
+h1,h2,h3,h4{font-family:var(--font-display); margin:0; line-height:1.08; letter-spacing:-.02em; font-weight:600}
+p{margin:0}
+a{color:inherit; text-decoration:none}
+button{font-family:inherit; cursor:pointer}
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--charge); outline-offset:2px; border-radius:6px}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--charge-700); font-weight:700}
+.wrap{max-width:1180px; margin:0 auto; padding:0 22px}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:60; height:var(--topbar-h);
+  background:rgba(247,246,241,.82); backdrop-filter:saturate(160%) blur(12px);
+  border-bottom:1px solid var(--line); display:flex; align-items:center;
+}
+.topbar .wrap{display:flex; align-items:center; gap:14px; width:100%}
+.burger{
+  display:inline-flex; flex-direction:column; gap:4px; justify-content:center;
+  width:42px; height:42px; padding:10px; border:1px solid var(--line); border-radius:12px;
+  background:var(--card); flex:0 0 auto;
+}
+.burger span{display:block; height:2px; width:100%; background:var(--ink); border-radius:2px; transition:transform .25s var(--ease), opacity .2s}
+.brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.02em}
+.brand .pmark{
+  width:28px; height:28px; border-radius:8px; background:var(--brand); color:var(--park);
+  display:grid; place-items:center; font-weight:700; font-size:18px; flex:0 0 auto;
+}
+.brand .pmark::after{content:"P"}
+.brand b{font-weight:700}
+.brand span{color:var(--muted); font-weight:500}
+.topbar .spacer{flex:1}
+.topbar-links{display:none; gap:26px; align-items:center}
+.topbar .topbar-login{display:none}
+.topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
+.topbar-links a:hover{color:var(--brand)}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:1px solid transparent; border-radius:var(--r-pill); font-weight:600; font-size:15px;
+  padding:11px 20px; transition:transform .15s var(--ease), background .2s, box-shadow .2s, border-color .2s; white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand); color:#fff}
+.btn-primary:hover{background:var(--brand-700)}
+.btn-ember{background:var(--park); color:#fff}
+.btn-ember:hover{background:var(--park-700)}
+.btn-ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn-ghost:hover{background:var(--card); border-color:var(--brand-100)}
+.btn-light{background:#fff; color:var(--brand)}
+.btn-sm{padding:8px 14px; font-size:14px}
+.btn svg{width:18px; height:18px}
+
+/* ---------- Drawer (burger menu) ---------- */
+.scrim{
+  position:fixed; inset:0; background:rgba(9,40,36,.42); backdrop-filter:blur(2px);
+  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; z-index:80;
+}
+.scrim.open{opacity:1; visibility:visible}
+.drawer{
+  position:fixed; top:0; left:0; bottom:0; width:min(360px,86vw); z-index:90;
+  background:var(--brand); color:#fff; transform:translateX(-102%);
+  transition:transform .38s var(--ease); display:flex; flex-direction:column;
+  padding:22px 22px 26px; box-shadow:var(--shadow-lg);
+}
+.drawer.open{transform:translateX(0)}
+.drawer-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:30px}
+.drawer .brand{color:#fff}
+.drawer .brand .pmark{background:#fff; color:var(--brand)}
+.drawer-close{width:40px; height:40px; border-radius:11px; border:1px solid rgba(255,255,255,.22); background:transparent; color:#fff; font-size:20px; display:grid; place-items:center}
+.drawer nav{display:flex; flex-direction:column; gap:0; margin-top:4px; flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch}
+.acc{border-bottom:1px solid rgba(255,255,255,.12)}
+.acc-head{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:15px 6px; background:transparent; border:0; color:#fff; text-align:left; cursor:pointer;
+  font-family:var(--font-display); font-size:21px; font-weight:500; letter-spacing:-.02em;
+}
+.acc-head:hover{color:var(--park-50)}
+.acc-ic{position:relative; width:20px; height:20px; flex:0 0 auto; opacity:.85}
+.acc-ic::before,.acc-ic::after{content:""; position:absolute; background:currentColor; border-radius:2px; transition:transform .3s var(--ease), opacity .3s}
+.acc-ic::before{left:1px; right:1px; top:9px; height:2px}
+.acc-ic::after{top:1px; bottom:1px; left:9px; width:2px}
+.acc.open .acc-ic{opacity:1}
+.acc.open .acc-ic::after{transform:scaleY(0); opacity:0}
+.acc-panel{display:grid; grid-template-rows:0fr; transition:grid-template-rows .34s var(--ease)}
+.acc.open .acc-panel{grid-template-rows:1fr}
+.acc-panel-inner{overflow:hidden; display:flex; flex-direction:column}
+.acc-panel-inner a{
+  display:block; padding:11px 0 11px 16px; margin-left:2px;
+  font-family:var(--font-body); font-size:15.5px; font-weight:500;
+  color:rgba(255,255,255,.82); border-left:2px solid rgba(255,255,255,.2);
+}
+.acc-panel-inner a:first-child{margin-top:2px}
+.acc-panel-inner a:last-child{margin-bottom:12px}
+.acc-panel-inner a:hover{color:#fff; border-left-color:var(--park)}
+.drawer-foot{margin-top:auto; display:flex; flex-direction:column; gap:12px}
+.drawer-foot .btn{width:100%}
+.drawer-mini{font-size:13px; color:rgba(255,255,255,.6); line-height:1.5}
+
+/* ---------- Hero ---------- */
+.hero{padding:34px 0 18px}
+.hero-grid{display:grid; grid-template-columns:1fr; gap:22px; align-items:stretch}
+.hero-copy{display:flex; flex-direction:column; justify-content:center}
+.hero h1{font-size:clamp(34px,7vw,58px); font-weight:700; margin:16px 0 0}
+.hero h1 .park{color:var(--park)} .hero h1 .charge{color:var(--charge-700)}
+.hero-sub{margin:18px 0 26px; font-size:clamp(16px,2.4vw,19px); color:var(--ink-soft); max-width:42ch}
+.hero-cta{display:flex; gap:12px; flex-wrap:wrap}
+.hero-meta{display:flex; gap:22px; margin-top:26px; flex-wrap:wrap}
+.hero-meta .stat{display:flex; flex-direction:column}
+.hero-meta .stat b{font-family:var(--font-mono); font-size:24px; color:var(--brand); line-height:1}
+.hero-meta .stat small{font-size:12.5px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.06em}
+
+.hero-map-card{
+  position:relative; border-radius:var(--r-lg); overflow:hidden; min-height:340px;
+  border:1px solid var(--line); box-shadow:var(--shadow); background:#eef0ec;
+}
+.map-el{position:absolute; inset:0}
+.hero-map-card .live-chip{
+  position:absolute; left:14px; top:14px; z-index:5;
+  background:rgba(255,255,255,.94); backdrop-filter:blur(6px); border:1px solid var(--line);
+  border-radius:var(--r-pill); padding:9px 15px 9px 12px; display:flex; align-items:center; gap:10px;
+  box-shadow:var(--shadow); font-weight:600; font-size:14px;
+}
+.live-dot{width:9px; height:9px; border-radius:50%; background:var(--charge); position:relative}
+.live-dot::after{content:""; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--charge); animation:ping 1.8s var(--ease) infinite}
+.live-chip b{font-family:var(--font-mono); color:var(--brand)}
+.map-legend{
+  position:absolute; right:12px; bottom:12px; z-index:5; display:flex; gap:8px; flex-direction:column;
+}
+.legend-item{background:rgba(255,255,255,.94); border:1px solid var(--line); border-radius:10px; padding:6px 11px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px; box-shadow:var(--shadow)}
+.legend-item .swatch{width:11px; height:11px; border-radius:50%}
+@keyframes ping{0%{transform:scale(.7);opacity:.9}80%,100%{transform:scale(1.9);opacity:0}}
+
+/* Map markers (shared in hero + admin) */
+.mk{position:relative; cursor:pointer; transform:translateY(-2px)}
+.mk-park{
+  width:30px; height:30px; border-radius:50% 50% 50% 2px; transform:rotate(45deg);
+  background:var(--park); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(229,81,31,.4);
+  display:grid; place-items:center;
+}
+.mk-park b{transform:rotate(-45deg); color:#fff; font-family:var(--font-display); font-weight:700; font-size:15px}
+.mk-charge{
+  width:30px; height:30px; border-radius:50% 50% 50% 2px; transform:rotate(45deg);
+  background:var(--charge); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(12,138,96,.4);
+  display:grid; place-items:center;
+}
+.mk-charge svg{transform:rotate(-45deg); width:15px; height:15px}
+.mk-charge.pulse::before{content:""; position:absolute; inset:-3px; border-radius:inherit; border:2px solid var(--charge); animation:ping 2.2s var(--ease) infinite}
+.maplibregl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
+.pop-t{font-family:var(--font-display); font-weight:600; font-size:15px; margin-bottom:3px}
+.pop-s{font-size:13px; color:var(--muted)}
+.pop-s .mono{color:var(--brand)}
+
+/* ---------- Section base ---------- */
+.section{padding:64px 0}
+.section-head{max-width:60ch; margin-bottom:36px}
+.section-head h2{font-size:clamp(26px,4.4vw,40px); margin-top:12px}
+.section-head p{color:var(--ink-soft); margin-top:14px; font-size:17px}
+
+/* Audience cards */
+.aud-grid{display:grid; grid-template-columns:1fr; gap:18px}
+.aud-card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:28px;
+  display:flex; flex-direction:column; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  transition:transform .25s var(--ease), box-shadow .25s;
+}
+.aud-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-lg)}
+.aud-card .tag{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; align-self:flex-start; padding:5px 11px; border-radius:var(--r-pill)}
+.aud-card.c1 .tag{background:var(--park-50); color:var(--park-700)}
+.aud-card.c2 .tag{background:var(--brand-50); color:var(--brand)}
+.aud-card.c3 .tag{background:var(--charge-50); color:var(--charge-700)}
+.aud-card h3{font-size:24px; margin:16px 0 10px}
+.aud-card p{color:var(--ink-soft); font-size:15.5px}
+.aud-list{list-style:none; padding:0; margin:18px 0 22px; display:flex; flex-direction:column; gap:10px}
+.aud-list li{display:flex; gap:10px; font-size:15px; color:var(--ink-soft)}
+.aud-list li svg{width:18px; height:18px; flex:0 0 auto; margin-top:2px}
+.aud-card .card-cta{margin-top:auto}
+.aud-card .card-cta a{font-weight:600; color:var(--brand); display:inline-flex; align-items:center; gap:7px}
+.aud-card .card-cta a svg{width:16px; height:16px; transition:transform .2s}
+.aud-card .card-cta a:hover svg{transform:translateX(4px)}
+
+/* Duality strip (parking + charging) */
+.duo{background:var(--brand); color:#fff; border-radius:28px; padding:46px 30px; position:relative; overflow:hidden}
+.duo::before{content:""; position:absolute; right:-60px; top:-60px; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,.05)}
+.duo .eyebrow{color:var(--charge)}
+.duo h2{font-size:clamp(24px,4vw,36px); margin:12px 0 0; max-width:24ch}
+.duo-cols{display:grid; grid-template-columns:1fr; gap:20px; margin-top:34px}
+.duo-col{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:24px}
+.duo-col .ic{width:46px; height:46px; border-radius:13px; display:grid; place-items:center; margin-bottom:16px}
+.duo-col.park .ic{background:var(--park)} .duo-col.charge .ic{background:var(--charge)}
+.duo-col .ic svg{width:24px; height:24px}
+.duo-col h4{font-size:20px; margin-bottom:8px}
+.duo-col p{color:rgba(255,255,255,.78); font-size:15px}
+
+/* Stats band */
+.statband{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden}
+.statband .cell{background:var(--card); padding:26px 22px}
+.statband .cell b{font-family:var(--font-mono); font-size:clamp(26px,4vw,34px); color:var(--brand); display:block; line-height:1}
+.statband .cell small{display:block; color:var(--muted); margin-top:8px; font-size:13.5px}
+.statband .cell.accent b{color:var(--park)}
+
+/* CTA band */
+.ctaband{background:var(--ink); color:#fff; border-radius:28px; padding:48px 30px; text-align:center}
+.ctaband h2{font-size:clamp(26px,4.4vw,38px)}
+.ctaband p{color:rgba(255,255,255,.72); margin:14px auto 26px; max-width:46ch}
+.ctaband .hero-cta{justify-content:center}
+
+/* Footer */
+.foot{background:var(--brand-700); color:rgba(255,255,255,.8); padding:54px 0 30px; margin-top:8px}
+.foot-grid{display:grid; grid-template-columns:1fr; gap:28px}
+.foot .brand{color:#fff; margin-bottom:14px}
+.foot .brand .pmark{background:#fff; color:var(--brand)}
+.foot-blurb{font-size:14.5px; max-width:34ch; color:rgba(255,255,255,.72)}
+.foot h5{font-family:var(--font-display); color:#fff; font-size:13px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:14px}
+.foot ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; font-size:14.5px}
+.foot ul a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.14); margin-top:34px; padding-top:20px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; font-size:13px; color:rgba(255,255,255,.6)}
+
+/* ---------- Login modal ---------- */
+.modal-scrim{position:fixed; inset:0; background:rgba(9,40,36,.5); backdrop-filter:blur(3px); z-index:120; display:grid; place-items:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s}
+.modal-scrim.open{opacity:1; visibility:visible}
+.modal{
+  background:var(--card); border-radius:24px; width:min(520px,100%); max-height:92vh; overflow:auto;
+  box-shadow:var(--shadow-lg); transform:translateY(14px) scale(.98); transition:transform .3s var(--ease);
+}
+.modal-scrim.open .modal{transform:none}
+.modal-head{padding:26px 26px 0; display:flex; align-items:flex-start; justify-content:space-between; gap:14px}
+.modal-head h3{font-size:23px}
+.modal-head .demo-badge{font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
+.modal-x{width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card); font-size:19px; flex:0 0 auto}
+.modal-body{padding:18px 26px 26px}
+.modal-body>p.lead{color:var(--muted); font-size:14.5px; margin-bottom:20px}
+.role-list{display:flex; flex-direction:column; gap:12px}
+.role-btn{
+  display:flex; align-items:center; gap:15px; text-align:left; width:100%;
+  background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px;
+  transition:border-color .2s, background .2s, transform .15s;
+}
+.role-btn:hover{border-color:var(--brand-100); background:var(--brand-50); transform:translateY(-2px)}
+.role-ic{width:46px; height:46px; border-radius:12px; display:grid; place-items:center; flex:0 0 auto; color:#fff}
+.role-ic svg{width:23px; height:23px}
+.role-btn.r-admin .role-ic{background:var(--brand)}
+.role-btn.r-biz .role-ic{background:var(--park)}
+.role-btn.r-staff .role-ic{background:var(--charge)}
+.role-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:16px; margin-bottom:2px}
+.role-txt small{color:var(--muted); font-size:13px; line-height:1.4}
+.role-btn .arr{margin-left:auto; color:var(--muted); flex:0 0 auto}
+.note{margin-top:18px; font-size:12.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:12px 14px; line-height:1.5}
+
+/* login form (step 2) */
+.login-form{display:none; flex-direction:column; gap:14px}
+.login-form.active{display:flex}
+.role-list.hidden{display:none}
+.field label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px}
+.field input{width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-family:inherit; font-size:15px; background:var(--paper)}
+.field input:focus{border-color:var(--brand); background:#fff; outline:none}
+.login-ctx{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; margin-bottom:4px; font-size:14px}
+.login-ctx .role-ic{width:38px; height:38px; border-radius:10px}
+.login-ctx .role-ic svg{width:19px; height:19px}
+.login-back{background:none; border:none; color:var(--muted); font-size:14px; padding:6px 0; align-self:flex-start; display:inline-flex; align-items:center; gap:6px}
+.login-back:hover{color:var(--brand)}
+
+/* ---------- App shells (dashboards) ---------- */
+.app{display:none; min-height:100vh; background:var(--paper); flex-direction:column}
+body.app-open .app.active{display:flex}
+body.app-open{overflow:auto}
+.app-top{
+  height:60px; background:var(--card); border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:14px; padding:0 18px; position:sticky; top:0; z-index:30;
+}
+.app-top .brand{font-size:17px}
+.app-role-pill{font-family:var(--font-mono); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:5px 11px; border-radius:var(--r-pill); margin-left:4px}
+.app-role-pill.admin{background:var(--brand-50); color:var(--brand)}
+.app-role-pill.biz{background:var(--park-50); color:var(--park-700)}
+.app-role-pill.staff{background:var(--charge-50); color:var(--charge-700)}
+.app-top .demo-badge{font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
+.app-top .user-badge{font-family:var(--font-mono); font-size:11.5px; font-weight:600; color:var(--brand); background:var(--brand-50); border:1px solid var(--brand-100); padding:5px 11px; border-radius:var(--r-pill); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.login-err{color:#C62828; font-size:13px; font-weight:600; margin-top:6px; background:#FDECEA; border:1px solid #F5C6C0; padding:9px 12px; border-radius:10px}
+.app-top .spacer{flex:1}
+.app-menu-btn{display:inline-flex; width:40px; height:40px; border:1px solid var(--line); border-radius:11px; background:var(--card); align-items:center; justify-content:center; flex-direction:column; gap:4px}
+.app-menu-btn span{width:18px; height:2px; background:var(--ink); border-radius:2px}
+.app-body{display:flex; flex:1; min-height:0}
+.app-side{
+  width:236px; flex:0 0 236px; background:var(--card); border-right:1px solid var(--line); padding:16px 12px;
+  display:flex; flex-direction:column; gap:3px; position:sticky; top:60px; height:calc(100vh - 60px); overflow:auto;
+}
+.app-side .grp{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:14px 12px 6px; font-weight:700}
+.nav-item{
+  display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:11px; font-weight:500; font-size:14.5px; color:var(--ink-soft);
+  border:none; background:none; width:100%; text-align:left; transition:background .15s, color .15s;
+}
+.nav-item svg{width:19px; height:19px; flex:0 0 auto; opacity:.8}
+.nav-item:hover{background:var(--paper); color:var(--ink)}
+.nav-item.active{background:var(--brand); color:#fff}
+.nav-item.active svg{opacity:1}
+.nav-item .badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--park); color:#fff; border-radius:var(--r-pill); padding:1px 7px}
+.nav-item.active .badge{background:rgba(255,255,255,.22)}
+.app-main{flex:1; min-width:0; padding:24px; overflow:auto}
+.panel{display:none}
+.panel.active{display:block; animation:fade .35s var(--ease)}
+@keyframes fade{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.panel-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap}
+.panel-head h2{font-size:26px}
+.panel-head .sub{color:var(--muted); font-size:14.5px; margin-top:5px}
+.panel-head .tools{display:flex; gap:10px; flex-wrap:wrap}
+
+/* KPI cards */
+.kpi-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:22px}
+.kpi{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
+.kpi .k-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+.kpi .k-ic{width:36px; height:36px; border-radius:10px; display:grid; place-items:center}
+.kpi .k-ic svg{width:19px; height:19px}
+.kpi .k-ic.b{background:var(--brand-50); color:var(--brand)}
+.kpi .k-ic.p{background:var(--park-50); color:var(--park-700)}
+.kpi .k-ic.c{background:var(--charge-50); color:var(--charge-700)}
+.kpi .delta{font-family:var(--font-mono); font-size:12px; font-weight:700; padding:3px 8px; border-radius:var(--r-pill)}
+.delta.up{background:var(--charge-50); color:var(--charge-700)}
+.delta.down{background:#FDE7E2; color:#C0392B}
+.kpi .k-val{font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--ink); line-height:1}
+.kpi .k-lab{color:var(--muted); font-size:13px; margin-top:7px}
+
+/* cards / grid */
+.cards-2{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:22px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow)}
+.card-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px}
+.card-h h3{font-size:17px}
+.card-h .link{font-size:13.5px; color:var(--brand); font-weight:600}
+.chart-wrap{margin:6px 0 4px}
+.chart-x{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-top:8px}
+
+/* feed */
+.feed{display:flex; flex-direction:column; gap:2px}
+.feed-row{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft)}
+.feed-row:last-child{border-bottom:none}
+.feed-dot{width:9px; height:9px; border-radius:50%; margin-top:6px; flex:0 0 auto}
+.feed-row .ft{font-size:14px; font-weight:500}
+.feed-row .fs{font-size:12.5px; color:var(--muted)}
+.feed-row time{margin-left:auto; font-family:var(--font-mono); font-size:11.5px; color:var(--muted); white-space:nowrap}
+
+/* tables */
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
+table.tbl{width:100%; border-collapse:collapse; min-width:560px}
+.tbl th{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); text-align:left; padding:13px 16px; border-bottom:1px solid var(--line); font-weight:700; background:var(--paper)}
+.tbl td{padding:13px 16px; border-bottom:1px solid var(--line-soft); font-size:14px; vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--paper)}
+.tbl .mono{font-size:13px; color:var(--ink-soft)}
+.tbl .strong{font-weight:600}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:var(--r-pill); white-space:nowrap}
+.pill .d{width:7px; height:7px; border-radius:50%}
+.pill.ok{background:var(--charge-50); color:var(--charge-700)} .pill.ok .d{background:var(--charge)}
+.pill.warn{background:#FEF3DD; color:#9A6B00} .pill.warn .d{background:var(--amber)}
+.pill.err{background:#FDE7E2; color:#C0392B} .pill.err .d{background:#E74C3C}
+.pill.mute{background:var(--paper); color:var(--muted); border:1px solid var(--line)} .pill.mute .d{background:var(--muted)}
+.pill.park{background:var(--park-50); color:var(--park-700)} .pill.park .d{background:var(--park)}
+.pill.charge{background:var(--charge-50); color:var(--charge-700)} .pill.charge .d{background:var(--charge)}
+.row-act{display:inline-flex; gap:6px}
+.icon-btn{width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:var(--card); display:grid; place-items:center; color:var(--ink-soft)}
+.icon-btn:hover{background:var(--paper); color:var(--brand); border-color:var(--brand-100)}
+.icon-btn svg{width:16px; height:16px}
+.avatar{width:30px; height:30px; border-radius:50%; background:var(--brand); color:#fff; display:inline-grid; place-items:center; font-size:12px; font-weight:700; font-family:var(--font-display); flex:0 0 auto}
+.cell-user{display:flex; align-items:center; gap:10px}
+
+/* admin map panel */
+.map-panel{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:min(64vh,560px); box-shadow:var(--shadow)}
+.map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
+.tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
+.tool-btn svg{width:16px; height:16px}
+.tool-btn.primary{background:var(--brand); color:#fff; border-color:var(--brand)}
+.tool-btn.danger:hover{background:#FDE7E2; color:#C0392B; border-color:#F3C5BC}
+.tool-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.map-areas{position:absolute; right:14px; top:14px; bottom:14px; width:264px; max-width:46%; z-index:6; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; overflow:hidden}
+.map-areas h4{padding:14px 16px 10px; font-size:14px; border-bottom:1px solid var(--line)}
+.map-areas .list{overflow:auto; padding:6px}
+.area-row{padding:11px 12px; border-radius:11px; cursor:pointer; transition:background .15s}
+.area-row:hover{background:var(--paper)}
+.area-row .ar-t{display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px}
+.area-row .ar-s{font-size:12px; color:var(--muted); margin-top:4px; padding-left:0; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.area-row .dotsq{width:9px; height:9px; border-radius:3px; flex:0 0 auto}
+
+/* business: cost centers / overview */
+.biz-hero{background:var(--brand); color:#fff; border-radius:18px; padding:24px; margin-bottom:22px; display:flex; flex-wrap:wrap; gap:20px; justify-content:space-between; align-items:center}
+.biz-hero .bh-l b{font-family:var(--font-display); font-size:22px; display:block}
+.biz-hero .bh-l small{color:rgba(255,255,255,.7); font-size:13.5px}
+.biz-hero .bh-stats{display:flex; gap:26px; flex-wrap:wrap}
+.biz-hero .bh-stats .s b{font-family:var(--font-mono); font-size:24px; display:block; line-height:1}
+.biz-hero .bh-stats .s small{font-size:12px; color:rgba(255,255,255,.7)}
+.cc-grid{display:grid; grid-template-columns:1fr; gap:14px}
+.cc{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow)}
+.cc-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+.cc-code{font-family:var(--font-mono); font-size:12px; color:var(--muted); font-weight:700}
+.cc h4{font-size:16px; margin-bottom:14px}
+.cc-bar{height:8px; border-radius:var(--r-pill); background:var(--line); overflow:hidden; margin-bottom:8px}
+.cc-bar i{display:block; height:100%; border-radius:inherit; background:var(--brand)}
+.cc-bar i.warn{background:var(--amber)} .cc-bar i.err{background:var(--park)}
+.cc-meta{display:flex; justify-content:space-between; font-size:13px; color:var(--muted)}
+.cc-meta b{color:var(--ink); font-family:var(--font-mono)}
+
+/* support (staff) */
+.ticket{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow); display:flex; gap:14px; align-items:flex-start; margin-bottom:12px}
+.ticket .t-main{flex:1; min-width:0}
+.ticket .t-id{font-family:var(--font-mono); font-size:11.5px; color:var(--muted); font-weight:700}
+.ticket h4{font-size:15.5px; margin:4px 0 5px}
+.ticket p{font-size:13.5px; color:var(--muted)}
+.ticket .t-side{display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto}
+.ticket time{font-family:var(--font-mono); font-size:11.5px; color:var(--muted)}
+.empty{padding:30px; text-align:center; color:var(--muted)}
+
+/* reveal animation */
+.reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease)}
+.reveal.in{opacity:1; transform:none}
+
+/* ---------- Responsive ---------- */
+@media(min-width:680px){
+  .aud-grid{grid-template-columns:repeat(3,1fr)}
+  .duo-cols{grid-template-columns:1fr 1fr}
+  .statband{grid-template-columns:repeat(4,1fr)}
+  .kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .cards-2{grid-template-columns:1.4fr 1fr}
+  .cc-grid{grid-template-columns:repeat(3,1fr)}
+  .foot-grid{grid-template-columns:1.6fr 1fr 1fr 1fr}
+}
+@media(min-width:860px){
+  .topbar-links{display:flex}
+  .topbar .topbar-login{display:inline-flex}
+  .hero{padding:54px 0 30px}
+  .hero-grid{grid-template-columns:1fr 1.12fr; gap:30px; min-height:480px}
+  .hero-map-card{min-height:480px}
+  .section{padding:84px 0}
+}
+@media(max-width:859px){
+  .app-side{position:fixed; left:0; top:60px; bottom:0; z-index:40; transform:translateX(-105%); transition:transform .3s var(--ease); box-shadow:var(--shadow-lg)}
+  body.side-open .app.active .app-side{transform:translateX(0)}
+  .app-menu-btn{display:inline-flex}
+  .map-areas{position:relative; right:auto; top:auto; bottom:auto; width:100%; max-width:none; margin-top:14px; height:auto; max-height:300px}
+  .map-panel{height:auto; min-height:420px}
+  .map-panel .map-el{position:relative; height:420px}
+}
+@media(min-width:860px){.app-menu-btn{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+  .reveal{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ PUBLIC SITE ============ -->
+<div id="site">
+
+<header class="topbar">
+  <div class="wrap">
+    <a href="#top" class="brand" aria-label="TotalParking etusivu"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></a>
+    <div class="spacer"></div>
+    <nav class="topbar-links" aria-label="Päävalikko">
+      <a href="#kuluttajat">Kuluttaja-asiakkaat</a>
+      <a href="#yritykset">Yritykset</a>
+      <a href="#meista">Meistä</a>
+    </nav>
+    <button class="btn btn-primary btn-sm topbar-login" id="open-login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+      Kirjaudu
+    </button>
+    <button class="burger" id="burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Valikko">
+  <div class="drawer-top">
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <button class="drawer-close" id="drawer-close" aria-label="Sulje valikko">✕</button>
+  </div>
+  <nav>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Kuluttaja-asiakkaat<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#kuluttajat" data-close>Yleistä</a>
+        <a href="#kuluttajat" data-close>Näin se toimii</a>
+        <a href="#kuluttajat" data-close>Hinnoittelu</a>
+        <a href="#kuluttajat" data-close>Lataus sähköautolle</a>
+        <a href="#kuluttajat" data-close>Lataa sovellus</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Yritykset<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#yritykset" data-close>Yleistä</a>
+        <a href="#yritykset" data-close>Yrityspysäköinti</a>
+        <a href="#yritykset" data-close>Laskutus ja kustannuspaikat</a>
+        <a href="#yritykset" data-close>Hinnoittelu</a>
+        <a href="#yritykset" data-close>Ota yhteyttä myyntiin</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Pysäköinnin tarjoajat<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#top" data-close>Liity tarjoajaksi</a>
+        <a href="#top" data-close>Alueiden hallinta</a>
+        <a href="#top" data-close>Tulot ja tilitykset</a>
+        <a href="#top" data-close>Rajapinnat ja integraatiot</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Asiakaspalvelu<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#top" data-close>Usein kysytyt kysymykset</a>
+        <a href="#meista" data-close>Ota yhteyttä</a>
+        <a href="#top" data-close>Palvelutilanne</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Meistä<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#meista" data-close>Yritys</a>
+        <a href="#meista" data-close>Vastuullisuus</a>
+        <a href="#meista" data-close>Työpaikat</a>
+        <a href="#meista" data-close>Yhteystiedot</a>
+      </div></div>
+    </div>
+  </nav>
+  <div class="drawer-foot">
+    <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
+    <p class="drawer-mini">Pysäköinti ja sähkölataus yhdellä kartalla. Helsinki · Tampere</p>
+  </div>
+</aside>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">Pysäköinti &amp; sähkölataus · Helsinki / Tampere</span>
+          <h1>Löydä <span class="park">paikka</span>. Lataa <span class="charge">auto</span>. Maksa kerralla.</h1>
+          <p class="hero-sub">TotalParking kokoaa kaupungin pysäköintialueet ja latauspisteet samalle kartalle. Itse pysäköinti, lataus ja maksu hoituvat mobiilisovelluksessa — yritysten ja ylläpidon työkalut täältä.</p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" id="hero-login">Kirjaudu palveluun</button>
+            <a href="#kuluttajat" class="btn btn-ghost">Tutustu palveluun</a>
+          </div>
+          <div class="hero-meta">
+            <div class="stat"><b>2</b><small>kaupunkia</small></div>
+            <div class="stat"><b id="hm-spots">1 240</b><small>pysäköintipaikkaa</small></div>
+            <div class="stat"><b>380+</b><small>latauspistettä</small></div>
+          </div>
+        </div>
+        <div class="hero-map-card reveal">
+          <div class="map-el" id="hero-map"></div>
+          <div class="live-chip"><span class="live-dot" aria-hidden="true"></span>Vapaana nyt <b id="live-spots">248</b></div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="swatch" style="background:var(--park)"></span>Pysäköinti</span>
+            <span class="legend-item"><span class="swatch" style="background:var(--charge)"></span>Lataus</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIENCE -->
+  <section class="section" id="kuluttajat">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Kenelle</span>
+        <h2>Yksi palvelu, kolme käyttäjää</h2>
+        <p>Kuluttaja löytää paikan ja lataa auton. Yritys hallitsee pysäköintiään ja laskujaan. Ylläpito pitää kartan ajan tasalla.</p>
+      </div>
+      <div class="aud-grid">
+
+        <article class="aud-card c1 reveal">
+          <span class="tag">Kuluttaja-asiakkaat</span>
+          <h3>Pysäköi ja lataa sovelluksella</h3>
+          <p>Näe vapaat paikat ja latauspisteet reaaliajassa, aloita ja lopeta pysäköinti puhelimella ja maksa Apple Paylla tai kortilla.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Vapaat paikat ja hinnat kartalla</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Lataus käyntiin samasta näkymästä</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Kuitit ja historia automaattisesti</li>
+          </ul>
+          <div class="card-cta"><a href="#meista">Lataa sovellus <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+        <article class="aud-card c2 reveal" id="yritykset">
+          <span class="tag">Yritykset &amp; yhteisöt</span>
+          <h3>Hallitse yrityspysäköintiä</h3>
+          <p>Yrityskäyttäjät, kustannuspaikat ja laskutus yhdessä paikassa. Seuraa pysäköintitapahtumia ja kuluja raporteilla.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Yrityskäyttäjien hallinta</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Kustannuspaikat ja budjetit</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Koontilaskut ja kuluraportit</li>
+          </ul>
+          <div class="card-cta"><a href="#" data-role="biz">Yrityskirjautuminen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+        <article class="aud-card c3 reveal">
+          <span class="tag">Ylläpito &amp; henkilökunta</span>
+          <h3>Pidä kartta ajan tasalla</h3>
+          <p>Ylläpidon ja henkilökunnan työkalut alueiden ja latauspisteiden hallintaan sekä asiakaspalveluun — roolin mukaisin oikeuksin.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Lisää, muokkaa ja hyväksy alueita</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Mittarit ja maksuliikenne</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Asiakaspalvelu ja käyttäjähallinta</li>
+          </ul>
+          <div class="card-cta"><a href="#" data-role="admin">Ylläpidon kirjautuminen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DUALITY -->
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="duo reveal">
+        <span class="eyebrow">Ydin</span>
+        <h2>Pysäköinti ja lataus eivät ole kaksi sovellusta — vaan yksi.</h2>
+        <div class="duo-cols">
+          <div class="duo-col park">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/></svg></div>
+            <h4>Pysäköinti</h4>
+            <p>Kadunvarsi-, halli- ja yksityisalueet samalla kartalla. Kiekkopaikat, maksulliset vyöhykkeet ja vapaat paikat reaaliaikaisesti.</p>
+          </div>
+          <div class="duo-col charge">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></div>
+            <h4>Sähkölataus</h4>
+            <p>Latauspisteet liittimineen ja tehoineen. Näet vapaat tulpat, hinnan ja käynnistät latauksen samasta näkymästä.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="statband reveal">
+        <div class="cell"><b>2</b><small>kaupunkia: Helsinki &amp; Tampere</small></div>
+        <div class="cell accent"><b>1 240</b><small>pysäköintipaikkaa kartalla</small></div>
+        <div class="cell"><b>380+</b><small>latauspistettä</small></div>
+        <div class="cell"><b>&lt; 30 s</b><small>pysäköinti käyntiin</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="meista" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Meistä</span>
+        <h2>Sujuvampi kaupunki, vähemmän turhaa kaahausta</h2>
+        <p>TotalParking on suomalainen pysäköinti- ja latauspalvelu, jonka tavoite on yksinkertainen: löydä vapaa paikka tai latauspiste nopeasti, maksa vaivatta ja säästä aikaa sekä polttoainetta. Aloitamme Helsingistä ja Tampereelta ja laajennamme käyttäjien ja kumppaneiden mukana.</p>
+      </div>
+      <div class="ctaband reveal">
+        <h2>Valmiina kokeilemaan?</h2>
+        <p>Kuluttajat lataavat sovelluksen. Yritykset ja ylläpito kirjautuvat hallintanäkymään tästä.</p>
+        <div class="hero-cta">
+          <button class="btn btn-light" id="cta-login">Kirjaudu palveluun</button>
+          <a href="#yritykset" class="btn btn-ghost" style="color:#fff; border-color:rgba(255,255,255,.3)">Yritysratkaisut</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+        <p class="foot-blurb">Pysäköinti ja sähkölataus yhdellä kartalla. Toiminnassa Helsingissä ja Tampereella.</p>
+      </div>
+      <div>
+        <h5>Palvelu</h5>
+        <ul>
+          <li><a href="#kuluttajat">Kuluttaja-asiakkaat</a></li>
+          <li><a href="#yritykset">Yritykset</a></li>
+          <li><a href="#meista">Meistä</a></li>
+          <li><a href="#" data-role="admin">Kirjaudu</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Yritys</h5>
+        <ul>
+          <li><a href="#">Yhteystiedot</a></li>
+          <li><a href="#">Kumppaneille</a></li>
+          <li><a href="#">Ura</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Lakiasiat</h5>
+        <ul>
+          <li><a href="#">Tietosuojaseloste</a></li>
+          <li><a href="#">Käyttöehdot</a></li>
+          <li><a href="#">Evästeet</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 TotalParking Oy · Demo</span>
+      <span class="mono">Helsinki · Tampere</span>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /#site -->
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="modal-scrim" id="login-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-head">
+      <h3 id="login-title">Kirjaudu palveluun</h3>
+      <span class="demo-badge">Demotila</span>
+      <button class="modal-x" id="login-x" aria-label="Sulje">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="lead">Valitse kirjautumistapa. Kukin rooli avaa oman näkymänsä eri oikeuksilla.</p>
+
+      <div class="role-list" id="role-list">
+        <button class="role-btn r-admin" data-role="admin">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <span class="role-txt"><b>Ylläpitäjä (master)</b><small>Dashboard, käyttäjät, maksuliikenne, kartta &amp; master-työkalut</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+
+        <button class="role-btn r-biz" data-role="biz">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01"/></svg></span>
+          <span class="role-txt"><b>Yritys tai yhteisö</b><small>Pysäköintitapahtumat, laskut, yrityskäyttäjät ja kustannuspaikat</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+
+        <button class="role-btn r-staff" data-role="staff">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg></span>
+          <span class="role-txt"><b>Henkilökunta (subadmin)</b><small>Asiakaspalvelu sekä alueiden lisäys, muokkaus ja hyväksyntä rajatuin oikeuksin</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+      </div>
+
+      <form class="login-form" id="login-form" autocomplete="off">
+        <button type="button" class="login-back" id="login-back"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Vaihda rooli</button>
+        <div class="login-ctx" id="login-ctx"></div>
+        <div class="field"><label>Sähköposti</label><input type="email" id="login-email" placeholder="nimi@yritys.fi" value="demo@totalparking.fi"></div>
+        <div class="field"><label>Salasana</label><input type="password" id="login-pass" placeholder="••••••••" value="demo1234"></div>
+        <p class="login-err" id="login-err" style="display:none"></p>
+        <button type="submit" class="btn btn-primary" id="login-submit" style="width:100%; margin-top:4px">Kirjaudu sisään</button>
+        <p class="note" id="login-note">Demotila — kirjautuminen ei vaadi oikeita tunnuksia. Klikkaa "Kirjaudu sisään" niin pääset valitsemaasi näkymään esimerkkidatalla.</p>
+      </form>
+
+      <div class="note" id="role-note">Tämä on havainnollistava pilottiversio. Kartat, mittarit ja taulukot käyttävät esimerkkidataa.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP: MASTER / ADMIN ============ -->
+<section class="app" id="app-admin">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill admin">Master</span>
+    <div class="spacer"></div>
+    <span class="demo-badge" id="admin-user">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="admin">
+      <div class="grp">Yleiskatsaus</div>
+      <button class="nav-item active" data-panel="a-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</button>
+      <button class="nav-item" data-panel="a-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Kartta &amp; alueet</button>
+      <div class="grp">Hallinta</div>
+      <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
+      <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
+      <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
+      <div class="grp">Työkalut</div>
+      <button class="nav-item" data-panel="a-tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Asetukset</button>
+    </nav>
+    <main class="app-main" data-app-main="admin"></main>
+  </div>
+</section>
+
+<!-- ============ APP: BUSINESS ============ -->
+<section class="app" id="app-biz">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill biz">Yritys</span>
+    <div class="spacer"></div>
+    <span class="demo-badge">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="biz">
+      <div class="grp">Yhteenveto</div>
+      <button class="nav-item active" data-panel="b-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Yleiskatsaus</button>
+      <button class="nav-item" data-panel="b-events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/></svg>Pysäköintitapahtumat</button>
+      <button class="nav-item" data-panel="b-invoices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>Laskut<span class="badge">1</span></button>
+      <div class="grp">Hallinta</div>
+      <button class="nav-item" data-panel="b-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Yrityskäyttäjät</button>
+      <button class="nav-item" data-panel="b-cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Kustannuspaikat</button>
+    </nav>
+    <main class="app-main" data-app-main="biz"></main>
+  </div>
+</section>
+
+<!-- ============ APP: STAFF ============ -->
+<section class="app" id="app-staff">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill staff">Henkilökunta</span>
+    <div class="spacer"></div>
+    <span class="demo-badge">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="staff">
+      <div class="grp">Työjono</div>
+      <button class="nav-item active" data-panel="s-support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Asiakaspalvelu<span class="badge">4</span></button>
+      <button class="nav-item" data-panel="s-areas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/></svg>Alueet kartalla</button>
+      <button class="nav-item" data-panel="s-approve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Hyväksynnät<span class="badge">2</span></button>
+    </nav>
+    <main class="app-main" data-app-main="staff"></main>
+  </div>
+</section>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function $(s,c){return (c||document).querySelector(s);}
+  function $all(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
+  function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+
+  /* ---------- Drawer ---------- */
+  var drawer=$('#drawer'), scrim=$('#scrim'), burger=$('#burger');
+  function openDrawer(){drawer.classList.add('open'); scrim.classList.add('open'); burger.setAttribute('aria-expanded','true'); document.body.classList.add('no-scroll');}
+  function closeDrawer(){drawer.classList.remove('open'); scrim.classList.remove('open'); burger.setAttribute('aria-expanded','false'); document.body.classList.remove('no-scroll'); $all('.acc.open').forEach(function(a){a.classList.remove('open'); var h=a.querySelector('.acc-head'); if(h){h.setAttribute('aria-expanded','false');}});}
+  burger.addEventListener('click',openDrawer);
+  $('#drawer-close').addEventListener('click',closeDrawer);
+  scrim.addEventListener('click',closeDrawer);
+  $all('[data-close]').forEach(function(a){a.addEventListener('click',closeDrawer);});
+  $all('.acc-head').forEach(function(head){head.addEventListener('click',function(){var acc=head.parentElement; var open=acc.classList.toggle('open'); head.setAttribute('aria-expanded', open?'true':'false');});});
+
+  /* ---------- Login modal ---------- */
+  var modal=$('#login-modal'), roleList=$('#role-list'), loginForm=$('#login-form'), roleNote=$('#role-note'), loginCtx=$('#login-ctx');
+  var roleMeta={
+    admin:{cls:'r-admin', name:'Ylläpitäjä (master)', icbg:'var(--brand)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>'},
+    biz:{cls:'r-biz', name:'Yritys tai yhteisö', icbg:'var(--park)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>'},
+    staff:{cls:'r-staff', name:'Henkilökunta (subadmin)', icbg:'var(--charge)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'}
+  };
+  var pendingRole=null;
+  function setLoginErr(msg){var e=$('#login-err'); if(!e)return; e.textContent=msg||''; e.style.display=msg?'block':'none';}
+  function setLoginBusy(on){var b=$('#login-submit'); if(!b)return; b.disabled=on; b.textContent=on?'Kirjaudutaan…':'Kirjaudu sisään';}
+  function setLoginNote(kind){var n=$('#login-note'); if(!n)return; n.textContent = kind==='real' ? 'Master-kirjautuminen käyttää Supabase-tunnuksiasi. Vain oikeat tunnukset päästävät sisään ja antavat oikeudet pysäköintidataan.' : 'Demotila — tämä rooli ei vaadi oikeita tunnuksia, vaan avaa näkymän esimerkkidatalla.';}
+  function authErrMsg(err){var m=(err&&err.message)||''; if(/Invalid login credentials/i.test(m)) return 'Väärä sähköposti tai salasana.'; if(/Email not confirmed/i.test(m)) return 'Sähköpostia ei ole vahvistettu Supabasessa.'; return 'Kirjautuminen epäonnistui: '+(m||'tuntematon virhe');}
+  function openLogin(){modal.classList.add('open'); document.body.classList.add('no-scroll'); resetLogin(); closeDrawer();}
+  function closeLogin(){modal.classList.remove('open'); document.body.classList.remove('no-scroll');}
+  function resetLogin(){roleList.classList.remove('hidden'); loginForm.classList.remove('active'); roleNote.style.display='block'; pendingRole=null;}
+  function chooseRole(role){
+    pendingRole=role; var m=roleMeta[role];
+    roleList.classList.add('hidden'); roleNote.style.display='none'; loginForm.classList.add('active');
+    loginCtx.style.background = role==='admin'?'var(--brand-50)':role==='biz'?'var(--park-50)':'var(--charge-50)';
+    loginCtx.innerHTML='<span class="role-ic" style="background:'+m.icbg+'">'+m.ic+'</span><div><b style="font-family:var(--font-display)">'+m.name+'</b><div style="font-size:12.5px;color:var(--muted)">Kirjaudu valitsemaasi näkymään</div></div>';
+    var emailInput=$('#login-email'), passInput=$('#login-pass');
+    if(role==='admin'){ emailInput.value=''; passInput.value=''; emailInput.placeholder='sinä@totalparking.fi'; setLoginNote('real'); }
+    else { emailInput.value = role==='biz'?'pekka.virtanen@logiteam.fi':'asiakaspalvelu@totalparking.fi'; passInput.value='demo1234'; setLoginNote('demo'); }
+    setLoginErr(''); setLoginBusy(false);
+  }
+  $('#open-login').addEventListener('click',openLogin);
+  $('#hero-login').addEventListener('click',openLogin);
+  $('#cta-login').addEventListener('click',openLogin);
+  $('#drawer-login').addEventListener('click',openLogin);
+  $('#login-x').addEventListener('click',closeLogin);
+  modal.addEventListener('click',function(e){if(e.target===modal)closeLogin();});
+  $('#login-back').addEventListener('click',resetLogin);
+  $all('.role-btn').forEach(function(b){b.addEventListener('click',function(){chooseRole(b.getAttribute('data-role'));});});
+  // links that jump straight to a role login
+  $all('[data-role]').forEach(function(a){
+    if(a.classList.contains('role-btn'))return;
+    a.addEventListener('click',function(e){e.preventDefault(); openLogin(); chooseRole(a.getAttribute('data-role'));});
+  });
+  loginForm.addEventListener('submit',function(e){
+    e.preventDefault();
+    var r=pendingRole;
+    if(r!=='admin'){ closeLogin(); enterApp(r); return; }   // biz/staff: demo
+    // Master: real Supabase authentication
+    if(!sb){ setLoginErr('Kirjautumispalvelua ei voitu ladata. Tarkista verkkoyhteys.'); return; }
+    var email=$('#login-email').value.trim(), pass=$('#login-pass').value;
+    if(!email||!pass){ setLoginErr('Anna sähköposti ja salasana.'); return; }
+    setLoginErr(''); setLoginBusy(true);
+    sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
+      setLoginBusy(false);
+      if(res.error){ setLoginErr(authErrMsg(res.error)); return; }
+      var u=res.data&&res.data.user, ab=$('#admin-user');
+      if(ab&&u){ ab.textContent=u.email; ab.classList.remove('demo-badge'); ab.classList.add('user-badge'); }
+      closeLogin(); enterApp('admin');
+    }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer();}});
+
+  /* ---------- App enter / exit ---------- */
+  var appIds={admin:'#app-admin', biz:'#app-biz', staff:'#app-staff'};
+  function enterApp(role){
+    $('#site').style.display='none';
+    $all('.app').forEach(function(a){a.classList.remove('active');});
+    $(appIds[role]).classList.add('active');
+    document.body.classList.add('app-open'); document.body.classList.remove('side-open','no-scroll');
+    window.scrollTo(0,0);
+    if(role==='admin') renderAdmin();
+    if(role==='biz') renderBiz();
+    if(role==='staff') renderStaff();
+  }
+  function exitApp(){
+    if(sb){ try{ sb.auth.signOut(); }catch(e){} }
+    $all('.app').forEach(function(a){a.classList.remove('active');});
+    document.body.classList.remove('app-open','side-open');
+    $('#site').style.display='';
+    window.scrollTo(0,0);
+  }
+  $all('[data-exit]').forEach(function(b){b.addEventListener('click',exitApp);});
+  $all('[data-side]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.toggle('side-open');});});
+
+  /* ---------- In-app navigation ---------- */
+  $all('.app-side .nav-item').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var nav=btn.closest('.app-side'); var app=nav.getAttribute('data-app');
+      $all('.nav-item',nav).forEach(function(n){n.classList.remove('active');});
+      btn.classList.add('active');
+      var panelId=btn.getAttribute('data-panel');
+      var main=$('[data-app-main="'+app+'"]');
+      $all('.panel',main).forEach(function(p){p.classList.toggle('active', p.getAttribute('data-id')===panelId);});
+      document.body.classList.remove('side-open');
+      main.scrollTop=0;
+      if(panelId==='a-map') initAdminMap();
+      if(panelId==='s-areas') initStaffMap();
+    });
+  });
+
+  /* ---------- Maps ---------- */
+  var cartoStyle={
+    version:8,
+    sources:{carto:{type:'raster',tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap · © CARTO'}},
+    layers:[{id:'carto',type:'raster',source:'carto'}]
+  };
+  var HKI=[24.9410,60.1699];
+  var POINTS=[
+    {n:'Kamppi P-halli',t:'park',c:[24.9322,60.1690],free:42,info:'Halli · 2,40 €/h'},
+    {n:'Rautatientori',t:'charge',c:[24.9436,60.1712],free:3,info:'4 × Type 2 · 22 kW'},
+    {n:'Kluuvi',t:'park',c:[24.9462,60.1695],free:18,info:'Kadunvarsi · maksullinen'},
+    {n:'Kruununhaka',t:'park',c:[24.9556,60.1726],free:9,info:'Kiekko 2 h'},
+    {n:'Kauppatori',t:'charge',c:[24.9525,60.1670],free:2,info:'2 × CCS · 50 kW'},
+    {n:'Punavuori',t:'park',c:[24.9381,60.1612],free:27,info:'Kadunvarsi · vyöhyke 2'},
+    {n:'Hietalahti',t:'charge',c:[24.9302,60.1631],free:5,info:'6 × Type 2 · 11 kW'},
+    {n:'Töölönlahti',t:'park',c:[24.9341,60.1762],free:64,info:'Halli · 1,90 €/h'},
+    {n:'Kallio',t:'charge',c:[24.9512,60.1841],free:1,info:'2 × CCS · 75 kW'},
+    {n:'Hakaniemi',t:'park',c:[24.9492,60.1791],free:21,info:'Halli · 2,20 €/h'},
+    {n:'Eira',t:'park',c:[24.9452,60.1571],free:6,info:'Kiekko 4 h'},
+    {n:'Ullanlinna',t:'charge',c:[24.9522,60.1592],free:4,info:'4 × Type 2 · 22 kW'}
+  ];
+  function markerEl(p){
+    var w=el('div','mk');
+    if(p.t==='park'){var m=el('div','mk-park','<b>P</b>'); w.appendChild(m);}
+    else{var c=el('div','mk-charge'+(reduce?'':' pulse'),'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>'); w.appendChild(c);}
+    return w;
+  }
+  function addPoints(map){
+    POINTS.forEach(function(p){
+      var pop=new maplibregl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
+      new maplibregl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
+    });
+  }
+  function newMap(id,zoom,interactive){
+    if(typeof maplibregl==='undefined') return null;
+    var map=new maplibregl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
+    map.addControl(new maplibregl.AttributionControl({compact:true}));
+    if(interactive!==false) map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    map.on('load',function(){addPoints(map);});
+    return map;
+  }
+  var heroMap, adminMap, staffMap;
+  function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
+  function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
+
+  /* ---------- Admin map: real TotalParking data on the app's Digitransit basemap ----------
+     Read-only overview for the master view. Uses the same client-side keys the app
+     already ships, the same omakartta_style.json basemap, the same parking-area
+     colours, garage icon and charging icon. ------------------------------------------------ */
+  var TP_DIGITRANSIT_KEY='a002614565b24559b3feddfca8d01918';
+  var TP_SUPABASE_URL='https://glphxelazjodpiekmoew.supabase.co';
+  var TP_SUPABASE_KEY='sb_publishable_MEZLuJOl-QsZxgLZI3nnTA_e-xL5VQW';
+  var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
+  var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(TP_SUPABASE_URL,TP_SUPABASE_KEY):null;
+  function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
+  function tpLegacySource(areaType,parkingType,maxHours){
+    if(parkingType==='Pysäköintihalli') return 'hel_halli';
+    if(areaType==='Maksullinen pysäköinti'){var h=parseInt(maxHours,10); if(h===1)return 'hel_kertamaksu_1h'; if(h===2)return 'hel_kertamaksu_2h'; if(h===4)return 'hel_kertamaksu_4h'; return 'hel_maksullinen_ei_tunnusta';}
+    if(areaType==='Kiekoton ilmaispysäköinti') return 'hel_ilmainen_lyhyt';
+    return 'community';
+  }
+  function tpHalliIcon(){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect x="2" y="2" width="60" height="60" rx="10" fill="#1565C0" stroke="white" stroke-width="2.5"/><path d="M12 24 L32 10 L52 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="32" y="52" font-family="Arial" font-weight="bold" font-size="32" fill="white" text-anchor="middle">P</text></svg>');}
+  function tpChargingIcon(bg){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect x="0" y="0" width="128" height="128" rx="26" fill="#1a1a1a"/><rect x="10" y="10" width="108" height="108" rx="17" fill="'+bg+'"/><rect x="31" y="30" width="35" height="68" rx="5" fill="#1a1a1a"/><path d="M90 52 C 90 74 84 92 66 92" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="82" y="40" width="16" height="13" rx="3" fill="#1a1a1a"/><rect x="86" y="33" width="3.6" height="8" rx="1.8" fill="#1a1a1a"/><rect x="92.4" y="33" width="3.6" height="8" rx="1.8" fill="#1a1a1a"/><rect x="37" y="36" width="23" height="15" rx="2.5" fill="'+bg+'"/><path d="M53 55 L40 80 L49 80 L45 99 L62 71 L52 71 Z" fill="'+bg+'"/></svg>');}
+  function tpAddImage(map,name,src,cb){ if(map.hasImage(name)){cb&&cb();return;} var img=new Image(); img.onload=function(){ if(!map.hasImage(name)) map.addImage(name,img,{pixelRatio:2}); cb&&cb(); }; img.onerror=function(){cb&&cb();}; img.src=src; }
+  function tpInBox(c){ return c && c[0]>23.4 && c[0]<25.4 && c[1]>59.9 && c[1]<61.7; }  /* Helsinki + Tampere */
+  async function tpFetchAllRows(table,select,headers){
+    var out=[], PAGE=1000;
+    for(var offset=0;;offset+=PAGE){
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+select+'&order=id.asc&offset='+offset+'&limit='+PAGE,{headers:headers});
+      if(!res.ok) throw new Error(table+' HTTP '+res.status);
+      var batch=await res.json(); out=out.concat(batch);
+      if(batch.length<PAGE||offset>40000) break;
+    }
+    return out;
+  }
+  async function tpLoadAreas(map){
+    try{
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+      var SEL='id,area_type,parking_type,max_hours,polygon_coordinates';
+      var both=await Promise.all([
+        tpFetchAllRows('parking_master',SEL,headers),
+        tpFetchAllRows('parking_master_ilmaiset',SEL,headers).catch(function(){return [];})
+      ]);
+      var rows=both[0].concat(both[1]);
+      var features=rows.filter(function(r){return r.polygon_coordinates&&(r.polygon_coordinates.type==='Polygon'||r.polygon_coordinates.type==='MultiPolygon')&&r.parking_type!=='Pysäköintihalli';})
+        .map(function(r){return {type:'Feature',properties:{source:tpLegacySource(r.area_type,r.parking_type,r.max_hours)},geometry:r.polygon_coordinates};});
+      var geojson={type:'FeatureCollection',features:features};
+      if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
+      else{
+        map.addSource('master-polygons',{type:'geojson',data:geojson});
+        map.addLayer({id:'master-poly-fill',type:'fill',source:'master-polygons',minzoom:11,paint:{'fill-opacity':0.30,'fill-color':['match',['get','source'],'community','#7F1F89','hel_ilmainen_pitka','#7F1F89','hel_ilmainen_lyhyt','#7F1F89','hel_sallittu_kiellon_ulkopuolella','#7F1F89','hel_kertamaksu_1h','#4A90D9','hel_kertamaksu_2h','#4A90D9','hel_kertamaksu_4h','#4A90D9','hel_maksullinen_ei_tunnusta','#4A90D9','hel_kertamaksu_1h_ei_tunnusta','#4A90D9','#4A90D9']}});
+        map.addLayer({id:'master-poly-line',type:'line',source:'master-polygons',minzoom:11,paint:{'line-width':1.5,'line-opacity':0.30,'line-color':['match',['get','source'],'community','#611868','hel_ilmainen_pitka','#611868','hel_ilmainen_lyhyt','#611868','hel_sallittu_kiellon_ulkopuolella','#611868','#2B6CB0']}});
+      }
+      ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
+      console.log('Admin-kartta: alueita',features.length);
+    }catch(e){console.error('Alueiden lataus epäonnistui',e);}
+  }
+  async function tpLoadHallit(map){
+    try{
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/parking_master?select=id,polygon_coordinates,info_additional,zone_number&parking_type=eq.Pysäköintihalli',{headers:headers});
+      if(!res.ok) return;
+      var rows=await res.json();
+      var feats=rows.filter(function(r){return r.polygon_coordinates&&r.polygon_coordinates.type==='Point';})
+        .map(function(r){return {type:'Feature',properties:{id:r.id,name:r.info_additional||'Pysäköintihalli'},geometry:r.polygon_coordinates};});
+      var gj={type:'FeatureCollection',features:feats};
+      tpAddImage(map,'halli-icon',tpHalliIcon(),function(){
+        if(map.getSource('halli-points')){ map.getSource('halli-points').setData(gj); }
+        else{
+          map.addSource('halli-points',{type:'geojson',data:gj});
+          map.addLayer({id:'halli-icons',type:'symbol',source:'halli-points',minzoom:11,layout:{'icon-image':'halli-icon','icon-size':0.50,'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-anchor':'center'}});
+        }
+        if(map.getLayer('halli-icons')) map.moveLayer('halli-icons');
+      });
+      console.log('Admin-kartta: halleja',feats.length);
+    }catch(e){console.error('Hallien lataus epäonnistui',e);}
+  }
+  async function tpLoadCharging(map){
+    try{
+      var res=await fetch(TP_AFIR_BASE+'/locations?limit=ALL'); if(!res.ok) return;
+      var data=await res.json(); var locs=Array.isArray(data.features)?data.features:[];
+      var feats=locs.filter(function(f){return f&&f.geometry&&f.geometry.coordinates&&tpInBox(f.geometry.coordinates);})
+        .map(function(f){var p=f.properties||{};return {type:'Feature',geometry:{type:'Point',coordinates:f.geometry.coordinates},properties:{id:p.id||'',name:p.name||'Latausasema',available:true}};});
+      var gj={type:'FeatureCollection',features:feats};
+      tpAddImage(map,'charging-green',tpChargingIcon('#4caf50'),function(){
+        if(map.getSource('charging-points')){ map.getSource('charging-points').setData(gj); }
+        else{
+          map.addSource('charging-points',{type:'geojson',data:gj});
+          map.addLayer({id:'charging-icons',type:'symbol',source:'charging-points',minzoom:11,layout:{'icon-image':'charging-green','icon-size':0.25,'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-anchor':'center'}});
+        }
+        if(map.getLayer('charging-icons')) map.moveLayer('charging-icons');
+      });
+      console.log('Admin-kartta: latauspisteitä',feats.length);
+    }catch(e){console.error('Latauspisteiden lataus epäonnistui',e);}
+  }
+  function initAdminMap(){
+    if(adminMap)return;
+    if(typeof maplibregl==='undefined'){adminMap=null;return;}
+    adminMap=new maplibregl.Map({container:'admin-map',style:'omakartta_style.json',center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
+    try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
+    adminMap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    adminMap.on('load',function(){ tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('error',function(e){ if(e&&e.error) console.warn('Admin-kartta:',e.error.message); });
+    setTimeout(function(){if(adminMap)adminMap.resize();},150);
+  }
+
+  /* ---------- Live counter ---------- */
+  var liveEl=$('#live-spots');
+  if(liveEl && !reduce){
+    var base=248;
+    setInterval(function(){base += Math.round((Math.random()-0.5)*8); if(base<210)base=210; if(base>290)base=290; liveEl.textContent=base;},2600);
+  }
+
+  /* ---------- Reveal on scroll ---------- */
+  if('IntersectionObserver' in window && !reduce){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target);}});},{threshold:.12});
+    $all('.reveal').forEach(function(r){io.observe(r);});
+  } else { $all('.reveal').forEach(function(r){r.classList.add('in');}); }
+
+  /* ---------- Charts (hand-built SVG) ---------- */
+  function areaChart(data,col){
+    var w=520,h=150,pad=6,n=data.length;
+    var max=Math.max.apply(null,data), min=Math.min.apply(null,data);
+    var rng=(max-min)||1;
+    function x(i){return pad+i*(w-2*pad)/(n-1);}
+    function y(v){return h-pad-((v-min)/rng)*(h-2*pad-10);}
+    var line='',area='M'+x(0).toFixed(1)+' '+(h-pad);
+    data.forEach(function(v,i){var X=x(i).toFixed(1),Y=y(v).toFixed(1); line+=(i?'L':'M')+X+' '+Y+' '; area+=' L'+X+' '+Y;});
+    area+=' L'+x(n-1).toFixed(1)+' '+(h-pad)+' Z';
+    var dots=data.map(function(v,i){return '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3.4" fill="#fff" stroke="'+col+'" stroke-width="2.2"/>';}).join('');
+    return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity=".22"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs><path d="'+area+'" fill="url(#g1)"/><path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'</svg>';
+  }
+  function barChart(data,col){
+    var w=520,h=150,pad=6,n=data.length, gap=14;
+    var max=Math.max.apply(null,data);
+    var bw=(w-2*pad-gap*(n-1))/n;
+    var bars=data.map(function(v,i){var bh=(v/max)*(h-2*pad); var X=pad+i*(bw+gap); var Y=h-pad-bh; return '<rect x="'+X.toFixed(1)+'" y="'+Y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="5" fill="'+col+'" opacity="'+(i===n-1?1:.4)+'"/>';}).join('');
+    return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'">'+bars+'</svg>';
+  }
+
+  /* ---------- Mock data ---------- */
+  var users=[
+    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2 min'],
+    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','14 min'],
+    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Vahvistus kesken','1 h'],
+    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','3 h'],
+    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','5 h'],
+    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Estetty','2 pv']
+  ];
+  var tx=[
+    ['#TP-90412','12:48','Aino Korhonen','4,80 €','Apple Pay','ok','Maksettu'],
+    ['#TP-90411','12:31','Mikael Aho','12,40 €','Kortti','ok','Maksettu'],
+    ['#TP-90408','12:02','Logiteam Oy','2,20 €','Lasku','warn','Käsittelyssä'],
+    ['#TP-90405','11:47','Sanna Mäkinen','6,00 €','Apple Pay','ok','Maksettu'],
+    ['#TP-90401','11:20','Joonas Laine','3,10 €','Kortti','err','Hyvitetty'],
+    ['#TP-90399','10:58','Tampereen Sähkö','18,90 €','Lasku','ok','Maksettu']
+  ];
+  var areas=[
+    ['Kamppi P-halli','park','Helsinki','ok','Aktiivinen','620'],
+    ['Rautatientori lataus','charge','Helsinki','ok','Aktiivinen','4'],
+    ['Hervanta keskus','park','Tampere','warn','Odottaa hyväksyntää','140'],
+    ['Eira kiekkoalue','park','Helsinki','ok','Aktiivinen','55'],
+    ['Kallio CCS','charge','Helsinki','warn','Odottaa hyväksyntää','2'],
+    ['Pyynikki P','park','Tampere','mute','Luonnos','80']
+  ];
+  function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
+  function typePill(t){return t==='park'?pill('park','Pysäköinti'):pill('charge','Lataus');}
+  function initials(name){var p=name.trim().split(' '); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+
+  /* ---------- Render: ADMIN ---------- */
+  var adminBuilt=false;
+  function renderAdmin(){
+    var main=$('[data-app-main="admin"]');
+    if(adminBuilt){return;}
+    adminBuilt=true;
+    var html='';
+    /* overview */
+    html+='<div class="panel active" data-id="a-overview">';
+    html+=panelHead('Dashboard','Yrityksen keskeiset mittarit · viimeiset 24 h');
+    html+='<div class="kpi-grid">'
+      +kpi('b','people','+8,2 %','up','18 420','Aktiiviset käyttäjät')
+      +kpi('p','park','+12 %','up','3 184','Pysäköintitapahtumat tänään')
+      +kpi('b','euro','+5,4 %','up','42 600 €','Toistuva liikevaihto (MRR)')
+      +kpi('c','bolt','+19 %','up','612','Latausistunnot tänään')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Liikevaihto · 6 kk</h3><span class="link">k€</span></div><div class="chart-wrap">'+barChart([28,31,33,36,39,43],'#0E5A4E')+'</div><div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Viimeisin toiminta</h3></div><div class="feed">'
+      +feed('var(--charge)','Latausistunto käynnistyi','Kallio CCS · Tampereen Sähkö','3 min')
+      +feed('var(--park)','Pysäköinti aloitettu','Kamppi P-halli · Aino K.','6 min')
+      +feed('var(--amber)','Uusi alue odottaa hyväksyntää','Hervanta keskus · Tampere','18 min')
+      +feed('var(--brand)','Uusi yrityskäyttäjä','Logiteam Oy','41 min')
+      +feed('var(--charge)','Maksu onnistui','18,90 € · Lasku','58 min')
+      +'</div></div>';
+    html+='</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Aika</th><th>Käyttäjä</th><th>Summa</th><th>Tapa</th><th>Tila</th></tr></thead><tbody>';
+    tx.slice(0,4).forEach(function(r){html+='<tr><td class="mono strong">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="strong">'+r[3]+'</td><td>'+r[4]+'</td><td>'+pill(r[5],r[6])+'</td></tr>';});
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* map */
+    html+='<div class="panel" data-id="a-map">';
+    html+=panelHead('Kartta &amp; alueet','Hallitse pysäköintialueita ja latauspisteitä master-työkaluilla');
+    html+='<div class="map-panel"><div class="map-el" id="admin-map"></div>'
+      +'<div class="map-tools">'
+      +tool('primary','plus','Lisää alue')
+      +tool('','edit','Muokkaa')
+      +tool('','check','Hyväksy')
+      +tool('danger','trash','Poista')
+      +tool('','layers','Tasot')
+      +'</div>'
+      +'<div class="map-areas"><h4>Alueet ('+areas.length+')</h4><div class="list">'+areas.map(areaRow).join('')+'</div></div>'
+      +'</div>';
+    html+='</div>';
+
+    /* users */
+    html+='<div class="panel" data-id="a-users">';
+    html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Käyttäjä</th><th>Sähköposti</th><th>Tyyppi</th><th>Tila</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
+    users.forEach(function(u){
+      html+='<tr><td><div class="cell-user"><span class="avatar">'+initials(u[0])+'</span><span class="strong">'+u[0]+'</span></div></td><td class="mono">'+u[1]+'</td><td>'+u[2]+'</td><td>'+pill(u[3],u[4])+'</td><td class="mono">'+u[5]+'</td><td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* payments */
+    html+='<div class="panel" data-id="a-pay">';
+    html+=panelHead('Maksuliikenne','Pysäköinnin ja latauksen maksutapahtumat','<button class="btn btn-ghost btn-sm">Vie CSV</button>');
+    html+='<div class="kpi-grid">'
+      +kpi('b','euro','','','9 840 €','Maksut tänään')
+      +kpi('c','card','','','1 284','Tapahtumia')
+      +kpi('p','euro','','','-310 €','Hyvitykset')
+      +kpi('b','bolt','','','3','Avoimet selvitykset')
+      +'</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Aika</th><th>Käyttäjä</th><th>Summa</th><th>Tapa</th><th>Tila</th></tr></thead><tbody>';
+    tx.forEach(function(r){html+='<tr><td class="mono strong">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="strong">'+r[3]+'</td><td>'+r[4]+'</td><td>'+pill(r[5],r[6])+'</td></tr>';});
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* business */
+    html+='<div class="panel" data-id="a-biz">';
+    html+=panelHead('Yritykset','Yritys- ja yhteisötilit');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Yritys</th><th>Käyttäjiä</th><th>Tapahtumat / kk</th><th>Laskutus / kk</th><th>Tila</th></tr></thead><tbody>'
+      +'<tr><td class="strong">Logiteam Oy</td><td class="mono">24</td><td class="mono">412</td><td class="strong">1 980 €</td><td>'+pill('ok','Aktiivinen')+'</td></tr>'
+      +'<tr><td class="strong">Tampereen Sähkö</td><td class="mono">11</td><td class="mono">208</td><td class="strong">2 640 €</td><td>'+pill('ok','Aktiivinen')+'</td></tr>'
+      +'<tr><td class="strong">Rakennus Niemi</td><td class="mono">7</td><td class="mono">96</td><td class="strong">540 €</td><td>'+pill('warn','Laskutus auki')+'</td></tr>'
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    /* tools */
+    html+='<div class="panel" data-id="a-tools">';
+    html+=panelHead('Asetukset','Master-tason työkalut ja konfiguraatio');
+    html+='<div class="cc-grid">'
+      +settingCard('Hinnoittelu &amp; vyöhykkeet','Pysäköintivyöhykkeiden hinnat ja aikarajat','euro')
+      +settingCard('Latausoperaattorit','Liittimet, tehot ja kumppaniverkostot','bolt')
+      +settingCard('Roolit &amp; oikeudet','Subadminien käyttöoikeudet ja rajaukset','people')
+      +settingCard('Maksujen asetukset','Stripe, Apple Pay ja laskutusjaksot','card')
+      +settingCard('Karttatasot','Näkyvyyssäännöt ja törmäyslogiikka','layers')
+      +settingCard('Integraatiot','Supabase, Digitransit ja rajapinnat','plus')
+      +'</div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Render: BUSINESS ---------- */
+  var bizBuilt=false;
+  function renderBiz(){
+    var main=$('[data-app-main="biz"]'); if(bizBuilt)return; bizBuilt=true;
+    var html='';
+    html+='<div class="panel active" data-id="b-overview">';
+    html+=panelHead('Yleiskatsaus','Logiteam Oy · kesäkuu 2026');
+    html+='<div class="biz-hero"><div class="bh-l"><b>Logiteam Oy</b><small>Y-tunnus 2841726-9 · 24 yrityskäyttäjää</small></div><div class="bh-stats"><div class="s"><b>412</b><small>tapahtumaa / kk</small></div><div class="s"><b>1 980 €</b><small>kuluva jakso</small></div><div class="s"><b>3</b><small>kustannuspaikkaa</small></div></div></div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Pysäköintikulut · 6 kk</h3><span class="link">€</span></div>'+areaChart([1420,1610,1380,1740,1880,1980],'#FF6B3D')+'<div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Jakauma</h3></div><div class="feed">'
+      +feed('var(--park)','Pysäköinti','312 tapahtumaa · 1 410 €','75 %')
+      +feed('var(--charge)','Lataus','78 istuntoa · 470 €','24 %')
+      +feed('var(--amber)','Muut maksut','22 tapahtumaa · 100 €','1 %')
+      +'</div></div>';
+    html+='</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Käyttäjä</th><th>Kustannuspaikka</th><th>Summa</th><th>Tyyppi</th></tr></thead><tbody>'+bizEventRows(4)+'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-events">';
+    html+=panelHead('Pysäköintitapahtumat','Kaikki yrityksen tapahtumat','<button class="btn btn-ghost btn-sm">Vie CSV</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Aika</th><th>Käyttäjä</th><th>Kohde</th><th>Kustannuspaikka</th><th>Summa</th><th>Tyyppi</th></tr></thead><tbody>'+bizEventRows(8,true)+'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-invoices">';
+    html+=panelHead('Laskut','Koontilaskut ja maksutilanne');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Laskunro</th><th>Jakso</th><th>Eräpäivä</th><th>Summa</th><th>Tila</th><th></th></tr></thead><tbody>'
+      +invoiceRow('TP-2026-0612','05/2026','15.06.2026','1 840 €','warn','Avoin')
+      +invoiceRow('TP-2026-0511','04/2026','15.05.2026','1 610 €','ok','Maksettu')
+      +invoiceRow('TP-2026-0410','03/2026','15.04.2026','1 380 €','ok','Maksettu')
+      +invoiceRow('TP-2026-0309','02/2026','15.03.2026','1 520 €','ok','Maksettu')
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-users">';
+    html+=panelHead('Yrityskäyttäjät','Hallinnoi käyttäjiä ja heidän kustannuspaikkojaan','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Käyttäjä</th><th>Rooli</th><th>Kustannuspaikka</th><th>Tapahtumat / kk</th><th></th></tr></thead><tbody>'
+      +bizUser('Pekka Virtanen','Pääkäyttäjä','KP-100 Hallinto','38')
+      +bizUser('Liisa Saari','Käyttäjä','KP-200 Myynti','64')
+      +bizUser('Antti Koskinen','Käyttäjä','KP-300 Logistiikka','120')
+      +bizUser('Maria Heikkilä','Käyttäjä','KP-200 Myynti','41')
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-cc">';
+    html+=panelHead('Kustannuspaikat','Budjetit ja kulujen seuranta','<button class="btn btn-primary btn-sm">+ Uusi kustannuspaikka</button>');
+    html+='<div class="cc-grid">'
+      +ccCard('KP-100','Hallinto',430,600,'')
+      +ccCard('KP-200','Myynti',760,900,'warn')
+      +ccCard('KP-300','Logistiikka',790,800,'err')
+      +'</div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Render: STAFF ---------- */
+  var staffBuilt=false;
+  function renderStaff(){
+    var main=$('[data-app-main="staff"]'); if(staffBuilt)return; staffBuilt=true;
+    var html='';
+    html+='<div class="panel active" data-id="s-support">';
+    html+=panelHead('Asiakaspalvelu','Avoimet tukipyynnöt · rajatut master-oikeudet');
+    html+=ticket('#AP-3391','Pysäköinti ei päättynyt sovelluksessa','Aino Korhonen · Kamppi P-halli','err','Kiireellinen','7 min');
+    html+=ticket('#AP-3388','Latauspiste merkitty varatuksi virheellisesti','Mikael Aho · Kallio CCS','warn','Normaali','24 min');
+    html+=ticket('#AP-3385','Kuitti ei tullut sähköpostiin','Sanna Mäkinen','mute','Matala','1 h');
+    html+=ticket('#AP-3380','Yrityskäyttäjän lisäys ei onnistu','Logiteam Oy · Pekka V.','warn','Normaali','2 h');
+    html+='</div>';
+
+    html+='<div class="panel" data-id="s-areas">';
+    html+=panelHead('Alueet kartalla','Lisää ja muokkaa alueita oman toimenkuvasi mukaan');
+    html+='<div class="map-panel"><div class="map-el" id="staff-map"></div>'
+      +'<div class="map-tools">'
+      +tool('primary','plus','Lisää alue')
+      +tool('','edit','Muokkaa')
+      +tool('','flag','Merkitse tarkistettavaksi')
+      +'</div>'
+      +'<div class="map-areas"><h4>Omat alueet ('+areas.length+')</h4><div class="list">'+areas.map(areaRow).join('')+'</div></div>'
+      +'</div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="s-approve">';
+    html+=panelHead('Hyväksynnät','Odottaa tarkistusta ja hyväksyntää');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Alue</th><th>Tyyppi</th><th>Kaupunki</th><th>Ehdottaja</th><th>Tila</th><th>Toiminnot</th></tr></thead><tbody>'
+      +'<tr><td class="strong">Hervanta keskus</td><td>'+typePill('park')+'</td><td>Tampere</td><td>kenttätyö@tre</td><td>'+pill('warn','Odottaa')+'</td><td><span class="row-act"><button class="btn btn-primary btn-sm">Hyväksy</button>'+iconBtn('trash')+'</span></td></tr>'
+      +'<tr><td class="strong">Kallio CCS</td><td>'+typePill('charge')+'</td><td>Helsinki</td><td>operaattori</td><td>'+pill('warn','Odottaa')+'</td><td><span class="row-act"><button class="btn btn-primary btn-sm">Hyväksy</button>'+iconBtn('trash')+'</span></td></tr>'
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Builders ---------- */
+  var ICONS={
+    people:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    park:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/>',
+    euro:'<path d="M14 5a7 7 0 1 0 0 14M5 9h7M5 13h6"/>',
+    bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+    card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    edit:'<path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
+    trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    layers:'<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
+    flag:'<path d="M4 21V4m0 0 12 0-2 4 2 4H4"/>'
+  };
+  function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
+  function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
+  function kpi(c,icn,delta,dir,val,lab){return '<div class="kpi"><div class="k-top"><span class="k-ic '+c+'">'+ic(icn)+'</span>'+(delta?'<span class="delta '+dir+'">'+delta+'</span>':'')+'</div><div class="k-val">'+val+'</div><div class="k-lab">'+lab+'</div></div>';}
+  function feed(col,t,s,time){return '<div class="feed-row"><span class="feed-dot" style="background:'+col+'"></span><div><div class="ft">'+t+'</div><div class="fs">'+s+'</div></div><time>'+time+'</time></div>';}
+  function tool(cls,icn,label){return '<button class="tool-btn '+cls+'">'+ic(icn)+label+'</button>';}
+  function iconBtn(icn){return '<button class="icon-btn">'+ic(icn)+'</button>';}
+  function areaRow(a){
+    var col=a[1]==='park'?'var(--park)':'var(--charge)';
+    var st=a[3]==='ok'?pill('ok','Aktiivinen'):a[3]==='warn'?pill('warn','Odottaa'):pill('mute','Luonnos');
+    return '<div class="area-row"><div class="ar-t"><span class="dotsq" style="background:'+col+'"></span>'+a[0]+'</div><div class="ar-s">'+st+'<span>'+a[2]+'</span><span class="mono">'+a[5]+' pkt</span></div></div>';
+  }
+  function settingCard(t,s,icn){return '<div class="cc"><div class="cc-top"><span class="k-ic b" style="width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--brand-50);color:var(--brand)">'+ic(icn)+'</span></div><h4 style="margin-top:12px">'+t+'</h4><p style="font-size:13.5px;color:var(--muted)">'+s+'</p></div>';}
+  function bizEventRows(n,withTime){
+    var rows=[
+      ['10:42','Antti Koskinen','Hakaniemi','KP-300 Logistiikka','2,20 €','park'],
+      ['10:18','Liisa Saari','Kallio CCS','KP-200 Myynti','9,40 €','charge'],
+      ['09:55','Pekka Virtanen','Kamppi P-halli','KP-100 Hallinto','4,80 €','park'],
+      ['09:30','Maria Heikkilä','Kluuvi','KP-200 Myynti','3,10 €','park'],
+      ['09:02','Antti Koskinen','Töölönlahti','KP-300 Logistiikka','5,70 €','park'],
+      ['08:48','Liisa Saari','Ullanlinna lataus','KP-200 Myynti','7,20 €','charge'],
+      ['08:21','Pekka Virtanen','Punavuori','KP-100 Hallinto','2,90 €','park'],
+      ['08:05','Maria Heikkilä','Hietalahti lataus','KP-200 Myynti','6,10 €','charge']
+    ];
+    return rows.slice(0,n).map(function(r){
+      if(withTime) return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="strong">'+r[4]+'</td><td>'+typePill(r[5])+'</td></tr>';
+      return '<tr><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="strong">'+r[4]+'</td><td>'+typePill(r[5])+'</td></tr>';
+    }).join('');
+  }
+  function invoiceRow(no,per,due,sum,st,stl){return '<tr><td class="mono strong">'+no+'</td><td>'+per+'</td><td class="mono">'+due+'</td><td class="strong">'+sum+'</td><td>'+pill(st,stl)+'</td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>';}
+  function bizUser(name,role,cc,n){return '<tr><td><div class="cell-user"><span class="avatar">'+initials(name)+'</span><span class="strong">'+name+'</span></div></td><td>'+role+'</td><td class="mono">'+cc+'</td><td class="mono">'+n+'</td><td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td></tr>';}
+  function ccCard(code,name,spent,budget,warn){
+    var pct=Math.min(100,Math.round(spent/budget*100));
+    return '<div class="cc"><div class="cc-top"><span class="cc-code">'+code+'</span><span class="mono" style="font-size:12px;color:var(--muted)">'+pct+' %</span></div><h4>'+name+'</h4><div class="cc-bar"><i class="'+warn+'" style="width:'+pct+'%"></i></div><div class="cc-meta"><span>Käytetty <b>'+spent+' €</b></span><span>Budjetti <b>'+budget+' €</b></span></div></div>';
+  }
+  function ticket(id,subj,who,pcls,prio,time){return '<div class="ticket"><div class="t-main"><span class="t-id">'+id+'</span><h4>'+subj+'</h4><p>'+who+'</p></div><div class="t-side">'+pill(pcls,prio)+'<time>'+time+'</time><button class="btn btn-ghost btn-sm">Avaa</button></div></div>';}
+
+  /* ---------- init ---------- */
+  initHeroMap();
+})();
+</script>
+</body>
+</html>
