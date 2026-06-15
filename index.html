@@ -313,6 +313,11 @@ body.app-open{overflow:auto}
 .app-top .demo-badge{font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
 .app-top .user-badge{font-family:var(--font-mono); font-size:11.5px; font-weight:600; color:var(--brand); background:var(--brand-50); border:1px solid var(--brand-100); padding:5px 11px; border-radius:var(--r-pill); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .login-err{color:#C62828; font-size:13px; font-weight:600; margin-top:6px; background:#FDECEA; border:1px solid #F5C6C0; padding:9px 12px; border-radius:10px}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:46px}
+.pass-eye{position:absolute; top:50%; right:7px; transform:translateY(-50%); width:34px; height:34px; display:grid; place-items:center; background:transparent; border:0; color:var(--muted); cursor:pointer; border-radius:9px; padding:0}
+.pass-eye:hover{color:var(--ink); background:var(--line-soft)}
+.pass-eye svg{width:20px; height:20px}
 .app-top .spacer{flex:1}
 .app-menu-btn{display:inline-flex; width:40px; height:40px; border:1px solid var(--line); border-radius:11px; background:var(--card); align-items:center; justify-content:center; flex-direction:column; gap:4px}
 .app-menu-btn span{width:18px; height:2px; background:var(--ink); border-radius:2px}
@@ -772,11 +777,16 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         </button>
       </div>
 
-      <form class="login-form" id="login-form" autocomplete="off">
+      <form class="login-form" id="login-form">
         <button type="button" class="login-back" id="login-back"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Vaihda rooli</button>
         <div class="login-ctx" id="login-ctx"></div>
-        <div class="field"><label>Sähköposti</label><input type="email" id="login-email" placeholder="nimi@yritys.fi" value="demo@totalparking.fi"></div>
-        <div class="field"><label>Salasana</label><input type="password" id="login-pass" placeholder="••••••••" value="demo1234"></div>
+        <div class="field"><label>Sähköposti</label><input type="email" id="login-email" name="username" autocomplete="username" placeholder="nimi@yritys.fi"></div>
+        <div class="field"><label>Salasana</label>
+          <div class="pass-wrap">
+            <input type="password" id="login-pass" name="password" autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="pass-eye" id="pass-eye" aria-label="Näytä salasana" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
         <p class="login-err" id="login-err" style="display:none"></p>
         <button type="submit" class="btn btn-primary" id="login-submit" style="width:100%; margin-top:4px">Kirjaudu sisään</button>
         <p class="note" id="login-note">Demotila — kirjautuminen ei vaadi oikeita tunnuksia. Klikkaa "Kirjaudu sisään" niin pääset valitsemaasi näkymään esimerkkidatalla.</p>
@@ -890,6 +900,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function setLoginBusy(on){var b=$('#login-submit'); if(!b)return; b.disabled=on; b.textContent=on?'Kirjaudutaan…':'Kirjaudu sisään';}
   function setLoginNote(kind){var n=$('#login-note'); if(!n)return; n.textContent = kind==='real' ? 'Master-kirjautuminen käyttää Supabase-tunnuksiasi. Vain oikeat tunnukset päästävät sisään ja antavat oikeudet pysäköintidataan.' : 'Demotila — tämä rooli ei vaadi oikeita tunnuksia, vaan avaa näkymän esimerkkidatalla.';}
   function authErrMsg(err){var m=(err&&err.message)||''; if(/Invalid login credentials/i.test(m)) return 'Väärä sähköposti tai salasana.'; if(/Email not confirmed/i.test(m)) return 'Sähköpostia ei ole vahvistettu Supabasessa.'; return 'Kirjautuminen epäonnistui: '+(m||'tuntematon virhe');}
+  var EYE_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYEOFF_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="m1 1 22 22"/></svg>';
+  function resetPassEye(){var p=$('#login-pass'), e=$('#pass-eye'); if(p)p.type='password'; if(e){e.innerHTML=EYE_SVG; e.setAttribute('aria-pressed','false'); e.setAttribute('aria-label','Näytä salasana');}}
   function openLogin(){modal.classList.add('open'); document.body.classList.add('no-scroll'); resetLogin(); closeDrawer();}
   function closeLogin(){modal.classList.remove('open'); document.body.classList.remove('no-scroll');}
   function resetLogin(){roleList.classList.remove('hidden'); loginForm.classList.remove('active'); roleNote.style.display='block'; pendingRole=null;}
@@ -901,7 +914,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     var emailInput=$('#login-email'), passInput=$('#login-pass');
     if(role==='admin'){ emailInput.value=''; passInput.value=''; emailInput.placeholder='sinä@totalparking.fi'; setLoginNote('real'); }
     else { emailInput.value = role==='biz'?'pekka.virtanen@logiteam.fi':'asiakaspalvelu@totalparking.fi'; passInput.value='demo1234'; setLoginNote('demo'); }
-    setLoginErr(''); setLoginBusy(false);
+    setLoginErr(''); setLoginBusy(false); resetPassEye();
   }
   $('#open-login').addEventListener('click',openLogin);
   $('#hero-login').addEventListener('click',openLogin);
@@ -910,6 +923,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   $('#login-x').addEventListener('click',closeLogin);
   modal.addEventListener('click',function(e){if(e.target===modal)closeLogin();});
   $('#login-back').addEventListener('click',resetLogin);
+  $('#pass-eye').addEventListener('click',function(){var p=$('#login-pass'); var show=p.type==='password'; p.type=show?'text':'password'; this.innerHTML=show?EYEOFF_SVG:EYE_SVG; this.setAttribute('aria-pressed',show?'true':'false'); this.setAttribute('aria-label',show?'Piilota salasana':'Näytä salasana');});
   $all('.role-btn').forEach(function(b){b.addEventListener('click',function(){chooseRole(b.getAttribute('data-role'));});});
   // links that jump straight to a role login
   $all('[data-role]').forEach(function(a){
