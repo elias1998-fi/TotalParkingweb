@@ -70,6 +70,7 @@ img{max-width:100%}
 .topbar .spacer{flex:1}
 .topbar-links{display:none; gap:26px; align-items:center}
 .topbar .topbar-login{display:none}
+.topbar .topbar-user{display:none}
 .topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
 .topbar-links a:hover{color:var(--brand)}
 .btn{
@@ -188,6 +189,29 @@ img{max-width:100%}
 .info-grid dd{margin:0; font-weight:600; font-size:14.5px; text-align:right}
 .info-grid dd a{color:var(--brand)}
 @media(min-width:680px){ .contact-cards{grid-template-columns:1fr 1fr} }
+
+/* ---------- Auth UI (top-bar user menu + drawer buttons) ---------- */
+.topbar-user{position:relative}
+.user-btn{display:inline-flex; align-items:center; gap:8px; max-width:240px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-pill); padding:8px 12px; font-weight:600; cursor:pointer}
+.user-btn:hover{border-color:var(--brand-100)}
+.user-btn .user-email{font-family:var(--font-mono); font-size:12.5px; color:var(--brand); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.user-btn .chev{flex:0 0 auto; transition:transform .2s var(--ease); color:var(--muted)}
+.topbar-user.open .user-btn .chev{transform:rotate(180deg)}
+.user-dropdown{position:absolute; right:0; top:calc(100% + 8px); min-width:236px; background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); padding:6px; opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity .18s, transform .18s, visibility .18s; z-index:70}
+.topbar-user.open .user-dropdown{opacity:1; visibility:visible; transform:translateY(0)}
+.user-dd-email{font-family:var(--font-mono); font-size:12px; color:var(--muted); padding:9px 11px 8px; border-bottom:1px solid var(--line-soft); margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.user-dd-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:transparent; border:0; border-radius:9px; padding:10px 11px; font-size:14.5px; font-weight:500; color:var(--ink); cursor:pointer}
+.user-dd-item:hover{background:var(--brand-50); color:var(--brand)}
+.user-dd-item svg{color:var(--muted); flex:0 0 auto}
+.user-dd-item:hover svg{color:var(--brand)}
+.user-dd-item.danger:hover{background:var(--park-50); color:var(--park-700)}
+.user-dd-item.danger:hover svg{color:var(--park-700)}
+.drawer-goapp, .drawer-logout-btn{display:none}
+body.logged-in .drawer-goapp{display:inline-flex}
+body.logged-in .drawer-logout-btn{display:inline-flex}
+body.logged-in #drawer-login{display:none}
+.drawer-logout-btn{background:transparent; border:1px solid rgba(255,255,255,.32); color:#fff}
+.drawer-logout-btn:hover{background:rgba(255,255,255,.10)}
 .hero-map-card .live-chip{
   position:absolute; left:14px; top:14px; z-index:5;
   background:rgba(255,255,255,.94); backdrop-filter:blur(6px); border:1px solid var(--line);
@@ -500,7 +524,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 }
 @media(min-width:860px){
   .topbar-links{display:flex}
-  .topbar .topbar-login{display:inline-flex}
+  body:not(.logged-in) .topbar .topbar-login{display:inline-flex}
+  body.logged-in .topbar .topbar-user{display:flex}
   .hero{padding:54px 0 30px}
   .hero-grid{grid-template-columns:1fr 1.12fr; gap:30px; min-height:480px}
   .hero-map-card{min-height:480px}
@@ -541,6 +566,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
       Kirjaudu
     </button>
+    <div class="topbar-user" id="topbar-user">
+      <button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false"><span class="user-email" id="user-email"></span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="user-dropdown" id="user-dropdown" role="menu">
+        <div class="user-dd-email" id="user-dd-email"></div>
+        <button class="user-dd-item" id="dd-goapp" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Oma näkymä</button>
+        <button class="user-dd-item danger" id="dd-logout" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+      </div>
+    </div>
     <button class="burger" id="burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </header>
@@ -600,7 +633,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     </div>
   </nav>
   <div class="drawer-foot">
+    <button class="btn btn-ember drawer-goapp" id="drawer-goapp">Oma näkymä</button>
     <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
+    <button class="btn drawer-logout-btn" id="drawer-logout">Kirjaudu ulos</button>
     <p class="drawer-mini">Pysäköinti ja sähkölataus yhdellä kartalla. Helsinki · Tampere</p>
   </div>
 </aside>
@@ -1030,7 +1065,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   loginForm.addEventListener('submit',function(e){
     e.preventDefault();
     var r=pendingRole;
-    if(r!=='admin'){ closeLogin(); enterApp(r); return; }   // biz/staff: demo
+    if(r!=='admin'){ sess={role:r, email:$('#login-email').value.trim()}; updateAuthUI(); closeLogin(); enterApp(r); return; }   // biz/staff: demo
     // Master: real Supabase authentication
     if(!sb){ setLoginErr('Kirjautumispalvelua ei voitu ladata. Tarkista verkkoyhteys.'); return; }
     var email=$('#login-email').value.trim(), pass=$('#login-pass').value;
@@ -1041,6 +1076,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       if(res.error){ setLoginErr(authErrMsg(res.error)); return; }
       var u=res.data&&res.data.user, ab=$('#admin-user');
       if(ab&&u){ ab.textContent=u.email; ab.classList.remove('demo-badge'); ab.classList.add('user-badge'); }
+      sess={role:'admin', email:(u&&u.email)||''}; updateAuthUI();
       closeLogin(); enterApp('admin');
     }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
   });
@@ -1050,8 +1086,16 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   (function(){ var b=document.getElementById('contact-back'); if(b) b.addEventListener('click',closeContact); var h=document.getElementById('contact-home'); if(h) h.addEventListener('click',function(e){ e.preventDefault(); closeContact(); }); })();
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closeContact();}});
 
-  /* ---------- App enter / exit ---------- */
+  /* ---------- Session + app enter / exit / logout ---------- */
+  var sess=null;   // {role,email} while logged in (kept across site<->app navigation)
   var appIds={admin:'#app-admin', biz:'#app-biz', staff:'#app-staff'};
+  function updateAuthUI(){
+    var on=!!sess;
+    document.body.classList.toggle('logged-in', on);
+    if(on){ var em=sess.email||''; var ue=$('#user-email'), ueh=$('#user-dd-email'); if(ue) ue.textContent=em; if(ueh) ueh.textContent=em; }
+    var tu=$('#topbar-user'); if(tu) tu.classList.remove('open');
+    var ub=$('#user-btn'); if(ub) ub.setAttribute('aria-expanded','false');
+  }
   function enterApp(role){
     $('#site').style.display='none';
     $all('.app').forEach(function(a){a.classList.remove('active');});
@@ -1062,15 +1106,39 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     if(role==='biz') renderBiz();
     if(role==='staff') renderStaff();
   }
-  function exitApp(){
-    if(sb){ try{ sb.auth.signOut(); }catch(e){} }
+  function goToSite(){   // show the public site but STAY logged in
     $all('.app').forEach(function(a){a.classList.remove('active');});
     document.body.classList.remove('app-open','side-open');
     $('#site').style.display='';
     window.scrollTo(0,0);
+    updateAuthUI();
+  }
+  function goToApp(){ if(sess){ closeDrawer(); enterApp(sess.role); } }
+  function exitApp(){   // log out
+    if(sb){ try{ sb.auth.signOut(); }catch(e){} }
+    sess=null; updateAuthUI();
+    $all('.app').forEach(function(a){a.classList.remove('active');});
+    document.body.classList.remove('app-open','side-open');
+    $('#site').style.display='';
+    window.scrollTo(0,0);
+    closeDrawer();
   }
   $all('[data-exit]').forEach(function(b){b.addEventListener('click',exitApp);});
   $all('[data-side]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.toggle('side-open');});});
+  (function(){
+    var tu=$('#topbar-user'), ub=$('#user-btn');
+    if(ub&&tu){
+      ub.addEventListener('click',function(e){ e.stopPropagation(); var open=tu.classList.toggle('open'); ub.setAttribute('aria-expanded',open?'true':'false'); });
+      document.addEventListener('click',function(e){ if(tu.classList.contains('open') && !tu.contains(e.target)){ tu.classList.remove('open'); ub.setAttribute('aria-expanded','false'); } });
+      document.addEventListener('keydown',function(e){ if(e.key==='Escape' && tu.classList.contains('open')){ tu.classList.remove('open'); ub.setAttribute('aria-expanded','false'); } });
+    }
+    var dga=$('#dd-goapp'); if(dga) dga.addEventListener('click',function(){ if(tu)tu.classList.remove('open'); goToApp(); });
+    var ddl=$('#dd-logout'); if(ddl) ddl.addEventListener('click',function(){ if(tu)tu.classList.remove('open'); exitApp(); });
+    var dg=$('#drawer-goapp'); if(dg) dg.addEventListener('click',goToApp);
+    var dlo=$('#drawer-logout'); if(dlo) dlo.addEventListener('click',exitApp);
+    $all('.app-top .brand').forEach(function(b){ b.style.cursor='pointer'; b.setAttribute('title','Siirry verkkosivulle'); b.addEventListener('click',goToSite); });
+  })();
+  updateAuthUI();
 
   /* ---------- In-app navigation ---------- */
   $all('.app-side .nav-item').forEach(function(btn){
