@@ -19,6 +19,7 @@
   --park:#FF6B3D; --park-700:#E5511F; --park-50:#FFEDE6;
   --paper:#F7F6F1; --card:#FFFFFF; --line:#E3E6E1; --line-soft:#EEEFEA;
   --amber:#F2A93B;
+  --navy:#1A3A66;
   --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-body:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -61,18 +62,29 @@ img{max-width:100%}
 .burger span{display:block; height:2px; width:100%; background:var(--ink); border-radius:2px; transition:transform .25s var(--ease), opacity .2s}
 .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.02em}
 .brand .pmark{
-  width:28px; height:28px; border-radius:8px; background:var(--brand); color:var(--park);
+  width:28px; height:28px; border-radius:8px; background:var(--navy); color:#fff;
   display:grid; place-items:center; font-weight:700; font-size:18px; flex:0 0 auto;
 }
 .brand .pmark::after{content:"P"}
 .brand b{font-weight:700}
 .brand span{color:var(--muted); font-weight:500}
+.brand-name{display:inline-flex; align-items:baseline}
+.brand-name b{color:var(--ink)}
 .topbar .spacer{flex:1}
-.topbar-links{display:none; gap:26px; align-items:center}
+.topbar-links{display:none; gap:6px; align-items:center}
 .topbar .topbar-login{display:none}
 .topbar .topbar-user{display:none}
-.topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
-.topbar-links a:hover{color:var(--brand)}
+.nav-dd{position:relative}
+.nav-dd-btn{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-weight:500; color:var(--ink-soft); font-size:15px; background:transparent; border:0; cursor:pointer; padding:8px 11px; border-radius:10px; white-space:nowrap}
+.nav-dd-btn:hover{color:var(--brand); background:var(--brand-50)}
+.nav-dd.open .nav-dd-btn{color:var(--brand); background:var(--brand-50)}
+.nav-dd-btn .nav-chev{flex:0 0 auto; transition:transform .2s var(--ease); color:var(--muted)}
+.nav-dd-btn:hover .nav-chev, .nav-dd.open .nav-dd-btn .nav-chev{color:var(--brand)}
+.nav-dd.open .nav-dd-btn .nav-chev{transform:rotate(180deg)}
+.nav-dd-panel{position:absolute; left:0; top:calc(100% + 9px); min-width:236px; background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); padding:7px; opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity .18s, transform .18s, visibility .18s; z-index:70; display:flex; flex-direction:column}
+.nav-dd.open .nav-dd-panel{opacity:1; visibility:visible; transform:translateY(0)}
+.nav-dd-panel a{display:block; padding:9px 12px; border-radius:9px; font-size:14.5px; font-weight:500; color:var(--ink); white-space:nowrap}
+.nav-dd-panel a:hover{background:var(--brand-50); color:var(--brand)}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   border:1px solid transparent; border-radius:var(--r-pill); font-weight:600; font-size:15px;
@@ -104,7 +116,6 @@ img{max-width:100%}
 .drawer.open{transform:translateX(0)}
 .drawer-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:30px}
 .drawer .brand{color:#fff}
-.drawer .brand .pmark{background:#fff; color:var(--brand)}
 .drawer-close{width:40px; height:40px; border-radius:11px; border:1px solid rgba(255,255,255,.22); background:transparent; color:#fff; font-size:20px; display:grid; place-items:center}
 .drawer nav{display:flex; flex-direction:column; gap:0; margin-top:4px; flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch}
 .acc{border-bottom:1px solid rgba(255,255,255,.12)}
@@ -306,7 +317,6 @@ body.logged-in #drawer-login{display:none}
 .foot{background:var(--brand-700); color:rgba(255,255,255,.8); padding:54px 0 30px; margin-top:8px}
 .foot-grid{display:grid; grid-template-columns:1fr; gap:28px}
 .foot .brand{color:#fff; margin-bottom:14px}
-.foot .brand .pmark{background:#fff; color:var(--brand)}
 .foot-blurb{font-size:14.5px; max-width:34ch; color:rgba(255,255,255,.72)}
 .foot h5{font-family:var(--font-display); color:#fff; font-size:13px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:14px}
 .foot ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; font-size:14.5px}
@@ -573,14 +583,55 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 
 <header class="topbar">
   <div class="wrap">
-    <a href="#top" class="brand" aria-label="TotalParking etusivu"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></a>
+    <a href="#top" class="brand" aria-label="TotalParking etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
     <div class="spacer"></div>
     <nav class="topbar-links" aria-label="Päävalikko">
-      <a href="#kuluttajat">Kuluttaja-asiakkaat</a>
-      <a href="#yritykset">Yritysasiakkaat</a>
-      <a href="#top">Pysäköinnin tarjoajat</a>
-      <a href="#top">Asiakaspalvelu</a>
-      <a href="#meista">Meistä</a>
+      <div class="nav-dd">
+        <button class="nav-dd-btn" aria-expanded="false">Kuluttaja-asiakkaat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-dd-panel">
+          <a href="#kuluttajat">Yleistä</a>
+          <a href="#kuluttajat">Näin se toimii</a>
+          <a href="#kuluttajat">Hinnoittelu</a>
+          <a href="#kuluttajat">Lataus sähköautolle</a>
+          <a href="#kuluttajat">Lataa sovellus</a>
+        </div>
+      </div>
+      <div class="nav-dd">
+        <button class="nav-dd-btn" aria-expanded="false">Yritysasiakkaat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-dd-panel">
+          <a href="#yritykset">Yleistä</a>
+          <a href="#yritykset">Yrityspysäköinti</a>
+          <a href="#yritykset">Laskutus ja kustannuspaikat</a>
+          <a href="#yritykset">Hinnoittelu</a>
+          <a href="#yritykset">Ota yhteyttä myyntiin</a>
+        </div>
+      </div>
+      <div class="nav-dd">
+        <button class="nav-dd-btn" aria-expanded="false">Pysäköinnin tarjoajat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-dd-panel">
+          <a href="#top">Liity tarjoajaksi</a>
+          <a href="#top">Alueiden hallinta</a>
+          <a href="#top">Tulot ja tilitykset</a>
+          <a href="#top">Rajapinnat ja integraatiot</a>
+        </div>
+      </div>
+      <div class="nav-dd">
+        <button class="nav-dd-btn" aria-expanded="false">Asiakaspalvelu<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-dd-panel">
+          <a href="#top">Usein kysytyt kysymykset</a>
+          <a href="#meista">Ota yhteyttä</a>
+          <a href="#top">Palvelutilanne</a>
+        </div>
+      </div>
+      <div class="nav-dd">
+        <button class="nav-dd-btn" aria-expanded="false">Meistä<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-dd-panel">
+          <a href="#meista">Yritys</a>
+          <a href="#meista">Vastuullisuus</a>
+          <a href="#meista">Työpaikat</a>
+          <a href="#" class="js-open-contact">Yhteystiedot</a>
+        </div>
+      </div>
     </nav>
     <button class="btn btn-primary btn-sm topbar-login" id="open-login">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
@@ -601,7 +652,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-label="Valikko">
   <div class="drawer-top">
-    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
     <button class="drawer-close" id="drawer-close" aria-label="Sulje valikko">✕</button>
   </div>
   <nav>
@@ -801,7 +852,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+        <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
         <p class="foot-blurb">Pysäköinti ja sähkölataus yhdellä kartalla. Toiminnassa Helsingissä ja Tampereella.</p>
       </div>
       <div>
@@ -894,7 +945,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <section class="app" id="app-admin">
   <header class="app-top">
     <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
-    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
     <span class="app-role-pill admin">Master</span>
     <div class="spacer"></div>
     <div class="app-user">
@@ -926,7 +977,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <section class="app" id="app-biz">
   <header class="app-top">
     <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
-    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
     <span class="app-role-pill biz">Yritys</span>
     <div class="spacer"></div>
     <div class="app-user">
@@ -956,7 +1007,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <section class="app" id="app-staff">
   <header class="app-top">
     <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
-    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
     <span class="app-role-pill staff">Henkilökunta</span>
     <div class="spacer"></div>
     <div class="app-user">
@@ -983,7 +1034,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <section class="page-overlay" id="page-contact" aria-label="Yhteystiedot">
   <header class="page-top">
     <button class="page-back" id="contact-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
-    <a href="#" class="brand" id="contact-home" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></a>
+    <a href="#" class="brand" id="contact-home" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1191,6 +1242,17 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ $all('.app-user.open').forEach(function(w){ w.classList.remove('open'); }); } });
   })();
   updateAuthUI();
+
+  /* ---------- Top-bar navigation dropdowns ---------- */
+  (function(){
+    function closeNavDD(except){ $all('.nav-dd.open').forEach(function(w){ if(w!==except){ w.classList.remove('open'); var b=w.querySelector('.nav-dd-btn'); if(b)b.setAttribute('aria-expanded','false'); } }); }
+    $all('.nav-dd-btn').forEach(function(btn){
+      btn.addEventListener('click',function(e){ e.stopPropagation(); var w=btn.closest('.nav-dd'); var willOpen=!w.classList.contains('open'); closeNavDD(w); w.classList.toggle('open',willOpen); btn.setAttribute('aria-expanded',willOpen?'true':'false'); });
+    });
+    $all('.nav-dd-panel a').forEach(function(a){ a.addEventListener('click',function(){ closeNavDD(); }); });
+    document.addEventListener('click',function(e){ if(!e.target.closest('.nav-dd')) closeNavDD(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeNavDD(); });
+  })();
 
   /* ---------- In-app navigation ---------- */
   $all('.app-side .nav-item').forEach(function(btn){
