@@ -1125,22 +1125,31 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       console.log('Admin-kartta: latauspisteitä',feats.length);
     }catch(e){console.error('Latauspisteiden lataus epäonnistui',e);}
   }
+  function adminMapStatus(msg,isErr){ var s=document.getElementById('admin-map-status'); if(!s)return; if(msg===null){ s.classList.add('hidden'); return; } s.textContent=msg; s.classList.remove('hidden'); s.classList.toggle('err',!!isErr); }
   function initAdminMap(){
     if(adminMap)return;
-    var statusEl=document.getElementById('admin-map-status');
-    function showStatus(msg,isErr){ if(!statusEl)return; statusEl.textContent=msg; statusEl.classList.remove('hidden'); statusEl.classList.toggle('err',!!isErr); }
-    function hideStatus(){ if(statusEl) statusEl.classList.add('hidden'); }
-    if(typeof maplibregl==='undefined'){ showStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); adminMap=null; return; }
+    if(typeof maplibregl==='undefined'){ adminMapStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
     if(!document.getElementById('admin-map')) return;
+    adminMapStatus('Ladataan karttaa…',false);
+    // Fetch the style with cache-busting so a stale 404 in the browser cache can't
+    // break it. If we get HTML back instead of JSON, the file isn't being served.
+    fetch('omakartta_style.json?v='+Date.now(),{cache:'no-store'}).then(function(r){
+      return r.text().then(function(t){
+        if(!r.ok) throw new Error('Tyylitiedosto ei latautunut (HTTP '+r.status+').');
+        if(t.charAt(0)==='<') throw new Error('omakartta_style.json palautti HTML-sivun JSON:in sijaan (todennäköisesti 404). Varmista että tiedosto on repon juuressa, ja avaa sivu tuoreessa yksityisessä ikkunassa.');
+        return JSON.parse(t);
+      });
+    }).then(function(style){ buildAdminMap(style); }).catch(function(err){ adminMapStatus('Kartan lataus epäonnistui:\n'+((err&&err.message)||err),true); });
+  }
+  function buildAdminMap(style){
     var loaded=false, lastErr='';
-    showStatus('Ladataan karttaa…',false);
-    adminMap=new maplibregl.Map({container:'admin-map',style:'omakartta_style.json',center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
+    adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
     adminMap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
-    adminMap.on('load',function(){ loaded=true; hideStatus(); adminMap.resize(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
-    adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) showStatus('Kartan lataus epäonnistui:\n'+m,true); });
+    adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
     [60,250,600].forEach(function(ms){ setTimeout(function(){ if(adminMap)adminMap.resize(); }, ms); });
-    setTimeout(function(){ if(!loaded) showStatus('Karttapohja ei latautunut 10 sekunnissa.'+(lastErr?('\n\nViimeisin virhe:\n'+lastErr):'\n\nTarkista selaimen konsoli (F12 → Console).'),true); }, 10000);
+    setTimeout(function(){ if(!loaded) adminMapStatus('Karttapohja ei latautunut 10 sekunnissa.'+(lastErr?('\n\nViimeisin virhe:\n'+lastErr):''),true); }, 10000);
   }
 
   /* ---------- Live counter ---------- */
