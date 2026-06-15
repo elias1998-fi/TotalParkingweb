@@ -152,6 +152,9 @@ img{max-width:100%}
   border:1px solid var(--line); box-shadow:var(--shadow); background:#eef0ec;
 }
 .map-el{position:absolute; inset:0}
+.map-status{position:absolute; left:12px; top:12px; right:12px; z-index:8; background:rgba(255,255,255,.95); border:1px solid var(--line); border-radius:12px; padding:11px 14px; font-size:13px; line-height:1.5; color:var(--ink-soft); box-shadow:var(--shadow); max-height:62%; overflow:auto; white-space:pre-wrap}
+.map-status.err{border-color:#F5C6C0; background:#FDECEA; color:#9A1B12; font-family:var(--font-mono); font-size:12px}
+.map-status.hidden{display:none}
 .hero-map-card .live-chip{
   position:absolute; left:14px; top:14px; z-index:5;
   background:rgba(255,255,255,.94); backdrop-filter:blur(6px); border:1px solid var(--line);
@@ -1124,13 +1127,20 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   }
   function initAdminMap(){
     if(adminMap)return;
-    if(typeof maplibregl==='undefined'){adminMap=null;return;}
+    var statusEl=document.getElementById('admin-map-status');
+    function showStatus(msg,isErr){ if(!statusEl)return; statusEl.textContent=msg; statusEl.classList.remove('hidden'); statusEl.classList.toggle('err',!!isErr); }
+    function hideStatus(){ if(statusEl) statusEl.classList.add('hidden'); }
+    if(typeof maplibregl==='undefined'){ showStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); adminMap=null; return; }
+    if(!document.getElementById('admin-map')) return;
+    var loaded=false, lastErr='';
+    showStatus('Ladataan karttaa…',false);
     adminMap=new maplibregl.Map({container:'admin-map',style:'omakartta_style.json',center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
     adminMap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
-    adminMap.on('load',function(){ tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
-    adminMap.on('error',function(e){ if(e&&e.error) console.warn('Admin-kartta:',e.error.message); });
-    setTimeout(function(){if(adminMap)adminMap.resize();},150);
+    adminMap.on('load',function(){ loaded=true; hideStatus(); adminMap.resize(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) showStatus('Kartan lataus epäonnistui:\n'+m,true); });
+    [60,250,600].forEach(function(ms){ setTimeout(function(){ if(adminMap)adminMap.resize(); }, ms); });
+    setTimeout(function(){ if(!loaded) showStatus('Karttapohja ei latautunut 10 sekunnissa.'+(lastErr?('\n\nViimeisin virhe:\n'+lastErr):'\n\nTarkista selaimen konsoli (F12 → Console).'),true); }, 10000);
   }
 
   /* ---------- Live counter ---------- */
@@ -1231,6 +1241,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     html+='<div class="panel" data-id="a-map">';
     html+=panelHead('Kartta &amp; alueet','Hallitse pysäköintialueita ja latauspisteitä master-työkaluilla');
     html+='<div class="map-panel"><div class="map-el" id="admin-map"></div>'
+      +'<div class="map-status" id="admin-map-status">Ladataan karttaa…</div>'
       +'<div class="map-tools">'
       +tool('primary','plus','Lisää alue')
       +tool('','edit','Muokkaa')
