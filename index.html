@@ -15,11 +15,11 @@
 :root{
   --ink:#0A1A33; --ink-soft:#3E4D67; --muted:#717A8C;
   --brand:#021E45; --brand-700:#01122E; --brand-50:#EAEDF3; --brand-100:#D1D7E5;
-  --charge:#FEEC99; --charge-700:#021E45; --charge-50:#FFF7D6;
+  --charge:#13B17C; --charge-700:#021E45; --charge-50:#E3F6EE;
   --park:#F5D1C1; --park-700:#021E45; --park-50:#FBEDE6;
   --paper:#FAF5F0; --card:#FFFFFF; --line:#E7E1DB; --line-soft:#F1ECE6;
-  --amber:#FEEC99;
-  --beige:#F5D1C1; --beige-700:#EAC3B0; --yellow:#FEEC99; --yellow-700:#F4DA7A;
+  --amber:#13B17C;
+  --beige:#F5D1C1; --beige-700:#EAC3B0; --yellow:#13B17C; --yellow-700:#0C8A60;
   --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-body:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -257,7 +257,7 @@ body.logged-in #drawer-login{display:none}
 .mk-park b{transform:rotate(-45deg); color:var(--brand); font-family:var(--font-display); font-weight:700; font-size:15px}
 .mk-charge{
   width:30px; height:30px; border-radius:50% 50% 50% 2px; transform:rotate(45deg);
-  background:var(--charge); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(244,218,122,.6);
+  background:var(--charge); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(19,177,124,.45);
   display:grid; place-items:center;
 }
 .mk-charge svg{transform:rotate(-45deg); width:15px; height:15px; stroke:var(--brand)}
@@ -330,6 +330,22 @@ body.logged-in #drawer-login{display:none}
 .foot ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; font-size:14.5px}
 .foot ul a:hover{color:#fff}
 .foot-bottom{border-top:1px solid rgba(255,255,255,.14); margin-top:34px; padding-top:20px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; font-size:13px; color:rgba(255,255,255,.6)}
+.foot-contact{margin-top:24px}
+.fc-name{font-family:var(--font-display); color:#fff; font-size:22px; font-weight:700; margin-bottom:15px}
+.fc-line{display:flex; align-items:flex-start; gap:9px; font-size:14.5px; color:rgba(255,255,255,.8); margin-bottom:11px; line-height:1.5}
+.fc-line>svg{width:17px; height:17px; flex:0 0 auto; margin-top:2px; opacity:.6}
+.fc-line a{color:#fff; text-decoration:underline; text-underline-offset:2px}
+.fc-line a:hover{color:var(--beige)}
+.fc-map{display:inline-flex; align-items:center; gap:3px; white-space:nowrap}
+.fc-map svg{width:13px; height:13px}
+.fc-btn{margin-top:7px; display:inline-flex}
+.foot-trust{display:flex; flex-direction:column; gap:22px; align-items:flex-start}
+.avainlippu{display:inline-flex; align-items:center; gap:12px; background:#fff; border-radius:14px; padding:11px 16px}
+.avainlippu>svg{width:34px; height:34px; flex:0 0 auto}
+.avainlippu b{font-family:var(--font-display); color:var(--brand); font-size:16px; line-height:1.1}
+.avainlippu span{display:block; font-size:11.5px; color:var(--muted); letter-spacing:.03em; margin-top:3px}
+.foot-legal a{color:rgba(255,255,255,.78)}
+.foot-legal a:hover{color:#fff}
 
 /* ---------- Login modal ---------- */
 .modal-scrim{position:fixed; inset:0; background:rgba(9,40,36,.5); backdrop-filter:blur(3px); z-index:120; display:grid; place-items:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s}
@@ -464,6 +480,26 @@ body.app-open{overflow:auto}
 .chart-wrap{margin:6px 0 4px}
 .chart-x{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-top:8px}
 
+/* web dashboard */
+.wseg{display:inline-flex; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-pill); padding:3px; gap:2px}
+.wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
+.wseg-btn.active{background:var(--brand); color:#fff}
+.src-row{margin-bottom:14px}
+.src-row:last-child{margin-bottom:0}
+.src-top{display:flex; justify-content:space-between; font-size:13.5px; font-weight:500; margin-bottom:6px}
+.src-top .mono{font-family:var(--font-mono); color:var(--muted); font-weight:700}
+.src-bar{height:8px; border-radius:6px; background:var(--brand-50); overflow:hidden}
+.src-bar i{display:block; height:100%; border-radius:6px; background:var(--brand)}
+.src-bar.beige i{background:var(--beige)}
+.src-bar.yellow i{background:var(--yellow)}
+.goal-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft)}
+.goal-row:last-child{border-bottom:none}
+.goal-row .g-ic{width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--brand-50); color:var(--brand); flex:0 0 auto}
+.goal-row .g-ic svg{width:17px; height:17px}
+.goal-row .g-t{font-size:14px; font-weight:500}
+.goal-row .g-s{font-size:12.5px; color:var(--muted)}
+.goal-row .g-v{margin-left:auto; font-family:var(--font-mono); font-weight:700; font-size:16px; color:var(--ink)}
+
 /* feed */
 .feed{display:flex; flex-direction:column; gap:2px}
 .feed-row{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft)}
@@ -554,7 +590,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   .kpi-grid{grid-template-columns:repeat(4,1fr)}
   .cards-2{grid-template-columns:1.4fr 1fr}
   .cc-grid{grid-template-columns:repeat(3,1fr)}
-  .foot-grid{grid-template-columns:1.6fr 1fr 1fr 1fr}
+  .foot-grid{grid-template-columns:1.5fr 1fr}
 }
 @media(min-width:860px){
   .topbar-links{display:flex}
@@ -860,30 +896,23 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
-      <div>
+      <div class="foot-main">
         <span class="brand"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></span>
         <p class="foot-blurb">Pysäköinti ja sähkölataus yhdellä kartalla. Toiminnassa Helsingissä ja Tampereella.</p>
+        <div class="foot-contact">
+          <h3 class="fc-name">TotalParking Oy</h3>
+          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span>Esimerkkikatu 1, 00100 Helsinki&nbsp;&nbsp;<a class="fc-map" href="https://www.google.com/maps/search/?api=1&amp;query=Esimerkkikatu+1,+00100+Helsinki" target="_blank" rel="noopener">(katso kartalla)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17 17 7M9 7h8v8"/></svg></a></span></div>
+          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V8l6-3 6 3v13"/><path d="M10 21v-5h4v5"/></svg><span>Y-tunnus 3312345-6</span></div>
+          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><a href="mailto:asiakaspalvelu@totalparking.fi">asiakaspalvelu@totalparking.fi</a></div>
+          <a class="btn btn-ember btn-sm fc-btn" href="mailto:asiakaspalvelu@totalparking.fi">Ota yhteyttä</a>
+        </div>
       </div>
-      <div>
-        <h5>Palvelu</h5>
-        <ul>
-          <li><a href="#kuluttajat">Kuluttaja-asiakkaat</a></li>
-          <li><a href="#yritykset">Yritysasiakkaat</a></li>
-          <li><a href="#" data-meista="">Meistä</a></li>
-          <li><a href="#" data-role="admin">Kirjaudu</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5>Yritys</h5>
-        <ul>
-          <li><a href="#" data-meista="m-yhteystiedot">Yhteystiedot</a></li>
-          <li><a href="#">Kumppaneille</a></li>
-          <li><a href="#" data-meista="m-tyopaikat">Ura</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5>Lakiasiat</h5>
-        <ul>
+      <div class="foot-trust">
+        <div class="avainlippu" aria-label="Avainlippu – suomalaista palvelua">
+          <svg viewBox="0 0 40 40" fill="none" stroke="var(--brand)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="20" r="7"/><path d="M22 20h14M31 20v6M36 20v8"/></svg>
+          <div><b>Avainlippu</b><span>Suomalaista palvelua</span></div>
+        </div>
+        <ul class="foot-legal">
           <li><a href="#">Tietosuojaseloste</a></li>
           <li><a href="#">Käyttöehdot</a></li>
           <li><a href="#">Evästeet</a></li>
@@ -975,6 +1004,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
       <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
+      <div class="grp">Verkkosivu</div>
+      <button class="nav-item" data-panel="a-web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>Yleiskatsaus</button>
+      <button class="nav-item" data-panel="a-web-seo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Sisältö &amp; SEO</button>
       <div class="grp">Työkalut</div>
       <button class="nav-item" data-panel="a-tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Asetukset</button>
     </nav>
@@ -1531,6 +1563,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     ['Kallio CCS','charge','Helsinki','warn','Odottaa hyväksyntää','2'],
     ['Pyynikki P','park','Tampere','mute','Luonnos','80']
   ];
+  var WEBDATA={
+    day:{v:[990,1120,1080,1240,1180,1340,1284], x:['Ma','Ti','Ke','To','Pe','La','Su']},
+    week:{v:[6200,6800,7100,7600,7300,8100,8600,8940], x:['vk19','vk20','vk21','vk22','vk23','vk24','vk25','vk26']},
+    month:{v:[21200,24800,23600,28200,30100,31800,33200,34210], x:['Marras','Joulu','Tammi','Helmi','Maalis','Huhti','Touko','Kesä']}
+  };
+  function webX(arr){return arr.map(function(l){return '<span>'+l+'</span>';}).join('');}
+  function srcRow(label,pct,cls){return '<div class="src-row"><div class="src-top"><span>'+label+'</span><span class="mono">'+pct+' %</span></div><div class="src-bar '+(cls||'')+'"><i style="width:'+pct+'%"></i></div></div>';}
+  function goalRow(icn,t,s,v){return '<div class="goal-row">'+(icn?'<span class="g-ic">'+ic(icn)+'</span>':'')+'<div><div class="g-t">'+t+'</div><div class="g-s">'+s+'</div></div><span class="g-v">'+v+'</span></div>';}
   function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
   function typePill(t){return t==='park'?pill('park','Pysäköinti'):pill('charge','Lataus');}
   function initials(name){var p=name.trim().split(' '); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
@@ -1616,6 +1656,75 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       +'</tbody></table></div>';
     html+='</div>';
 
+    /* website overview */
+    html+='<div class="panel" data-id="a-web">';
+    html+=panelHead('Verkkosivu','totalparking.fi · kävijät, liikenne ja konversiot');
+    html+='<div class="kpi-grid">'
+      +kpi('b','globe','+6,4 %','up','1 284','Kävijät tänään')
+      +kpi('c','people','+9,1 %','up','8 940','Kävijät / 7 pv')
+      +kpi('p','eye','+12 %','up','34 210','Kävijät / 30 pv')
+      +kpi('b','clock','+4 s','up','2 m 41 s','Keskimääräinen istunto')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Kävijät</h3><div class="wseg" id="web-seg"><button class="wseg-btn active" data-gran="day">Päivä</button><button class="wseg-btn" data-gran="week">Viikko</button><button class="wseg-btn" data-gran="month">Kuukausi</button></div></div>'
+      +'<div class="chart-wrap" id="web-chart">'+areaChart(WEBDATA.day.v,'#021E45')+'</div>'
+      +'<div class="chart-x" id="web-chart-x">'+webX(WEBDATA.day.x)+'</div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Liikenteen lähteet</h3></div>'
+      +srcRow('Haku (Google)',52,'')
+      +srcRow('Suora',24,'beige')
+      +srcRow('Sosiaalinen media',14,'yellow')
+      +srcRow('Viittaukset',10,'')
+      +'</div>';
+    html+='</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Laitteet</h3></div>'
+      +srcRow('Mobiili',68,'')
+      +srcRow('Työpöytä',27,'beige')
+      +srcRow('Tabletti',5,'yellow')
+      +'</div>';
+    html+='<div class="card"><div class="card-h"><h3>Konversiot · 30 pv</h3></div>'
+      +goalRow('people','Rekisteröitymiset','Uudet käyttäjätilit','486')
+      +goalRow('card','Demovaraukset','Yritysasiakkaat-sivu','58')
+      +goalRow('bolt','Sovelluslataukset','iOS-web-app','1 240')
+      +goalRow('euro','Yhteydenotot','Lomake &amp; sähköposti','92')
+      +'</div>';
+    html+='</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sivu</th><th>Näyttökerrat</th><th>Keskimääräinen aika</th><th>Poistumis-%</th></tr></thead><tbody>'
+      +'<tr><td class="mono strong">/</td><td class="mono">12 480</td><td class="mono">1 m 52 s</td><td class="mono">38 %</td></tr>'
+      +'<tr><td class="mono strong">/yritysasiakkaat</td><td class="mono">6 210</td><td class="mono">2 m 18 s</td><td class="mono">29 %</td></tr>'
+      +'<tr><td class="mono strong">/pysakoinnin-tarjoajat</td><td class="mono">4 890</td><td class="mono">2 m 41 s</td><td class="mono">33 %</td></tr>'
+      +'<tr><td class="mono strong">/meista</td><td class="mono">3 120</td><td class="mono">1 m 34 s</td><td class="mono">44 %</td></tr>'
+      +'<tr><td class="mono strong">/asiakaspalvelu</td><td class="mono">2 740</td><td class="mono">3 m 05 s</td><td class="mono">22 %</td></tr>'
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    /* website content & seo */
+    html+='<div class="panel" data-id="a-web-seo">';
+    html+=panelHead('Sisältö &amp; hakukoneet','Hakukonenäkyvyys, avainsanat ja viittaukset');
+    html+='<div class="kpi-grid">'
+      +kpi('b','search','+8,3 %','up','128 400','Näyttökerrat haussa')
+      +kpi('c','globe','+11 %','up','9 840','Klikkaukset hausta')
+      +kpi('p','flag','0,4','up','7,2','Keskim. sijainti')
+      +kpi('b','eye','+1,1 %','up','7,7 %','Klikkausprosentti (CTR)')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Suosituimmat hakusanat</h3><span class="link">klikit</span></div>'
+      +goalRow('','parkki helsinki','sijainti 2,1','1 840')
+      +goalRow('','latauspisteet kartta','sijainti 3,4','1 210')
+      +goalRow('','pysäköinti tampere','sijainti 2,8','980')
+      +goalRow('','sähköauton lataus hinta','sijainti 5,2','760')
+      +goalRow('','kadunvarsipysäköinti sovellus','sijainti 1,6','540')
+      +'</div>';
+    html+='<div class="card"><div class="card-h"><h3>Viittaavat sivustot</h3></div>'
+      +srcRow('hsl.fi',38,'')
+      +srcRow('visittampere.fi',22,'beige')
+      +srcRow('kauppalehti.fi',18,'yellow')
+      +srcRow('reddit.com/r/Suomi',12,'')
+      +srcRow('muut',10,'')
+      +'</div>';
+    html+='</div>';
+    html+='</div>';
+
     /* tools */
     html+='<div class="panel" data-id="a-tools">';
     html+=panelHead('Asetukset','Master-tason työkalut ja konfiguraatio');
@@ -1630,6 +1739,17 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     html+='</div>';
 
     main.innerHTML=html;
+    var wseg=main.querySelector('#web-seg');
+    if(wseg){
+      var wc=main.querySelector('#web-chart'), wx=main.querySelector('#web-chart-x');
+      wseg.addEventListener('click',function(e){
+        var b=e.target.closest('.wseg-btn'); if(!b)return;
+        $all('.wseg-btn',wseg).forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        var d=WEBDATA[b.getAttribute('data-gran')];
+        wc.innerHTML=areaChart(d.v,'#021E45'); wx.innerHTML=webX(d.x);
+      });
+    }
   }
 
   /* ---------- Render: BUSINESS ---------- */
@@ -1736,7 +1856,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
     check:'<path d="M20 6 9 17l-5-5"/>',
     layers:'<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
-    flag:'<path d="M4 21V4m0 0 12 0-2 4 2 4H4"/>'
+    flag:'<path d="M4 21V4m0 0 12 0-2 4 2 4H4"/>',
+    globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/>',
+    eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'
   };
   function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
