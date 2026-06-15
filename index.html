@@ -19,7 +19,6 @@
   --park:#FF6B3D; --park-700:#E5511F; --park-50:#FFEDE6;
   --paper:#F7F6F1; --card:#FFFFFF; --line:#E3E6E1; --line-soft:#EEEFEA;
   --amber:#F2A93B;
-  --navy:#1A3A66;
   --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-body:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -62,10 +61,12 @@ img{max-width:100%}
 .burger span{display:block; height:2px; width:100%; background:var(--ink); border-radius:2px; transition:transform .25s var(--ease), opacity .2s}
 .brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.02em}
 .brand .pmark{
-  width:28px; height:28px; border-radius:8px; background:var(--navy); color:#fff;
+  width:28px; height:28px; border-radius:8px; background:var(--brand); color:var(--park);
   display:grid; place-items:center; font-weight:700; font-size:18px; flex:0 0 auto;
 }
 .brand .pmark::after{content:"P"}
+.drawer .brand .pmark{background:#fff; color:var(--brand)}
+.foot .brand .pmark{background:#fff; color:var(--brand)}
 .brand b{font-weight:700}
 .brand span{color:var(--muted); font-weight:500}
 .brand-name{display:inline-flex; align-items:baseline}
@@ -200,6 +201,12 @@ img{max-width:100%}
 .info-grid dd{margin:0; font-weight:600; font-size:14.5px; text-align:right}
 .info-grid dd a{color:var(--brand)}
 @media(min-width:680px){ .contact-cards{grid-template-columns:1fr 1fr} }
+.meista-sec{margin-top:40px; padding-top:34px; border-top:1px solid var(--line); scroll-margin-top:84px}
+.meista-sec:first-of-type{margin-top:30px; padding-top:0; border-top:0}
+.meista-h{font-family:var(--font-display); font-size:clamp(24px,4.4vw,33px); font-weight:700; letter-spacing:-.02em; margin:0 0 16px}
+.meista-sec > p{font-size:16.5px; line-height:1.7; color:var(--ink-soft); margin:0 0 15px; max-width:66ch}
+.meista-sec > p a{color:var(--brand); font-weight:600}
+.meista-sub{margin-bottom:30px !important}
 
 /* ---------- Auth UI (top-bar user menu + drawer buttons) ---------- */
 .topbar-user{position:relative}
@@ -626,10 +633,10 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Meistä<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#meista">Yritys</a>
-          <a href="#meista">Vastuullisuus</a>
-          <a href="#meista">Työpaikat</a>
-          <a href="#" class="js-open-contact">Yhteystiedot</a>
+          <a href="#" data-meista="m-yritys">Yritys</a>
+          <a href="#" data-meista="m-vastuullisuus">Vastuullisuus</a>
+          <a href="#" data-meista="m-tyopaikat">Työpaikat</a>
+          <a href="#" data-meista="m-yhteystiedot">Yhteystiedot</a>
         </div>
       </div>
     </nav>
@@ -696,10 +703,10 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Meistä<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#meista" data-close>Yritys</a>
-        <a href="#meista" data-close>Vastuullisuus</a>
-        <a href="#meista" data-close>Työpaikat</a>
-        <a href="#" class="js-open-contact" data-close>Yhteystiedot</a>
+        <a href="#" data-meista="m-yritys" data-close>Yritys</a>
+        <a href="#" data-meista="m-vastuullisuus" data-close>Vastuullisuus</a>
+        <a href="#" data-meista="m-tyopaikat" data-close>Työpaikat</a>
+        <a href="#" data-meista="m-yhteystiedot" data-close>Yhteystiedot</a>
       </div></div>
     </div>
   </nav>
@@ -860,16 +867,16 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         <ul>
           <li><a href="#kuluttajat">Kuluttaja-asiakkaat</a></li>
           <li><a href="#yritykset">Yritysasiakkaat</a></li>
-          <li><a href="#meista">Meistä</a></li>
+          <li><a href="#" data-meista="">Meistä</a></li>
           <li><a href="#" data-role="admin">Kirjaudu</a></li>
         </ul>
       </div>
       <div>
         <h5>Yritys</h5>
         <ul>
-          <li><a href="#" class="js-open-contact">Yhteystiedot</a></li>
+          <li><a href="#" data-meista="m-yhteystiedot">Yhteystiedot</a></li>
           <li><a href="#">Kumppaneille</a></li>
-          <li><a href="#">Ura</a></li>
+          <li><a href="#" data-meista="m-tyopaikat">Ura</a></li>
         </ul>
       </div>
       <div>
@@ -1031,18 +1038,41 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 </section>
 
 <!-- ============ PAGE: YHTEYSTIEDOT ============ -->
-<section class="page-overlay" id="page-contact" aria-label="Yhteystiedot">
+<section class="page-overlay" id="page-meista" aria-label="Meistä">
   <header class="page-top">
-    <button class="page-back" id="contact-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
-    <a href="#" class="brand" id="contact-home" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="page-back" id="meista-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
+    <a href="#" class="brand" id="meista-home" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
-      <p class="eyebrow">Yhteystiedot</p>
-      <h1 class="page-title">Ota yhteyttä</h1>
-      <p class="page-lead">Autamme mielellämme niin kuluttaja-asiakkaita, yrityksiä kuin pysäköinnin tarjoajia. Alta löydät yhteyshenkilömme sekä yrityksen tiedot.</p>
+      <p class="eyebrow">Meistä</p>
+      <h1 class="page-title">Tietoa meistä</h1>
+      <p class="page-lead">TotalParking yhdistää pysäköinnin ja sähköauton latauksen yhdelle kartalle. Tästä löydät tarinamme, arvomme, uramahdollisuudet sekä yhteystietomme.</p>
 
-      <div class="contact-cards">
+      <section class="meista-sec" id="m-yritys">
+        <h2 class="meista-h">Yritys</h2>
+        <p>Yritys on perustettu vuonna 2026, ja se sai alkunsa kahden opiskelijakaverin ajatuksesta: pysäköinnin pitäisi olla kokonaisvaltaisesti helpompaa. Heidän visionsa oli sovellus, joka kokoaa koko Suomen pysäköintialueet ja latauspisteet yhdelle kartalle samaan sovellukseen — ei siis enää hyppimistä monien eri yritysten sovellusten välillä.</p>
+        <p>Tästä ajatuksesta syntyi TotalParking: yksi näkymä, josta löytää lähimmän vapaan pysäköintipaikan ja sähköauton latauspisteen niin Helsingissä, Tampereella kuin tulevaisuudessa koko Suomessa.</p>
+      </section>
+
+      <section class="meista-sec" id="m-vastuullisuus">
+        <h2 class="meista-h">Vastuullisuus</h2>
+        <p>Pysäköinnin sujuvoittaminen on myös ympäristöteko. Kun kuljettajan ei tarvitse kiertää korttelia vapaata ruutua etsien, turhat ajokilometrit ja niistä syntyvät päästöt vähenevät.</p>
+        <p>Nostamme sähköauton latauspisteet kartalla pysäköinnin rinnalle, jotta siirtyminen sähköiseen liikkumiseen olisi mahdollisimman vaivatonta. Tavoitteenamme on, että jokainen pysäköinti- ja latausmahdollisuus löytyy yhdestä paikasta.</p>
+        <p>Käsittelemme käyttäjien tietoja vastuullisesti ja keräämme vain sen, mikä on palvelun toiminnan kannalta tarpeellista.</p>
+      </section>
+
+      <section class="meista-sec" id="m-tyopaikat">
+        <h2 class="meista-h">Työpaikat</h2>
+        <p>Tällä hetkellä meillä ei ole avoimia työpaikkoja. Otamme kuitenkin aina mielellämme vastaan avoimia hakemuksia — jos jaat intohimomme sujuvampaan liikkumiseen ja haluat olla mukana rakentamassa Suomen kattavinta pysäköinti- ja latauskarttaa, kerro itsestäsi.</p>
+        <p>Lähetä vapaamuotoinen hakemuksesi osoitteeseen <a href="mailto:rekrytointi@totalparking.fi">rekrytointi@totalparking.fi</a>, niin olemme yhteydessä, kun sopiva paikka avautuu.</p>
+      </section>
+
+      <section class="meista-sec" id="m-yhteystiedot">
+        <h2 class="meista-h">Yhteystiedot</h2>
+        <p class="meista-sub">Autamme mielellämme niin kuluttaja-asiakkaita, yrityksiä kuin pysäköinnin tarjoajia. Alta löydät yhteyshenkilömme sekä yrityksen tiedot.</p>
+
+        <div class="contact-cards">
         <div class="person-card">
           <div class="person-photo-wrap">
             <img class="person-photo" id="photo-ceo" alt="Toimitusjohtaja" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23E3E6E1'/%3E%3Ccircle cx='100' cy='80' r='34' fill='%23B3BDB8'/%3E%3Cpath d='M42 182c0-32 26-52 58-52s58 20 58 52Z' fill='%23B3BDB8'/%3E%3C/svg%3E">
@@ -1085,6 +1115,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
           <div><dt>Asiakaspalvelu</dt><dd>arkisin klo 8–18</dd></div>
         </dl>
       </div>
+      </section>
     </div>
   </div>
 </section>
@@ -1175,11 +1206,17 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       closeLogin(); enterApp('admin');
     }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
   });
-  function openContact(){ var p=document.getElementById('page-contact'); if(!p)return; closeDrawer(); p.classList.add('active'); document.body.classList.add('no-scroll'); p.scrollTop=0; }
-  function closeContact(){ var p=document.getElementById('page-contact'); if(!p)return; p.classList.remove('active'); document.body.classList.remove('no-scroll'); }
-  $all('.js-open-contact').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openContact(); }); });
-  (function(){ var b=document.getElementById('contact-back'); if(b) b.addEventListener('click',closeContact); var h=document.getElementById('contact-home'); if(h) h.addEventListener('click',function(e){ e.preventDefault(); closeContact(); }); })();
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closeContact();}});
+  function openMeista(sectionId){
+    var p=document.getElementById('page-meista'); if(!p)return;
+    closeDrawer();
+    p.classList.add('active'); document.body.classList.add('no-scroll'); p.scrollTop=0;
+    var sec = sectionId ? document.getElementById(sectionId) : null;
+    if(sec){ requestAnimationFrame(function(){ var top=sec.getBoundingClientRect().top - p.getBoundingClientRect().top + p.scrollTop - 70; p.scrollTo({top:Math.max(0,top), behavior:'auto'}); }); }
+  }
+  function closeMeista(){ var p=document.getElementById('page-meista'); if(!p)return; p.classList.remove('active'); document.body.classList.remove('no-scroll'); }
+  $all('[data-meista]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openMeista(a.getAttribute('data-meista')); }); });
+  (function(){ var b=document.getElementById('meista-back'); if(b) b.addEventListener('click',closeMeista); var h=document.getElementById('meista-home'); if(h) h.addEventListener('click',function(e){ e.preventDefault(); closeMeista(); }); })();
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closeMeista();}});
 
   /* ---------- Session + app enter / exit / logout ---------- */
   var sess=null;   // {role,email} while logged in (kept across site<->app navigation)
