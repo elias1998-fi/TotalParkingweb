@@ -2,7 +2,7 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0E5A4E">
 <title>TotalParking — Pysäköinti ja sähkölataus yhdellä kartalla</title>
 <meta name="description" content="TotalParking yhdistää kaupungin pysäköinnin ja sähköauton latauksen yhteen palveluun Helsingissä ja Tampereella. Kuluttajille, yrityksille ja yhteisöille.">
@@ -33,7 +33,7 @@ html{scroll-behavior:smooth}
 body{
   margin:0; font-family:var(--font-body); color:var(--ink); background:var(--paper);
   font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  overflow-x:hidden;
+  overflow-x:hidden; touch-action:manipulation; -webkit-text-size-adjust:100%; text-size-adjust:100%;
 }
 body.no-scroll{overflow:hidden}
 h1,h2,h3,h4{font-family:var(--font-display); margin:0; line-height:1.08; letter-spacing:-.02em; font-weight:600}
@@ -349,7 +349,7 @@ body.logged-in #drawer-login{display:none}
 .login-form.active{display:flex}
 .role-list.hidden{display:none}
 .field label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px}
-.field input{width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-family:inherit; font-size:15px; background:var(--paper)}
+.field input{width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-family:inherit; font-size:16px; background:var(--paper)}
 .field input:focus{border-color:var(--brand); background:#fff; outline:none}
 .login-ctx{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; margin-bottom:4px; font-size:14px}
 .login-ctx .role-ic{width:38px; height:38px; border-radius:10px}
@@ -372,6 +372,21 @@ body.app-open{overflow:auto}
 .app-role-pill.staff{background:var(--charge-50); color:var(--charge-700)}
 .app-top .demo-badge{font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
 .app-top .user-badge{font-family:var(--font-mono); font-size:11.5px; font-weight:600; color:var(--brand); background:var(--brand-50); border:1px solid var(--brand-100); padding:5px 11px; border-radius:var(--r-pill); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.app-user{position:relative}
+.app-user-btn{display:inline-flex; align-items:center; gap:7px; max-width:240px; background:var(--brand-50); border:1px solid var(--brand-100); border-radius:var(--r-pill); padding:6px 11px; cursor:pointer; font-family:var(--font-mono); font-size:11.5px; font-weight:600; color:var(--brand)}
+.app-user-btn:hover{border-color:var(--brand)}
+.app-user-email{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.app-user-btn .chev{flex:0 0 auto; transition:transform .2s var(--ease)}
+.app-user.open .app-user-btn .chev{transform:rotate(180deg)}
+.app-user-dd{position:absolute; right:0; top:calc(100% + 8px); min-width:230px; background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); padding:6px; opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity .18s, transform .18s, visibility .18s; z-index:60; font-family:var(--font-body)}
+.app-user.open .app-user-dd{opacity:1; visibility:visible; transform:translateY(0)}
+.app-user-dd-email{font-family:var(--font-mono); font-size:12px; color:var(--muted); padding:9px 11px 8px; border-bottom:1px solid var(--line-soft); margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.app-user-dd-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:transparent; border:0; border-radius:9px; padding:10px 11px; font-size:14.5px; font-weight:500; color:var(--ink); cursor:pointer; font-family:var(--font-body)}
+.app-user-dd-item:hover{background:var(--brand-50); color:var(--brand)}
+.app-user-dd-item svg{color:var(--muted); flex:0 0 auto}
+.app-user-dd-item:hover svg{color:var(--brand)}
+.app-user-dd-item.danger:hover{background:var(--park-50); color:var(--park-700)}
+.app-user-dd-item.danger:hover svg{color:var(--park-700)}
 .login-err{color:#C62828; font-size:13px; font-weight:600; margin-top:6px; background:#FDECEA; border:1px solid #F5C6C0; padding:9px 12px; border-radius:10px}
 .pass-wrap{position:relative}
 .pass-wrap input{padding-right:46px}
@@ -539,6 +554,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   .map-panel{height:auto; min-height:420px}
   .map-panel .map-el{position:relative; height:420px}
 }
+@media(max-width:560px){
+  .app-top{gap:9px; padding:0 13px}
+  .app-top .brand b, .app-top .brand>span:not(.pmark){display:none}
+  .app-user-btn{max-width:160px}
+}
 @media(min-width:860px){.app-menu-btn{display:none}}
 @media(prefers-reduced-motion:reduce){
   *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
@@ -557,7 +577,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="spacer"></div>
     <nav class="topbar-links" aria-label="Päävalikko">
       <a href="#kuluttajat">Kuluttaja-asiakkaat</a>
-      <a href="#yritykset">Yritykset</a>
+      <a href="#yritykset">Yritysasiakkaat</a>
       <a href="#top">Pysäköinnin tarjoajat</a>
       <a href="#top">Asiakaspalvelu</a>
       <a href="#meista">Meistä</a>
@@ -596,7 +616,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       </div></div>
     </div>
     <div class="acc">
-      <button class="acc-head" aria-expanded="false">Yritykset<span class="acc-ic" aria-hidden="true"></span></button>
+      <button class="acc-head" aria-expanded="false">Yritysasiakkaat<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
         <a href="#yritykset" data-close>Yleistä</a>
         <a href="#yritykset" data-close>Yrityspysäköinti</a>
@@ -788,7 +808,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         <h5>Palvelu</h5>
         <ul>
           <li><a href="#kuluttajat">Kuluttaja-asiakkaat</a></li>
-          <li><a href="#yritykset">Yritykset</a></li>
+          <li><a href="#yritykset">Yritysasiakkaat</a></li>
           <li><a href="#meista">Meistä</a></li>
           <li><a href="#" data-role="admin">Kirjaudu</a></li>
         </ul>
@@ -877,8 +897,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
     <span class="app-role-pill admin">Master</span>
     <div class="spacer"></div>
-    <span class="demo-badge" id="admin-user">Demotila</span>
-    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+    <div class="app-user">
+      <button class="app-user-btn" aria-haspopup="true" aria-expanded="false"><span class="app-user-email"></span><svg class="chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="app-user-dd" role="menu">
+        <div class="app-user-dd-email"></div>
+        <button class="app-user-dd-item js-gosite" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Verkkosivu</button>
+        <button class="app-user-dd-item danger js-logout" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+      </div>
+    </div>
   </header>
   <div class="app-body">
     <nav class="app-side" data-app="admin">
@@ -903,8 +929,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
     <span class="app-role-pill biz">Yritys</span>
     <div class="spacer"></div>
-    <span class="demo-badge">Demotila</span>
-    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+    <div class="app-user">
+      <button class="app-user-btn" aria-haspopup="true" aria-expanded="false"><span class="app-user-email"></span><svg class="chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="app-user-dd" role="menu">
+        <div class="app-user-dd-email"></div>
+        <button class="app-user-dd-item js-gosite" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Verkkosivu</button>
+        <button class="app-user-dd-item danger js-logout" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+      </div>
+    </div>
   </header>
   <div class="app-body">
     <nav class="app-side" data-app="biz">
@@ -927,8 +959,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
     <span class="app-role-pill staff">Henkilökunta</span>
     <div class="spacer"></div>
-    <span class="demo-badge">Demotila</span>
-    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+    <div class="app-user">
+      <button class="app-user-btn" aria-haspopup="true" aria-expanded="false"><span class="app-user-email"></span><svg class="chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="app-user-dd" role="menu">
+        <div class="app-user-dd-email"></div>
+        <button class="app-user-dd-item js-gosite" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Verkkosivu</button>
+        <button class="app-user-dd-item danger js-logout" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+      </div>
+    </div>
   </header>
   <div class="app-body">
     <nav class="app-side" data-app="staff">
@@ -1010,6 +1048,13 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function $all(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
   function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
 
+  /* Keep the page at a fixed scale on mobile: iOS Safari ignores user-scalable=no,
+     so block its pinch-zoom gesture. (MapLibre handles map zoom via touch events,
+     not these gesture events, so the map still pinch-zooms normally.) */
+  ['gesturestart','gesturechange','gestureend'].forEach(function(ev){
+    document.addEventListener(ev,function(e){ e.preventDefault(); },{passive:false});
+  });
+
   /* ---------- Drawer ---------- */
   var drawer=$('#drawer'), scrim=$('#scrim'), burger=$('#burger');
   function openDrawer(){drawer.classList.add('open'); scrim.classList.add('open'); burger.setAttribute('aria-expanded','true'); document.body.classList.add('no-scroll');}
@@ -1074,8 +1119,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
       setLoginBusy(false);
       if(res.error){ setLoginErr(authErrMsg(res.error)); return; }
-      var u=res.data&&res.data.user, ab=$('#admin-user');
-      if(ab&&u){ ab.textContent=u.email; ab.classList.remove('demo-badge'); ab.classList.add('user-badge'); }
+      var u=res.data&&res.data.user;
       sess={role:'admin', email:(u&&u.email)||''}; updateAuthUI();
       closeLogin(); enterApp('admin');
     }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
@@ -1090,11 +1134,15 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   var sess=null;   // {role,email} while logged in (kept across site<->app navigation)
   var appIds={admin:'#app-admin', biz:'#app-biz', staff:'#app-staff'};
   function updateAuthUI(){
-    var on=!!sess;
+    var on=!!sess, em=on?(sess.email||''):'';
     document.body.classList.toggle('logged-in', on);
-    if(on){ var em=sess.email||''; var ue=$('#user-email'), ueh=$('#user-dd-email'); if(ue) ue.textContent=em; if(ueh) ueh.textContent=em; }
+    var ue=$('#user-email'); if(ue) ue.textContent=em;
+    var ueh=$('#user-dd-email'); if(ueh) ueh.textContent=em;
+    $all('.app-user-email').forEach(function(x){ x.textContent=em; });
+    $all('.app-user-dd-email').forEach(function(x){ x.textContent=em; });
     var tu=$('#topbar-user'); if(tu) tu.classList.remove('open');
     var ub=$('#user-btn'); if(ub) ub.setAttribute('aria-expanded','false');
+    $all('.app-user').forEach(function(x){ x.classList.remove('open'); });
   }
   function enterApp(role){
     $('#site').style.display='none';
@@ -1123,7 +1171,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     window.scrollTo(0,0);
     closeDrawer();
   }
-  $all('[data-exit]').forEach(function(b){b.addEventListener('click',exitApp);});
   $all('[data-side]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.toggle('side-open');});});
   (function(){
     var tu=$('#topbar-user'), ub=$('#user-btn');
@@ -1137,6 +1184,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     var dg=$('#drawer-goapp'); if(dg) dg.addEventListener('click',goToApp);
     var dlo=$('#drawer-logout'); if(dlo) dlo.addEventListener('click',exitApp);
     $all('.app-top .brand').forEach(function(b){ b.style.cursor='pointer'; b.setAttribute('title','Siirry verkkosivulle'); b.addEventListener('click',goToSite); });
+    $all('.app-user-btn').forEach(function(btn){ btn.addEventListener('click',function(e){ e.stopPropagation(); var w=btn.closest('.app-user'); var open=w.classList.toggle('open'); btn.setAttribute('aria-expanded',open?'true':'false'); }); });
+    $all('.app-user .js-gosite').forEach(function(b){ b.addEventListener('click',function(){ var w=b.closest('.app-user'); if(w)w.classList.remove('open'); goToSite(); }); });
+    $all('.app-user .js-logout').forEach(function(b){ b.addEventListener('click',function(){ var w=b.closest('.app-user'); if(w)w.classList.remove('open'); exitApp(); }); });
+    document.addEventListener('click',function(e){ $all('.app-user.open').forEach(function(w){ if(!w.contains(e.target)) w.classList.remove('open'); }); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ $all('.app-user.open').forEach(function(w){ w.classList.remove('open'); }); } });
   })();
   updateAuthUI();
 
