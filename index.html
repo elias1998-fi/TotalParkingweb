@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E5A4E">
+<title>TotalParking — Pysäköinti ja sähkölataus yhdellä kartalla</title>
+<meta name="description" content="TotalParking yhdistää kaupungin pysäköinnin ja sähköauton latauksen yhteen palveluun Helsingissä ja Tampereella. Kuluttajille, yrityksille ja yhteisöille.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E5A4E'/%3E%3Ctext x='16' y='23' font-family='Arial,sans-serif' font-size='20' font-weight='700' text-anchor='middle' fill='%23FF6B3D'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E2A26; --ink-soft:#33433F; --muted:#5B6B66;
+  --brand:#0E5A4E; --brand-700:#093E36; --brand-50:#E8F1EE; --brand-100:#D3E5E0;
+  --charge:#13B17C; --charge-700:#0C8A60; --charge-50:#E3F6EE;
+  --park:#FF6B3D; --park-700:#E5511F; --park-50:#FFEDE6;
+  --paper:#F7F6F1; --card:#FFFFFF; --line:#E3E6E1; --line-soft:#EEEFEA;
+  --amber:#F2A93B;
+  --font-display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-body:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --r-sm:10px; --r:14px; --r-lg:22px; --r-pill:999px;
+  --shadow:0 1px 2px rgba(14,42,38,.05), 0 10px 28px rgba(14,42,38,.06);
+  --shadow-lg:0 24px 60px rgba(9,62,54,.18);
+  --topbar-h:64px;
+  --ease:cubic-bezier(.4,.0,.2,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--font-body); color:var(--ink); background:var(--paper);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body.no-scroll{overflow:hidden}
+h1,h2,h3,h4{font-family:var(--font-display); margin:0; line-height:1.08; letter-spacing:-.02em; font-weight:600}
+p{margin:0}
+a{color:inherit; text-decoration:none}
+button{font-family:inherit; cursor:pointer}
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--charge); outline-offset:2px; border-radius:6px}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--charge-700); font-weight:700}
+.wrap{max-width:1180px; margin:0 auto; padding:0 22px}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:60; height:var(--topbar-h);
+  background:rgba(247,246,241,.82); backdrop-filter:saturate(160%) blur(12px);
+  border-bottom:1px solid var(--line); display:flex; align-items:center;
+}
+.topbar .wrap{display:flex; align-items:center; gap:14px; width:100%}
+.burger{
+  display:inline-flex; flex-direction:column; gap:4px; justify-content:center;
+  width:42px; height:42px; padding:10px; border:1px solid var(--line); border-radius:12px;
+  background:var(--card); flex:0 0 auto;
+}
+.burger span{display:block; height:2px; width:100%; background:var(--ink); border-radius:2px; transition:transform .25s var(--ease), opacity .2s}
+.brand{display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.02em}
+.brand .pmark{
+  width:28px; height:28px; border-radius:8px; background:var(--brand); color:var(--park);
+  display:grid; place-items:center; font-weight:700; font-size:18px; flex:0 0 auto;
+}
+.brand .pmark::after{content:"P"}
+.brand b{font-weight:700}
+.brand span{color:var(--muted); font-weight:500}
+.topbar .spacer{flex:1}
+.topbar-links{display:none; gap:26px; align-items:center}
+.topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
+.topbar-links a:hover{color:var(--brand)}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:1px solid transparent; border-radius:var(--r-pill); font-weight:600; font-size:15px;
+  padding:11px 20px; transition:transform .15s var(--ease), background .2s, box-shadow .2s, border-color .2s; white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand); color:#fff}
+.btn-primary:hover{background:var(--brand-700)}
+.btn-ember{background:var(--park); color:#fff}
+.btn-ember:hover{background:var(--park-700)}
+.btn-ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn-ghost:hover{background:var(--card); border-color:var(--brand-100)}
+.btn-light{background:#fff; color:var(--brand)}
+.btn-sm{padding:8px 14px; font-size:14px}
+.btn svg{width:18px; height:18px}
+
+/* ---------- Drawer (burger menu) ---------- */
+.scrim{
+  position:fixed; inset:0; background:rgba(9,40,36,.42); backdrop-filter:blur(2px);
+  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; z-index:80;
+}
+.scrim.open{opacity:1; visibility:visible}
+.drawer{
+  position:fixed; top:0; left:0; bottom:0; width:min(360px,86vw); z-index:90;
+  background:var(--brand); color:#fff; transform:translateX(-102%);
+  transition:transform .38s var(--ease); display:flex; flex-direction:column;
+  padding:22px 22px 26px; box-shadow:var(--shadow-lg);
+}
+.drawer.open{transform:translateX(0)}
+.drawer-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:30px}
+.drawer .brand{color:#fff}
+.drawer .brand .pmark{background:#fff; color:var(--brand)}
+.drawer-close{width:40px; height:40px; border-radius:11px; border:1px solid rgba(255,255,255,.22); background:transparent; color:#fff; font-size:20px; display:grid; place-items:center}
+.drawer nav{display:flex; flex-direction:column; gap:4px; margin-top:8px}
+.drawer nav a{
+  display:flex; align-items:center; justify-content:space-between; padding:16px 6px;
+  font-family:var(--font-display); font-size:22px; font-weight:500; letter-spacing:-.02em;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+.drawer nav a .n{font-family:var(--font-mono); font-size:12px; opacity:.6; font-weight:700}
+.drawer nav a:hover{color:var(--park-50)}
+.drawer-foot{margin-top:auto; display:flex; flex-direction:column; gap:12px}
+.drawer-foot .btn{width:100%}
+.drawer-mini{font-size:13px; color:rgba(255,255,255,.6); line-height:1.5}
+
+/* ---------- Hero ---------- */
+.hero{padding:34px 0 18px}
+.hero-grid{display:grid; grid-template-columns:1fr; gap:22px; align-items:stretch}
+.hero-copy{display:flex; flex-direction:column; justify-content:center}
+.hero h1{font-size:clamp(34px,7vw,58px); font-weight:700; margin:16px 0 0}
+.hero h1 .park{color:var(--park)} .hero h1 .charge{color:var(--charge-700)}
+.hero-sub{margin:18px 0 26px; font-size:clamp(16px,2.4vw,19px); color:var(--ink-soft); max-width:42ch}
+.hero-cta{display:flex; gap:12px; flex-wrap:wrap}
+.hero-meta{display:flex; gap:22px; margin-top:26px; flex-wrap:wrap}
+.hero-meta .stat{display:flex; flex-direction:column}
+.hero-meta .stat b{font-family:var(--font-mono); font-size:24px; color:var(--brand); line-height:1}
+.hero-meta .stat small{font-size:12.5px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.06em}
+
+.hero-map-card{
+  position:relative; border-radius:var(--r-lg); overflow:hidden; min-height:340px;
+  border:1px solid var(--line); box-shadow:var(--shadow); background:#eef0ec;
+}
+.map-el{position:absolute; inset:0}
+.hero-map-card .live-chip{
+  position:absolute; left:14px; top:14px; z-index:5;
+  background:rgba(255,255,255,.94); backdrop-filter:blur(6px); border:1px solid var(--line);
+  border-radius:var(--r-pill); padding:9px 15px 9px 12px; display:flex; align-items:center; gap:10px;
+  box-shadow:var(--shadow); font-weight:600; font-size:14px;
+}
+.live-dot{width:9px; height:9px; border-radius:50%; background:var(--charge); position:relative}
+.live-dot::after{content:""; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--charge); animation:ping 1.8s var(--ease) infinite}
+.live-chip b{font-family:var(--font-mono); color:var(--brand)}
+.map-legend{
+  position:absolute; right:12px; bottom:12px; z-index:5; display:flex; gap:8px; flex-direction:column;
+}
+.legend-item{background:rgba(255,255,255,.94); border:1px solid var(--line); border-radius:10px; padding:6px 11px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px; box-shadow:var(--shadow)}
+.legend-item .swatch{width:11px; height:11px; border-radius:50%}
+@keyframes ping{0%{transform:scale(.7);opacity:.9}80%,100%{transform:scale(1.9);opacity:0}}
+
+/* Map markers (shared in hero + admin) */
+.mk{position:relative; cursor:pointer; transform:translateY(-2px)}
+.mk-park{
+  width:30px; height:30px; border-radius:50% 50% 50% 2px; transform:rotate(45deg);
+  background:var(--park); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(229,81,31,.4);
+  display:grid; place-items:center;
+}
+.mk-park b{transform:rotate(-45deg); color:#fff; font-family:var(--font-display); font-weight:700; font-size:15px}
+.mk-charge{
+  width:30px; height:30px; border-radius:50% 50% 50% 2px; transform:rotate(45deg);
+  background:var(--charge); border:2.5px solid #fff; box-shadow:0 4px 10px rgba(12,138,96,.4);
+  display:grid; place-items:center;
+}
+.mk-charge svg{transform:rotate(-45deg); width:15px; height:15px}
+.mk-charge.pulse::before{content:""; position:absolute; inset:-3px; border-radius:inherit; border:2px solid var(--charge); animation:ping 2.2s var(--ease) infinite}
+.maplibregl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
+.pop-t{font-family:var(--font-display); font-weight:600; font-size:15px; margin-bottom:3px}
+.pop-s{font-size:13px; color:var(--muted)}
+.pop-s .mono{color:var(--brand)}
+
+/* ---------- Section base ---------- */
+.section{padding:64px 0}
+.section-head{max-width:60ch; margin-bottom:36px}
+.section-head h2{font-size:clamp(26px,4.4vw,40px); margin-top:12px}
+.section-head p{color:var(--ink-soft); margin-top:14px; font-size:17px}
+
+/* Audience cards */
+.aud-grid{display:grid; grid-template-columns:1fr; gap:18px}
+.aud-card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:28px;
+  display:flex; flex-direction:column; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  transition:transform .25s var(--ease), box-shadow .25s;
+}
+.aud-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-lg)}
+.aud-card .tag{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; align-self:flex-start; padding:5px 11px; border-radius:var(--r-pill)}
+.aud-card.c1 .tag{background:var(--park-50); color:var(--park-700)}
+.aud-card.c2 .tag{background:var(--brand-50); color:var(--brand)}
+.aud-card.c3 .tag{background:var(--charge-50); color:var(--charge-700)}
+.aud-card h3{font-size:24px; margin:16px 0 10px}
+.aud-card p{color:var(--ink-soft); font-size:15.5px}
+.aud-list{list-style:none; padding:0; margin:18px 0 22px; display:flex; flex-direction:column; gap:10px}
+.aud-list li{display:flex; gap:10px; font-size:15px; color:var(--ink-soft)}
+.aud-list li svg{width:18px; height:18px; flex:0 0 auto; margin-top:2px}
+.aud-card .card-cta{margin-top:auto}
+.aud-card .card-cta a{font-weight:600; color:var(--brand); display:inline-flex; align-items:center; gap:7px}
+.aud-card .card-cta a svg{width:16px; height:16px; transition:transform .2s}
+.aud-card .card-cta a:hover svg{transform:translateX(4px)}
+
+/* Duality strip (parking + charging) */
+.duo{background:var(--brand); color:#fff; border-radius:28px; padding:46px 30px; position:relative; overflow:hidden}
+.duo::before{content:""; position:absolute; right:-60px; top:-60px; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,.05)}
+.duo .eyebrow{color:var(--charge)}
+.duo h2{font-size:clamp(24px,4vw,36px); margin:12px 0 0; max-width:24ch}
+.duo-cols{display:grid; grid-template-columns:1fr; gap:20px; margin-top:34px}
+.duo-col{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:24px}
+.duo-col .ic{width:46px; height:46px; border-radius:13px; display:grid; place-items:center; margin-bottom:16px}
+.duo-col.park .ic{background:var(--park)} .duo-col.charge .ic{background:var(--charge)}
+.duo-col .ic svg{width:24px; height:24px}
+.duo-col h4{font-size:20px; margin-bottom:8px}
+.duo-col p{color:rgba(255,255,255,.78); font-size:15px}
+
+/* Stats band */
+.statband{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden}
+.statband .cell{background:var(--card); padding:26px 22px}
+.statband .cell b{font-family:var(--font-mono); font-size:clamp(26px,4vw,34px); color:var(--brand); display:block; line-height:1}
+.statband .cell small{display:block; color:var(--muted); margin-top:8px; font-size:13.5px}
+.statband .cell.accent b{color:var(--park)}
+
+/* CTA band */
+.ctaband{background:var(--ink); color:#fff; border-radius:28px; padding:48px 30px; text-align:center}
+.ctaband h2{font-size:clamp(26px,4.4vw,38px)}
+.ctaband p{color:rgba(255,255,255,.72); margin:14px auto 26px; max-width:46ch}
+.ctaband .hero-cta{justify-content:center}
+
+/* Footer */
+.foot{background:var(--brand-700); color:rgba(255,255,255,.8); padding:54px 0 30px; margin-top:8px}
+.foot-grid{display:grid; grid-template-columns:1fr; gap:28px}
+.foot .brand{color:#fff; margin-bottom:14px}
+.foot .brand .pmark{background:#fff; color:var(--brand)}
+.foot-blurb{font-size:14.5px; max-width:34ch; color:rgba(255,255,255,.72)}
+.foot h5{font-family:var(--font-display); color:#fff; font-size:13px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:14px}
+.foot ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; font-size:14.5px}
+.foot ul a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.14); margin-top:34px; padding-top:20px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; font-size:13px; color:rgba(255,255,255,.6)}
+
+/* ---------- Login modal ---------- */
+.modal-scrim{position:fixed; inset:0; background:rgba(9,40,36,.5); backdrop-filter:blur(3px); z-index:120; display:grid; place-items:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s}
+.modal-scrim.open{opacity:1; visibility:visible}
+.modal{
+  background:var(--card); border-radius:24px; width:min(520px,100%); max-height:92vh; overflow:auto;
+  box-shadow:var(--shadow-lg); transform:translateY(14px) scale(.98); transition:transform .3s var(--ease);
+}
+.modal-scrim.open .modal{transform:none}
+.modal-head{padding:26px 26px 0; display:flex; align-items:flex-start; justify-content:space-between; gap:14px}
+.modal-head h3{font-size:23px}
+.modal-head .demo-badge{font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
+.modal-x{width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card); font-size:19px; flex:0 0 auto}
+.modal-body{padding:18px 26px 26px}
+.modal-body>p.lead{color:var(--muted); font-size:14.5px; margin-bottom:20px}
+.role-list{display:flex; flex-direction:column; gap:12px}
+.role-btn{
+  display:flex; align-items:center; gap:15px; text-align:left; width:100%;
+  background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px;
+  transition:border-color .2s, background .2s, transform .15s;
+}
+.role-btn:hover{border-color:var(--brand-100); background:var(--brand-50); transform:translateY(-2px)}
+.role-ic{width:46px; height:46px; border-radius:12px; display:grid; place-items:center; flex:0 0 auto; color:#fff}
+.role-ic svg{width:23px; height:23px}
+.role-btn.r-admin .role-ic{background:var(--brand)}
+.role-btn.r-biz .role-ic{background:var(--park)}
+.role-btn.r-staff .role-ic{background:var(--charge)}
+.role-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:16px; margin-bottom:2px}
+.role-txt small{color:var(--muted); font-size:13px; line-height:1.4}
+.role-btn .arr{margin-left:auto; color:var(--muted); flex:0 0 auto}
+.note{margin-top:18px; font-size:12.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:12px 14px; line-height:1.5}
+
+/* login form (step 2) */
+.login-form{display:none; flex-direction:column; gap:14px}
+.login-form.active{display:flex}
+.role-list.hidden{display:none}
+.field label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px}
+.field input{width:100%; border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-family:inherit; font-size:15px; background:var(--paper)}
+.field input:focus{border-color:var(--brand); background:#fff; outline:none}
+.login-ctx{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; margin-bottom:4px; font-size:14px}
+.login-ctx .role-ic{width:38px; height:38px; border-radius:10px}
+.login-ctx .role-ic svg{width:19px; height:19px}
+.login-back{background:none; border:none; color:var(--muted); font-size:14px; padding:6px 0; align-self:flex-start; display:inline-flex; align-items:center; gap:6px}
+.login-back:hover{color:var(--brand)}
+
+/* ---------- App shells (dashboards) ---------- */
+.app{display:none; min-height:100vh; background:var(--paper); flex-direction:column}
+body.app-open .app.active{display:flex}
+body.app-open{overflow:auto}
+.app-top{
+  height:60px; background:var(--card); border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:14px; padding:0 18px; position:sticky; top:0; z-index:30;
+}
+.app-top .brand{font-size:17px}
+.app-role-pill{font-family:var(--font-mono); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:5px 11px; border-radius:var(--r-pill); margin-left:4px}
+.app-role-pill.admin{background:var(--brand-50); color:var(--brand)}
+.app-role-pill.biz{background:var(--park-50); color:var(--park-700)}
+.app-role-pill.staff{background:var(--charge-50); color:var(--charge-700)}
+.app-top .demo-badge{font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:var(--amber); color:#3a2a00; padding:4px 9px; border-radius:var(--r-pill)}
+.app-top .spacer{flex:1}
+.app-menu-btn{display:inline-flex; width:40px; height:40px; border:1px solid var(--line); border-radius:11px; background:var(--card); align-items:center; justify-content:center; flex-direction:column; gap:4px}
+.app-menu-btn span{width:18px; height:2px; background:var(--ink); border-radius:2px}
+.app-body{display:flex; flex:1; min-height:0}
+.app-side{
+  width:236px; flex:0 0 236px; background:var(--card); border-right:1px solid var(--line); padding:16px 12px;
+  display:flex; flex-direction:column; gap:3px; position:sticky; top:60px; height:calc(100vh - 60px); overflow:auto;
+}
+.app-side .grp{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:14px 12px 6px; font-weight:700}
+.nav-item{
+  display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:11px; font-weight:500; font-size:14.5px; color:var(--ink-soft);
+  border:none; background:none; width:100%; text-align:left; transition:background .15s, color .15s;
+}
+.nav-item svg{width:19px; height:19px; flex:0 0 auto; opacity:.8}
+.nav-item:hover{background:var(--paper); color:var(--ink)}
+.nav-item.active{background:var(--brand); color:#fff}
+.nav-item.active svg{opacity:1}
+.nav-item .badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--park); color:#fff; border-radius:var(--r-pill); padding:1px 7px}
+.nav-item.active .badge{background:rgba(255,255,255,.22)}
+.app-main{flex:1; min-width:0; padding:24px; overflow:auto}
+.panel{display:none}
+.panel.active{display:block; animation:fade .35s var(--ease)}
+@keyframes fade{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.panel-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap}
+.panel-head h2{font-size:26px}
+.panel-head .sub{color:var(--muted); font-size:14.5px; margin-top:5px}
+.panel-head .tools{display:flex; gap:10px; flex-wrap:wrap}
+
+/* KPI cards */
+.kpi-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:22px}
+.kpi{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
+.kpi .k-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+.kpi .k-ic{width:36px; height:36px; border-radius:10px; display:grid; place-items:center}
+.kpi .k-ic svg{width:19px; height:19px}
+.kpi .k-ic.b{background:var(--brand-50); color:var(--brand)}
+.kpi .k-ic.p{background:var(--park-50); color:var(--park-700)}
+.kpi .k-ic.c{background:var(--charge-50); color:var(--charge-700)}
+.kpi .delta{font-family:var(--font-mono); font-size:12px; font-weight:700; padding:3px 8px; border-radius:var(--r-pill)}
+.delta.up{background:var(--charge-50); color:var(--charge-700)}
+.delta.down{background:#FDE7E2; color:#C0392B}
+.kpi .k-val{font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--ink); line-height:1}
+.kpi .k-lab{color:var(--muted); font-size:13px; margin-top:7px}
+
+/* cards / grid */
+.cards-2{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:22px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow)}
+.card-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px}
+.card-h h3{font-size:17px}
+.card-h .link{font-size:13.5px; color:var(--brand); font-weight:600}
+.chart-wrap{margin:6px 0 4px}
+.chart-x{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-top:8px}
+
+/* feed */
+.feed{display:flex; flex-direction:column; gap:2px}
+.feed-row{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft)}
+.feed-row:last-child{border-bottom:none}
+.feed-dot{width:9px; height:9px; border-radius:50%; margin-top:6px; flex:0 0 auto}
+.feed-row .ft{font-size:14px; font-weight:500}
+.feed-row .fs{font-size:12.5px; color:var(--muted)}
+.feed-row time{margin-left:auto; font-family:var(--font-mono); font-size:11.5px; color:var(--muted); white-space:nowrap}
+
+/* tables */
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
+table.tbl{width:100%; border-collapse:collapse; min-width:560px}
+.tbl th{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); text-align:left; padding:13px 16px; border-bottom:1px solid var(--line); font-weight:700; background:var(--paper)}
+.tbl td{padding:13px 16px; border-bottom:1px solid var(--line-soft); font-size:14px; vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--paper)}
+.tbl .mono{font-size:13px; color:var(--ink-soft)}
+.tbl .strong{font-weight:600}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:var(--r-pill); white-space:nowrap}
+.pill .d{width:7px; height:7px; border-radius:50%}
+.pill.ok{background:var(--charge-50); color:var(--charge-700)} .pill.ok .d{background:var(--charge)}
+.pill.warn{background:#FEF3DD; color:#9A6B00} .pill.warn .d{background:var(--amber)}
+.pill.err{background:#FDE7E2; color:#C0392B} .pill.err .d{background:#E74C3C}
+.pill.mute{background:var(--paper); color:var(--muted); border:1px solid var(--line)} .pill.mute .d{background:var(--muted)}
+.pill.park{background:var(--park-50); color:var(--park-700)} .pill.park .d{background:var(--park)}
+.pill.charge{background:var(--charge-50); color:var(--charge-700)} .pill.charge .d{background:var(--charge)}
+.row-act{display:inline-flex; gap:6px}
+.icon-btn{width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:var(--card); display:grid; place-items:center; color:var(--ink-soft)}
+.icon-btn:hover{background:var(--paper); color:var(--brand); border-color:var(--brand-100)}
+.icon-btn svg{width:16px; height:16px}
+.avatar{width:30px; height:30px; border-radius:50%; background:var(--brand); color:#fff; display:inline-grid; place-items:center; font-size:12px; font-weight:700; font-family:var(--font-display); flex:0 0 auto}
+.cell-user{display:flex; align-items:center; gap:10px}
+
+/* admin map panel */
+.map-panel{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:min(64vh,560px); box-shadow:var(--shadow)}
+.map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
+.tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
+.tool-btn svg{width:16px; height:16px}
+.tool-btn.primary{background:var(--brand); color:#fff; border-color:var(--brand)}
+.tool-btn.danger:hover{background:#FDE7E2; color:#C0392B; border-color:#F3C5BC}
+.tool-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.map-areas{position:absolute; right:14px; top:14px; bottom:14px; width:264px; max-width:46%; z-index:6; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; overflow:hidden}
+.map-areas h4{padding:14px 16px 10px; font-size:14px; border-bottom:1px solid var(--line)}
+.map-areas .list{overflow:auto; padding:6px}
+.area-row{padding:11px 12px; border-radius:11px; cursor:pointer; transition:background .15s}
+.area-row:hover{background:var(--paper)}
+.area-row .ar-t{display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px}
+.area-row .ar-s{font-size:12px; color:var(--muted); margin-top:4px; padding-left:0; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.area-row .dotsq{width:9px; height:9px; border-radius:3px; flex:0 0 auto}
+
+/* business: cost centers / overview */
+.biz-hero{background:var(--brand); color:#fff; border-radius:18px; padding:24px; margin-bottom:22px; display:flex; flex-wrap:wrap; gap:20px; justify-content:space-between; align-items:center}
+.biz-hero .bh-l b{font-family:var(--font-display); font-size:22px; display:block}
+.biz-hero .bh-l small{color:rgba(255,255,255,.7); font-size:13.5px}
+.biz-hero .bh-stats{display:flex; gap:26px; flex-wrap:wrap}
+.biz-hero .bh-stats .s b{font-family:var(--font-mono); font-size:24px; display:block; line-height:1}
+.biz-hero .bh-stats .s small{font-size:12px; color:rgba(255,255,255,.7)}
+.cc-grid{display:grid; grid-template-columns:1fr; gap:14px}
+.cc{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow)}
+.cc-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+.cc-code{font-family:var(--font-mono); font-size:12px; color:var(--muted); font-weight:700}
+.cc h4{font-size:16px; margin-bottom:14px}
+.cc-bar{height:8px; border-radius:var(--r-pill); background:var(--line); overflow:hidden; margin-bottom:8px}
+.cc-bar i{display:block; height:100%; border-radius:inherit; background:var(--brand)}
+.cc-bar i.warn{background:var(--amber)} .cc-bar i.err{background:var(--park)}
+.cc-meta{display:flex; justify-content:space-between; font-size:13px; color:var(--muted)}
+.cc-meta b{color:var(--ink); font-family:var(--font-mono)}
+
+/* support (staff) */
+.ticket{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow); display:flex; gap:14px; align-items:flex-start; margin-bottom:12px}
+.ticket .t-main{flex:1; min-width:0}
+.ticket .t-id{font-family:var(--font-mono); font-size:11.5px; color:var(--muted); font-weight:700}
+.ticket h4{font-size:15.5px; margin:4px 0 5px}
+.ticket p{font-size:13.5px; color:var(--muted)}
+.ticket .t-side{display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto}
+.ticket time{font-family:var(--font-mono); font-size:11.5px; color:var(--muted)}
+.empty{padding:30px; text-align:center; color:var(--muted)}
+
+/* reveal animation */
+.reveal{opacity:0; transform:translateY(22px); transition:opacity .6s var(--ease), transform .6s var(--ease)}
+.reveal.in{opacity:1; transform:none}
+
+/* ---------- Responsive ---------- */
+@media(min-width:680px){
+  .aud-grid{grid-template-columns:repeat(3,1fr)}
+  .duo-cols{grid-template-columns:1fr 1fr}
+  .statband{grid-template-columns:repeat(4,1fr)}
+  .kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .cards-2{grid-template-columns:1.4fr 1fr}
+  .cc-grid{grid-template-columns:repeat(3,1fr)}
+  .foot-grid{grid-template-columns:1.6fr 1fr 1fr 1fr}
+}
+@media(min-width:860px){
+  .topbar-links{display:flex}
+  .hero{padding:54px 0 30px}
+  .hero-grid{grid-template-columns:1fr 1.12fr; gap:30px; min-height:480px}
+  .hero-map-card{min-height:480px}
+  .section{padding:84px 0}
+}
+@media(max-width:859px){
+  .app-side{position:fixed; left:0; top:60px; bottom:0; z-index:40; transform:translateX(-105%); transition:transform .3s var(--ease); box-shadow:var(--shadow-lg)}
+  body.side-open .app.active .app-side{transform:translateX(0)}
+  .app-menu-btn{display:inline-flex}
+  .map-areas{position:relative; right:auto; top:auto; bottom:auto; width:100%; max-width:none; margin-top:14px; height:auto; max-height:300px}
+  .map-panel{height:auto; min-height:420px}
+  .map-panel .map-el{position:relative; height:420px}
+}
+@media(min-width:860px){.app-menu-btn{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+  .reveal{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ PUBLIC SITE ============ -->
+<div id="site">
+
+<header class="topbar">
+  <div class="wrap">
+    <button class="burger" id="burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
+    <a href="#top" class="brand" aria-label="TotalParking etusivu"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></a>
+    <div class="spacer"></div>
+    <nav class="topbar-links" aria-label="Päävalikko">
+      <a href="#kuluttajat">Kuluttaja-asiakkaat</a>
+      <a href="#yritykset">Yritykset</a>
+      <a href="#meista">Meistä</a>
+    </nav>
+    <button class="btn btn-primary btn-sm" id="open-login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+      Kirjaudu
+    </button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Valikko">
+  <div class="drawer-top">
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <button class="drawer-close" id="drawer-close" aria-label="Sulje valikko">✕</button>
+  </div>
+  <nav>
+    <a href="#kuluttajat" data-close><span>Kuluttaja-asiakkaat</span><span class="n">01</span></a>
+    <a href="#yritykset" data-close><span>Yritykset</span><span class="n">02</span></a>
+    <a href="#meista" data-close><span>Meistä</span><span class="n">03</span></a>
+  </nav>
+  <div class="drawer-foot">
+    <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
+    <p class="drawer-mini">Pysäköinti ja sähkölataus yhdellä kartalla. Helsinki · Tampere</p>
+  </div>
+</aside>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">Pysäköinti &amp; sähkölataus · Helsinki / Tampere</span>
+          <h1>Löydä <span class="park">paikka</span>. Lataa <span class="charge">auto</span>. Maksa kerralla.</h1>
+          <p class="hero-sub">TotalParking kokoaa kaupungin pysäköintialueet ja latauspisteet samalle kartalle. Itse pysäköinti, lataus ja maksu hoituvat mobiilisovelluksessa — yritysten ja ylläpidon työkalut täältä.</p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" id="hero-login">Kirjaudu palveluun</button>
+            <a href="#kuluttajat" class="btn btn-ghost">Tutustu palveluun</a>
+          </div>
+          <div class="hero-meta">
+            <div class="stat"><b>2</b><small>kaupunkia</small></div>
+            <div class="stat"><b id="hm-spots">1 240</b><small>pysäköintipaikkaa</small></div>
+            <div class="stat"><b>380+</b><small>latauspistettä</small></div>
+          </div>
+        </div>
+        <div class="hero-map-card reveal">
+          <div class="map-el" id="hero-map"></div>
+          <div class="live-chip"><span class="live-dot" aria-hidden="true"></span>Vapaana nyt <b id="live-spots">248</b></div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="swatch" style="background:var(--park)"></span>Pysäköinti</span>
+            <span class="legend-item"><span class="swatch" style="background:var(--charge)"></span>Lataus</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIENCE -->
+  <section class="section" id="kuluttajat">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Kenelle</span>
+        <h2>Yksi palvelu, kolme käyttäjää</h2>
+        <p>Kuluttaja löytää paikan ja lataa auton. Yritys hallitsee pysäköintiään ja laskujaan. Ylläpito pitää kartan ajan tasalla.</p>
+      </div>
+      <div class="aud-grid">
+
+        <article class="aud-card c1 reveal">
+          <span class="tag">Kuluttaja-asiakkaat</span>
+          <h3>Pysäköi ja lataa sovelluksella</h3>
+          <p>Näe vapaat paikat ja latauspisteet reaaliajassa, aloita ja lopeta pysäköinti puhelimella ja maksa Apple Paylla tai kortilla.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Vapaat paikat ja hinnat kartalla</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Lataus käyntiin samasta näkymästä</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--park-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Kuitit ja historia automaattisesti</li>
+          </ul>
+          <div class="card-cta"><a href="#meista">Lataa sovellus <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+        <article class="aud-card c2 reveal" id="yritykset">
+          <span class="tag">Yritykset &amp; yhteisöt</span>
+          <h3>Hallitse yrityspysäköintiä</h3>
+          <p>Yrityskäyttäjät, kustannuspaikat ja laskutus yhdessä paikassa. Seuraa pysäköintitapahtumia ja kuluja raporteilla.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Yrityskäyttäjien hallinta</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Kustannuspaikat ja budjetit</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Koontilaskut ja kuluraportit</li>
+          </ul>
+          <div class="card-cta"><a href="#" data-role="biz">Yrityskirjautuminen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+        <article class="aud-card c3 reveal">
+          <span class="tag">Ylläpito &amp; henkilökunta</span>
+          <h3>Pidä kartta ajan tasalla</h3>
+          <p>Ylläpidon ja henkilökunnan työkalut alueiden ja latauspisteiden hallintaan sekä asiakaspalveluun — roolin mukaisin oikeuksin.</p>
+          <ul class="aud-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Lisää, muokkaa ja hyväksy alueita</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Mittarit ja maksuliikenne</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--charge-700)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Asiakaspalvelu ja käyttäjähallinta</li>
+          </ul>
+          <div class="card-cta"><a href="#" data-role="admin">Ylläpidon kirjautuminen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DUALITY -->
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="duo reveal">
+        <span class="eyebrow">Ydin</span>
+        <h2>Pysäköinti ja lataus eivät ole kaksi sovellusta — vaan yksi.</h2>
+        <div class="duo-cols">
+          <div class="duo-col park">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/></svg></div>
+            <h4>Pysäköinti</h4>
+            <p>Kadunvarsi-, halli- ja yksityisalueet samalla kartalla. Kiekkopaikat, maksulliset vyöhykkeet ja vapaat paikat reaaliaikaisesti.</p>
+          </div>
+          <div class="duo-col charge">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></div>
+            <h4>Sähkölataus</h4>
+            <p>Latauspisteet liittimineen ja tehoineen. Näet vapaat tulpat, hinnan ja käynnistät latauksen samasta näkymästä.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="statband reveal">
+        <div class="cell"><b>2</b><small>kaupunkia: Helsinki &amp; Tampere</small></div>
+        <div class="cell accent"><b>1 240</b><small>pysäköintipaikkaa kartalla</small></div>
+        <div class="cell"><b>380+</b><small>latauspistettä</small></div>
+        <div class="cell"><b>&lt; 30 s</b><small>pysäköinti käyntiin</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="meista" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Meistä</span>
+        <h2>Sujuvampi kaupunki, vähemmän turhaa kaahausta</h2>
+        <p>TotalParking on suomalainen pysäköinti- ja latauspalvelu, jonka tavoite on yksinkertainen: löydä vapaa paikka tai latauspiste nopeasti, maksa vaivatta ja säästä aikaa sekä polttoainetta. Aloitamme Helsingistä ja Tampereelta ja laajennamme käyttäjien ja kumppaneiden mukana.</p>
+      </div>
+      <div class="ctaband reveal">
+        <h2>Valmiina kokeilemaan?</h2>
+        <p>Kuluttajat lataavat sovelluksen. Yritykset ja ylläpito kirjautuvat hallintanäkymään tästä.</p>
+        <div class="hero-cta">
+          <button class="btn btn-light" id="cta-login">Kirjaudu palveluun</button>
+          <a href="#yritykset" class="btn btn-ghost" style="color:#fff; border-color:rgba(255,255,255,.3)">Yritysratkaisut</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+        <p class="foot-blurb">Pysäköinti ja sähkölataus yhdellä kartalla. Toiminnassa Helsingissä ja Tampereella.</p>
+      </div>
+      <div>
+        <h5>Palvelu</h5>
+        <ul>
+          <li><a href="#kuluttajat">Kuluttaja-asiakkaat</a></li>
+          <li><a href="#yritykset">Yritykset</a></li>
+          <li><a href="#meista">Meistä</a></li>
+          <li><a href="#" data-role="admin">Kirjaudu</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Yritys</h5>
+        <ul>
+          <li><a href="#">Yhteystiedot</a></li>
+          <li><a href="#">Kumppaneille</a></li>
+          <li><a href="#">Ura</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Lakiasiat</h5>
+        <ul>
+          <li><a href="#">Tietosuojaseloste</a></li>
+          <li><a href="#">Käyttöehdot</a></li>
+          <li><a href="#">Evästeet</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 TotalParking Oy · Demo</span>
+      <span class="mono">Helsinki · Tampere</span>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /#site -->
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="modal-scrim" id="login-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-head">
+      <h3 id="login-title">Kirjaudu palveluun</h3>
+      <span class="demo-badge">Demotila</span>
+      <button class="modal-x" id="login-x" aria-label="Sulje">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="lead">Valitse kirjautumistapa. Kukin rooli avaa oman näkymänsä eri oikeuksilla.</p>
+
+      <div class="role-list" id="role-list">
+        <button class="role-btn r-admin" data-role="admin">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <span class="role-txt"><b>Ylläpitäjä (master)</b><small>Dashboard, käyttäjät, maksuliikenne, kartta &amp; master-työkalut</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+
+        <button class="role-btn r-biz" data-role="biz">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01"/></svg></span>
+          <span class="role-txt"><b>Yritys tai yhteisö</b><small>Pysäköintitapahtumat, laskut, yrityskäyttäjät ja kustannuspaikat</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+
+        <button class="role-btn r-staff" data-role="staff">
+          <span class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg></span>
+          <span class="role-txt"><b>Henkilökunta (subadmin)</b><small>Asiakaspalvelu sekä alueiden lisäys, muokkaus ja hyväksyntä rajatuin oikeuksin</small></span>
+          <span class="arr"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+      </div>
+
+      <form class="login-form" id="login-form" autocomplete="off">
+        <button type="button" class="login-back" id="login-back"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Vaihda rooli</button>
+        <div class="login-ctx" id="login-ctx"></div>
+        <div class="field"><label>Sähköposti</label><input type="email" id="login-email" placeholder="nimi@yritys.fi" value="demo@totalparking.fi"></div>
+        <div class="field"><label>Salasana</label><input type="password" id="login-pass" placeholder="••••••••" value="demo1234"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:4px">Kirjaudu sisään</button>
+        <p class="note">Demotila — kirjautuminen ei vaadi oikeita tunnuksia. Klikkaa "Kirjaudu sisään" niin pääset valitsemaasi näkymään esimerkkidatalla.</p>
+      </form>
+
+      <div class="note" id="role-note">Tämä on havainnollistava pilottiversio. Kartat, mittarit ja taulukot käyttävät esimerkkidataa.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP: MASTER / ADMIN ============ -->
+<section class="app" id="app-admin">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill admin">Master</span>
+    <div class="spacer"></div>
+    <span class="demo-badge">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="admin">
+      <div class="grp">Yleiskatsaus</div>
+      <button class="nav-item active" data-panel="a-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</button>
+      <button class="nav-item" data-panel="a-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Kartta &amp; alueet</button>
+      <div class="grp">Hallinta</div>
+      <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
+      <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
+      <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
+      <div class="grp">Työkalut</div>
+      <button class="nav-item" data-panel="a-tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Asetukset</button>
+    </nav>
+    <main class="app-main" data-app-main="admin"></main>
+  </div>
+</section>
+
+<!-- ============ APP: BUSINESS ============ -->
+<section class="app" id="app-biz">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill biz">Yritys</span>
+    <div class="spacer"></div>
+    <span class="demo-badge">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="biz">
+      <div class="grp">Yhteenveto</div>
+      <button class="nav-item active" data-panel="b-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Yleiskatsaus</button>
+      <button class="nav-item" data-panel="b-events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/></svg>Pysäköintitapahtumat</button>
+      <button class="nav-item" data-panel="b-invoices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>Laskut<span class="badge">1</span></button>
+      <div class="grp">Hallinta</div>
+      <button class="nav-item" data-panel="b-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Yrityskäyttäjät</button>
+      <button class="nav-item" data-panel="b-cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Kustannuspaikat</button>
+    </nav>
+    <main class="app-main" data-app-main="biz"></main>
+  </div>
+</section>
+
+<!-- ============ APP: STAFF ============ -->
+<section class="app" id="app-staff">
+  <header class="app-top">
+    <button class="app-menu-btn" data-side aria-label="Valikko"><span></span><span></span><span></span></button>
+    <span class="brand"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></span>
+    <span class="app-role-pill staff">Henkilökunta</span>
+    <div class="spacer"></div>
+    <span class="demo-badge">Demotila</span>
+    <button class="btn btn-ghost btn-sm" data-exit><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
+  </header>
+  <div class="app-body">
+    <nav class="app-side" data-app="staff">
+      <div class="grp">Työjono</div>
+      <button class="nav-item active" data-panel="s-support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Asiakaspalvelu<span class="badge">4</span></button>
+      <button class="nav-item" data-panel="s-areas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/></svg>Alueet kartalla</button>
+      <button class="nav-item" data-panel="s-approve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Hyväksynnät<span class="badge">2</span></button>
+    </nav>
+    <main class="app-main" data-app-main="staff"></main>
+  </div>
+</section>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function $(s,c){return (c||document).querySelector(s);}
+  function $all(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
+  function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+
+  /* ---------- Drawer ---------- */
+  var drawer=$('#drawer'), scrim=$('#scrim'), burger=$('#burger');
+  function openDrawer(){drawer.classList.add('open'); scrim.classList.add('open'); burger.setAttribute('aria-expanded','true'); document.body.classList.add('no-scroll');}
+  function closeDrawer(){drawer.classList.remove('open'); scrim.classList.remove('open'); burger.setAttribute('aria-expanded','false'); document.body.classList.remove('no-scroll');}
+  burger.addEventListener('click',openDrawer);
+  $('#drawer-close').addEventListener('click',closeDrawer);
+  scrim.addEventListener('click',closeDrawer);
+  $all('[data-close]').forEach(function(a){a.addEventListener('click',closeDrawer);});
+
+  /* ---------- Login modal ---------- */
+  var modal=$('#login-modal'), roleList=$('#role-list'), loginForm=$('#login-form'), roleNote=$('#role-note'), loginCtx=$('#login-ctx');
+  var roleMeta={
+    admin:{cls:'r-admin', name:'Ylläpitäjä (master)', icbg:'var(--brand)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>'},
+    biz:{cls:'r-biz', name:'Yritys tai yhteisö', icbg:'var(--park)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>'},
+    staff:{cls:'r-staff', name:'Henkilökunta (subadmin)', icbg:'var(--charge)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'}
+  };
+  var pendingRole=null;
+  function openLogin(){modal.classList.add('open'); document.body.classList.add('no-scroll'); resetLogin(); closeDrawer();}
+  function closeLogin(){modal.classList.remove('open'); document.body.classList.remove('no-scroll');}
+  function resetLogin(){roleList.classList.remove('hidden'); loginForm.classList.remove('active'); roleNote.style.display='block'; pendingRole=null;}
+  function chooseRole(role){
+    pendingRole=role; var m=roleMeta[role];
+    roleList.classList.add('hidden'); roleNote.style.display='none'; loginForm.classList.add('active');
+    loginCtx.style.background = role==='admin'?'var(--brand-50)':role==='biz'?'var(--park-50)':'var(--charge-50)';
+    loginCtx.innerHTML='<span class="role-ic" style="background:'+m.icbg+'">'+m.ic+'</span><div><b style="font-family:var(--font-display)">'+m.name+'</b><div style="font-size:12.5px;color:var(--muted)">Kirjaudu valitsemaasi näkymään</div></div>';
+    var emailInput=$('#login-email');
+    emailInput.value = role==='biz'?'pekka.virtanen@logiteam.fi':role==='staff'?'asiakaspalvelu@totalparking.fi':'admin@totalparking.fi';
+  }
+  $('#open-login').addEventListener('click',openLogin);
+  $('#hero-login').addEventListener('click',openLogin);
+  $('#cta-login').addEventListener('click',openLogin);
+  $('#drawer-login').addEventListener('click',openLogin);
+  $('#login-x').addEventListener('click',closeLogin);
+  modal.addEventListener('click',function(e){if(e.target===modal)closeLogin();});
+  $('#login-back').addEventListener('click',resetLogin);
+  $all('.role-btn').forEach(function(b){b.addEventListener('click',function(){chooseRole(b.getAttribute('data-role'));});});
+  // links that jump straight to a role login
+  $all('[data-role]').forEach(function(a){
+    if(a.classList.contains('role-btn'))return;
+    a.addEventListener('click',function(e){e.preventDefault(); openLogin(); chooseRole(a.getAttribute('data-role'));});
+  });
+  loginForm.addEventListener('submit',function(e){e.preventDefault(); var r=pendingRole; closeLogin(); enterApp(r);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer();}});
+
+  /* ---------- App enter / exit ---------- */
+  var appIds={admin:'#app-admin', biz:'#app-biz', staff:'#app-staff'};
+  function enterApp(role){
+    $('#site').style.display='none';
+    $all('.app').forEach(function(a){a.classList.remove('active');});
+    $(appIds[role]).classList.add('active');
+    document.body.classList.add('app-open'); document.body.classList.remove('side-open','no-scroll');
+    window.scrollTo(0,0);
+    if(role==='admin') renderAdmin();
+    if(role==='biz') renderBiz();
+    if(role==='staff') renderStaff();
+  }
+  function exitApp(){
+    $all('.app').forEach(function(a){a.classList.remove('active');});
+    document.body.classList.remove('app-open','side-open');
+    $('#site').style.display='';
+    window.scrollTo(0,0);
+  }
+  $all('[data-exit]').forEach(function(b){b.addEventListener('click',exitApp);});
+  $all('[data-side]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.toggle('side-open');});});
+
+  /* ---------- In-app navigation ---------- */
+  $all('.app-side .nav-item').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var nav=btn.closest('.app-side'); var app=nav.getAttribute('data-app');
+      $all('.nav-item',nav).forEach(function(n){n.classList.remove('active');});
+      btn.classList.add('active');
+      var panelId=btn.getAttribute('data-panel');
+      var main=$('[data-app-main="'+app+'"]');
+      $all('.panel',main).forEach(function(p){p.classList.toggle('active', p.getAttribute('data-id')===panelId);});
+      document.body.classList.remove('side-open');
+      main.scrollTop=0;
+      if(panelId==='a-map') initAdminMap();
+      if(panelId==='s-areas') initStaffMap();
+    });
+  });
+
+  /* ---------- Maps ---------- */
+  var cartoStyle={
+    version:8,
+    sources:{carto:{type:'raster',tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap · © CARTO'}},
+    layers:[{id:'carto',type:'raster',source:'carto'}]
+  };
+  var HKI=[24.9410,60.1699];
+  var POINTS=[
+    {n:'Kamppi P-halli',t:'park',c:[24.9322,60.1690],free:42,info:'Halli · 2,40 €/h'},
+    {n:'Rautatientori',t:'charge',c:[24.9436,60.1712],free:3,info:'4 × Type 2 · 22 kW'},
+    {n:'Kluuvi',t:'park',c:[24.9462,60.1695],free:18,info:'Kadunvarsi · maksullinen'},
+    {n:'Kruununhaka',t:'park',c:[24.9556,60.1726],free:9,info:'Kiekko 2 h'},
+    {n:'Kauppatori',t:'charge',c:[24.9525,60.1670],free:2,info:'2 × CCS · 50 kW'},
+    {n:'Punavuori',t:'park',c:[24.9381,60.1612],free:27,info:'Kadunvarsi · vyöhyke 2'},
+    {n:'Hietalahti',t:'charge',c:[24.9302,60.1631],free:5,info:'6 × Type 2 · 11 kW'},
+    {n:'Töölönlahti',t:'park',c:[24.9341,60.1762],free:64,info:'Halli · 1,90 €/h'},
+    {n:'Kallio',t:'charge',c:[24.9512,60.1841],free:1,info:'2 × CCS · 75 kW'},
+    {n:'Hakaniemi',t:'park',c:[24.9492,60.1791],free:21,info:'Halli · 2,20 €/h'},
+    {n:'Eira',t:'park',c:[24.9452,60.1571],free:6,info:'Kiekko 4 h'},
+    {n:'Ullanlinna',t:'charge',c:[24.9522,60.1592],free:4,info:'4 × Type 2 · 22 kW'}
+  ];
+  function markerEl(p){
+    var w=el('div','mk');
+    if(p.t==='park'){var m=el('div','mk-park','<b>P</b>'); w.appendChild(m);}
+    else{var c=el('div','mk-charge'+(reduce?'':' pulse'),'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>'); w.appendChild(c);}
+    return w;
+  }
+  function addPoints(map){
+    POINTS.forEach(function(p){
+      var pop=new maplibregl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
+      new maplibregl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
+    });
+  }
+  function newMap(id,zoom,interactive){
+    if(typeof maplibregl==='undefined') return null;
+    var map=new maplibregl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
+    map.addControl(new maplibregl.AttributionControl({compact:true}));
+    if(interactive!==false) map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    map.on('load',function(){addPoints(map);});
+    return map;
+  }
+  var heroMap, adminMap, staffMap;
+  function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
+  function initAdminMap(){if(adminMap)return; adminMap=newMap('admin-map',12.6,true); setTimeout(function(){if(adminMap)adminMap.resize();},120);}
+  function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
+
+  /* ---------- Live counter ---------- */
+  var liveEl=$('#live-spots');
+  if(liveEl && !reduce){
+    var base=248;
+    setInterval(function(){base += Math.round((Math.random()-0.5)*8); if(base<210)base=210; if(base>290)base=290; liveEl.textContent=base;},2600);
+  }
+
+  /* ---------- Reveal on scroll ---------- */
+  if('IntersectionObserver' in window && !reduce){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target);}});},{threshold:.12});
+    $all('.reveal').forEach(function(r){io.observe(r);});
+  } else { $all('.reveal').forEach(function(r){r.classList.add('in');}); }
+
+  /* ---------- Charts (hand-built SVG) ---------- */
+  function areaChart(data,col){
+    var w=520,h=150,pad=6,n=data.length;
+    var max=Math.max.apply(null,data), min=Math.min.apply(null,data);
+    var rng=(max-min)||1;
+    function x(i){return pad+i*(w-2*pad)/(n-1);}
+    function y(v){return h-pad-((v-min)/rng)*(h-2*pad-10);}
+    var line='',area='M'+x(0).toFixed(1)+' '+(h-pad);
+    data.forEach(function(v,i){var X=x(i).toFixed(1),Y=y(v).toFixed(1); line+=(i?'L':'M')+X+' '+Y+' '; area+=' L'+X+' '+Y;});
+    area+=' L'+x(n-1).toFixed(1)+' '+(h-pad)+' Z';
+    var dots=data.map(function(v,i){return '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3.4" fill="#fff" stroke="'+col+'" stroke-width="2.2"/>';}).join('');
+    return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity=".22"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs><path d="'+area+'" fill="url(#g1)"/><path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'</svg>';
+  }
+  function barChart(data,col){
+    var w=520,h=150,pad=6,n=data.length, gap=14;
+    var max=Math.max.apply(null,data);
+    var bw=(w-2*pad-gap*(n-1))/n;
+    var bars=data.map(function(v,i){var bh=(v/max)*(h-2*pad); var X=pad+i*(bw+gap); var Y=h-pad-bh; return '<rect x="'+X.toFixed(1)+'" y="'+Y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="5" fill="'+col+'" opacity="'+(i===n-1?1:.4)+'"/>';}).join('');
+    return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'">'+bars+'</svg>';
+  }
+
+  /* ---------- Mock data ---------- */
+  var users=[
+    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2 min'],
+    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','14 min'],
+    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Vahvistus kesken','1 h'],
+    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','3 h'],
+    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','5 h'],
+    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Estetty','2 pv']
+  ];
+  var tx=[
+    ['#TP-90412','12:48','Aino Korhonen','4,80 €','Apple Pay','ok','Maksettu'],
+    ['#TP-90411','12:31','Mikael Aho','12,40 €','Kortti','ok','Maksettu'],
+    ['#TP-90408','12:02','Logiteam Oy','2,20 €','Lasku','warn','Käsittelyssä'],
+    ['#TP-90405','11:47','Sanna Mäkinen','6,00 €','Apple Pay','ok','Maksettu'],
+    ['#TP-90401','11:20','Joonas Laine','3,10 €','Kortti','err','Hyvitetty'],
+    ['#TP-90399','10:58','Tampereen Sähkö','18,90 €','Lasku','ok','Maksettu']
+  ];
+  var areas=[
+    ['Kamppi P-halli','park','Helsinki','ok','Aktiivinen','620'],
+    ['Rautatientori lataus','charge','Helsinki','ok','Aktiivinen','4'],
+    ['Hervanta keskus','park','Tampere','warn','Odottaa hyväksyntää','140'],
+    ['Eira kiekkoalue','park','Helsinki','ok','Aktiivinen','55'],
+    ['Kallio CCS','charge','Helsinki','warn','Odottaa hyväksyntää','2'],
+    ['Pyynikki P','park','Tampere','mute','Luonnos','80']
+  ];
+  function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
+  function typePill(t){return t==='park'?pill('park','Pysäköinti'):pill('charge','Lataus');}
+  function initials(name){var p=name.trim().split(' '); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+
+  /* ---------- Render: ADMIN ---------- */
+  var adminBuilt=false;
+  function renderAdmin(){
+    var main=$('[data-app-main="admin"]');
+    if(adminBuilt){return;}
+    adminBuilt=true;
+    var html='';
+    /* overview */
+    html+='<div class="panel active" data-id="a-overview">';
+    html+=panelHead('Dashboard','Yrityksen keskeiset mittarit · viimeiset 24 h');
+    html+='<div class="kpi-grid">'
+      +kpi('b','people','+8,2 %','up','18 420','Aktiiviset käyttäjät')
+      +kpi('p','park','+12 %','up','3 184','Pysäköintitapahtumat tänään')
+      +kpi('b','euro','+5,4 %','up','42 600 €','Toistuva liikevaihto (MRR)')
+      +kpi('c','bolt','+19 %','up','612','Latausistunnot tänään')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Liikevaihto · 6 kk</h3><span class="link">k€</span></div><div class="chart-wrap">'+barChart([28,31,33,36,39,43],'#0E5A4E')+'</div><div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Viimeisin toiminta</h3></div><div class="feed">'
+      +feed('var(--charge)','Latausistunto käynnistyi','Kallio CCS · Tampereen Sähkö','3 min')
+      +feed('var(--park)','Pysäköinti aloitettu','Kamppi P-halli · Aino K.','6 min')
+      +feed('var(--amber)','Uusi alue odottaa hyväksyntää','Hervanta keskus · Tampere','18 min')
+      +feed('var(--brand)','Uusi yrityskäyttäjä','Logiteam Oy','41 min')
+      +feed('var(--charge)','Maksu onnistui','18,90 € · Lasku','58 min')
+      +'</div></div>';
+    html+='</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Aika</th><th>Käyttäjä</th><th>Summa</th><th>Tapa</th><th>Tila</th></tr></thead><tbody>';
+    tx.slice(0,4).forEach(function(r){html+='<tr><td class="mono strong">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="strong">'+r[3]+'</td><td>'+r[4]+'</td><td>'+pill(r[5],r[6])+'</td></tr>';});
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* map */
+    html+='<div class="panel" data-id="a-map">';
+    html+=panelHead('Kartta &amp; alueet','Hallitse pysäköintialueita ja latauspisteitä master-työkaluilla');
+    html+='<div class="map-panel"><div class="map-el" id="admin-map"></div>'
+      +'<div class="map-tools">'
+      +tool('primary','plus','Lisää alue')
+      +tool('','edit','Muokkaa')
+      +tool('','check','Hyväksy')
+      +tool('danger','trash','Poista')
+      +tool('','layers','Tasot')
+      +'</div>'
+      +'<div class="map-areas"><h4>Alueet ('+areas.length+')</h4><div class="list">'+areas.map(areaRow).join('')+'</div></div>'
+      +'</div>';
+    html+='</div>';
+
+    /* users */
+    html+='<div class="panel" data-id="a-users">';
+    html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Käyttäjä</th><th>Sähköposti</th><th>Tyyppi</th><th>Tila</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
+    users.forEach(function(u){
+      html+='<tr><td><div class="cell-user"><span class="avatar">'+initials(u[0])+'</span><span class="strong">'+u[0]+'</span></div></td><td class="mono">'+u[1]+'</td><td>'+u[2]+'</td><td>'+pill(u[3],u[4])+'</td><td class="mono">'+u[5]+'</td><td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* payments */
+    html+='<div class="panel" data-id="a-pay">';
+    html+=panelHead('Maksuliikenne','Pysäköinnin ja latauksen maksutapahtumat','<button class="btn btn-ghost btn-sm">Vie CSV</button>');
+    html+='<div class="kpi-grid">'
+      +kpi('b','euro','','','9 840 €','Maksut tänään')
+      +kpi('c','card','','','1 284','Tapahtumia')
+      +kpi('p','euro','','','-310 €','Hyvitykset')
+      +kpi('b','bolt','','','3','Avoimet selvitykset')
+      +'</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Aika</th><th>Käyttäjä</th><th>Summa</th><th>Tapa</th><th>Tila</th></tr></thead><tbody>';
+    tx.forEach(function(r){html+='<tr><td class="mono strong">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="strong">'+r[3]+'</td><td>'+r[4]+'</td><td>'+pill(r[5],r[6])+'</td></tr>';});
+    html+='</tbody></table></div>';
+    html+='</div>';
+
+    /* business */
+    html+='<div class="panel" data-id="a-biz">';
+    html+=panelHead('Yritykset','Yritys- ja yhteisötilit');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Yritys</th><th>Käyttäjiä</th><th>Tapahtumat / kk</th><th>Laskutus / kk</th><th>Tila</th></tr></thead><tbody>'
+      +'<tr><td class="strong">Logiteam Oy</td><td class="mono">24</td><td class="mono">412</td><td class="strong">1 980 €</td><td>'+pill('ok','Aktiivinen')+'</td></tr>'
+      +'<tr><td class="strong">Tampereen Sähkö</td><td class="mono">11</td><td class="mono">208</td><td class="strong">2 640 €</td><td>'+pill('ok','Aktiivinen')+'</td></tr>'
+      +'<tr><td class="strong">Rakennus Niemi</td><td class="mono">7</td><td class="mono">96</td><td class="strong">540 €</td><td>'+pill('warn','Laskutus auki')+'</td></tr>'
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    /* tools */
+    html+='<div class="panel" data-id="a-tools">';
+    html+=panelHead('Asetukset','Master-tason työkalut ja konfiguraatio');
+    html+='<div class="cc-grid">'
+      +settingCard('Hinnoittelu &amp; vyöhykkeet','Pysäköintivyöhykkeiden hinnat ja aikarajat','euro')
+      +settingCard('Latausoperaattorit','Liittimet, tehot ja kumppaniverkostot','bolt')
+      +settingCard('Roolit &amp; oikeudet','Subadminien käyttöoikeudet ja rajaukset','people')
+      +settingCard('Maksujen asetukset','Stripe, Apple Pay ja laskutusjaksot','card')
+      +settingCard('Karttatasot','Näkyvyyssäännöt ja törmäyslogiikka','layers')
+      +settingCard('Integraatiot','Supabase, Digitransit ja rajapinnat','plus')
+      +'</div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Render: BUSINESS ---------- */
+  var bizBuilt=false;
+  function renderBiz(){
+    var main=$('[data-app-main="biz"]'); if(bizBuilt)return; bizBuilt=true;
+    var html='';
+    html+='<div class="panel active" data-id="b-overview">';
+    html+=panelHead('Yleiskatsaus','Logiteam Oy · kesäkuu 2026');
+    html+='<div class="biz-hero"><div class="bh-l"><b>Logiteam Oy</b><small>Y-tunnus 2841726-9 · 24 yrityskäyttäjää</small></div><div class="bh-stats"><div class="s"><b>412</b><small>tapahtumaa / kk</small></div><div class="s"><b>1 980 €</b><small>kuluva jakso</small></div><div class="s"><b>3</b><small>kustannuspaikkaa</small></div></div></div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Pysäköintikulut · 6 kk</h3><span class="link">€</span></div>'+areaChart([1420,1610,1380,1740,1880,1980],'#FF6B3D')+'<div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Jakauma</h3></div><div class="feed">'
+      +feed('var(--park)','Pysäköinti','312 tapahtumaa · 1 410 €','75 %')
+      +feed('var(--charge)','Lataus','78 istuntoa · 470 €','24 %')
+      +feed('var(--amber)','Muut maksut','22 tapahtumaa · 100 €','1 %')
+      +'</div></div>';
+    html+='</div>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Käyttäjä</th><th>Kustannuspaikka</th><th>Summa</th><th>Tyyppi</th></tr></thead><tbody>'+bizEventRows(4)+'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-events">';
+    html+=panelHead('Pysäköintitapahtumat','Kaikki yrityksen tapahtumat','<button class="btn btn-ghost btn-sm">Vie CSV</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Aika</th><th>Käyttäjä</th><th>Kohde</th><th>Kustannuspaikka</th><th>Summa</th><th>Tyyppi</th></tr></thead><tbody>'+bizEventRows(8,true)+'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-invoices">';
+    html+=panelHead('Laskut','Koontilaskut ja maksutilanne');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Laskunro</th><th>Jakso</th><th>Eräpäivä</th><th>Summa</th><th>Tila</th><th></th></tr></thead><tbody>'
+      +invoiceRow('TP-2026-0612','05/2026','15.06.2026','1 840 €','warn','Avoin')
+      +invoiceRow('TP-2026-0511','04/2026','15.05.2026','1 610 €','ok','Maksettu')
+      +invoiceRow('TP-2026-0410','03/2026','15.04.2026','1 380 €','ok','Maksettu')
+      +invoiceRow('TP-2026-0309','02/2026','15.03.2026','1 520 €','ok','Maksettu')
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-users">';
+    html+=panelHead('Yrityskäyttäjät','Hallinnoi käyttäjiä ja heidän kustannuspaikkojaan','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Käyttäjä</th><th>Rooli</th><th>Kustannuspaikka</th><th>Tapahtumat / kk</th><th></th></tr></thead><tbody>'
+      +bizUser('Pekka Virtanen','Pääkäyttäjä','KP-100 Hallinto','38')
+      +bizUser('Liisa Saari','Käyttäjä','KP-200 Myynti','64')
+      +bizUser('Antti Koskinen','Käyttäjä','KP-300 Logistiikka','120')
+      +bizUser('Maria Heikkilä','Käyttäjä','KP-200 Myynti','41')
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="b-cc">';
+    html+=panelHead('Kustannuspaikat','Budjetit ja kulujen seuranta','<button class="btn btn-primary btn-sm">+ Uusi kustannuspaikka</button>');
+    html+='<div class="cc-grid">'
+      +ccCard('KP-100','Hallinto',430,600,'')
+      +ccCard('KP-200','Myynti',760,900,'warn')
+      +ccCard('KP-300','Logistiikka',790,800,'err')
+      +'</div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Render: STAFF ---------- */
+  var staffBuilt=false;
+  function renderStaff(){
+    var main=$('[data-app-main="staff"]'); if(staffBuilt)return; staffBuilt=true;
+    var html='';
+    html+='<div class="panel active" data-id="s-support">';
+    html+=panelHead('Asiakaspalvelu','Avoimet tukipyynnöt · rajatut master-oikeudet');
+    html+=ticket('#AP-3391','Pysäköinti ei päättynyt sovelluksessa','Aino Korhonen · Kamppi P-halli','err','Kiireellinen','7 min');
+    html+=ticket('#AP-3388','Latauspiste merkitty varatuksi virheellisesti','Mikael Aho · Kallio CCS','warn','Normaali','24 min');
+    html+=ticket('#AP-3385','Kuitti ei tullut sähköpostiin','Sanna Mäkinen','mute','Matala','1 h');
+    html+=ticket('#AP-3380','Yrityskäyttäjän lisäys ei onnistu','Logiteam Oy · Pekka V.','warn','Normaali','2 h');
+    html+='</div>';
+
+    html+='<div class="panel" data-id="s-areas">';
+    html+=panelHead('Alueet kartalla','Lisää ja muokkaa alueita oman toimenkuvasi mukaan');
+    html+='<div class="map-panel"><div class="map-el" id="staff-map"></div>'
+      +'<div class="map-tools">'
+      +tool('primary','plus','Lisää alue')
+      +tool('','edit','Muokkaa')
+      +tool('','flag','Merkitse tarkistettavaksi')
+      +'</div>'
+      +'<div class="map-areas"><h4>Omat alueet ('+areas.length+')</h4><div class="list">'+areas.map(areaRow).join('')+'</div></div>'
+      +'</div>';
+    html+='</div>';
+
+    html+='<div class="panel" data-id="s-approve">';
+    html+=panelHead('Hyväksynnät','Odottaa tarkistusta ja hyväksyntää');
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Alue</th><th>Tyyppi</th><th>Kaupunki</th><th>Ehdottaja</th><th>Tila</th><th>Toiminnot</th></tr></thead><tbody>'
+      +'<tr><td class="strong">Hervanta keskus</td><td>'+typePill('park')+'</td><td>Tampere</td><td>kenttätyö@tre</td><td>'+pill('warn','Odottaa')+'</td><td><span class="row-act"><button class="btn btn-primary btn-sm">Hyväksy</button>'+iconBtn('trash')+'</span></td></tr>'
+      +'<tr><td class="strong">Kallio CCS</td><td>'+typePill('charge')+'</td><td>Helsinki</td><td>operaattori</td><td>'+pill('warn','Odottaa')+'</td><td><span class="row-act"><button class="btn btn-primary btn-sm">Hyväksy</button>'+iconBtn('trash')+'</span></td></tr>'
+      +'</tbody></table></div>';
+    html+='</div>';
+
+    main.innerHTML=html;
+  }
+
+  /* ---------- Builders ---------- */
+  var ICONS={
+    people:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    park:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/>',
+    euro:'<path d="M14 5a7 7 0 1 0 0 14M5 9h7M5 13h6"/>',
+    bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+    card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    edit:'<path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
+    trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    layers:'<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/>',
+    flag:'<path d="M4 21V4m0 0 12 0-2 4 2 4H4"/>'
+  };
+  function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
+  function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
+  function kpi(c,icn,delta,dir,val,lab){return '<div class="kpi"><div class="k-top"><span class="k-ic '+c+'">'+ic(icn)+'</span>'+(delta?'<span class="delta '+dir+'">'+delta+'</span>':'')+'</div><div class="k-val">'+val+'</div><div class="k-lab">'+lab+'</div></div>';}
+  function feed(col,t,s,time){return '<div class="feed-row"><span class="feed-dot" style="background:'+col+'"></span><div><div class="ft">'+t+'</div><div class="fs">'+s+'</div></div><time>'+time+'</time></div>';}
+  function tool(cls,icn,label){return '<button class="tool-btn '+cls+'">'+ic(icn)+label+'</button>';}
+  function iconBtn(icn){return '<button class="icon-btn">'+ic(icn)+'</button>';}
+  function areaRow(a){
+    var col=a[1]==='park'?'var(--park)':'var(--charge)';
+    var st=a[3]==='ok'?pill('ok','Aktiivinen'):a[3]==='warn'?pill('warn','Odottaa'):pill('mute','Luonnos');
+    return '<div class="area-row"><div class="ar-t"><span class="dotsq" style="background:'+col+'"></span>'+a[0]+'</div><div class="ar-s">'+st+'<span>'+a[2]+'</span><span class="mono">'+a[5]+' pkt</span></div></div>';
+  }
+  function settingCard(t,s,icn){return '<div class="cc"><div class="cc-top"><span class="k-ic b" style="width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--brand-50);color:var(--brand)">'+ic(icn)+'</span></div><h4 style="margin-top:12px">'+t+'</h4><p style="font-size:13.5px;color:var(--muted)">'+s+'</p></div>';}
+  function bizEventRows(n,withTime){
+    var rows=[
+      ['10:42','Antti Koskinen','Hakaniemi','KP-300 Logistiikka','2,20 €','park'],
+      ['10:18','Liisa Saari','Kallio CCS','KP-200 Myynti','9,40 €','charge'],
+      ['09:55','Pekka Virtanen','Kamppi P-halli','KP-100 Hallinto','4,80 €','park'],
+      ['09:30','Maria Heikkilä','Kluuvi','KP-200 Myynti','3,10 €','park'],
+      ['09:02','Antti Koskinen','Töölönlahti','KP-300 Logistiikka','5,70 €','park'],
+      ['08:48','Liisa Saari','Ullanlinna lataus','KP-200 Myynti','7,20 €','charge'],
+      ['08:21','Pekka Virtanen','Punavuori','KP-100 Hallinto','2,90 €','park'],
+      ['08:05','Maria Heikkilä','Hietalahti lataus','KP-200 Myynti','6,10 €','charge']
+    ];
+    return rows.slice(0,n).map(function(r){
+      if(withTime) return '<tr><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="strong">'+r[4]+'</td><td>'+typePill(r[5])+'</td></tr>';
+      return '<tr><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="mono">'+r[3]+'</td><td class="strong">'+r[4]+'</td><td>'+typePill(r[5])+'</td></tr>';
+    }).join('');
+  }
+  function invoiceRow(no,per,due,sum,st,stl){return '<tr><td class="mono strong">'+no+'</td><td>'+per+'</td><td class="mono">'+due+'</td><td class="strong">'+sum+'</td><td>'+pill(st,stl)+'</td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>';}
+  function bizUser(name,role,cc,n){return '<tr><td><div class="cell-user"><span class="avatar">'+initials(name)+'</span><span class="strong">'+name+'</span></div></td><td>'+role+'</td><td class="mono">'+cc+'</td><td class="mono">'+n+'</td><td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td></tr>';}
+  function ccCard(code,name,spent,budget,warn){
+    var pct=Math.min(100,Math.round(spent/budget*100));
+    return '<div class="cc"><div class="cc-top"><span class="cc-code">'+code+'</span><span class="mono" style="font-size:12px;color:var(--muted)">'+pct+' %</span></div><h4>'+name+'</h4><div class="cc-bar"><i class="'+warn+'" style="width:'+pct+'%"></i></div><div class="cc-meta"><span>Käytetty <b>'+spent+' €</b></span><span>Budjetti <b>'+budget+' €</b></span></div></div>';
+  }
+  function ticket(id,subj,who,pcls,prio,time){return '<div class="ticket"><div class="t-main"><span class="t-id">'+id+'</span><h4>'+subj+'</h4><p>'+who+'</p></div><div class="t-side">'+pill(pcls,prio)+'<time>'+time+'</time><button class="btn btn-ghost btn-sm">Avaa</button></div></div>';}
+
+  /* ---------- init ---------- */
+  initHeroMap();
+})();
+</script>
+</body>
+</html>
