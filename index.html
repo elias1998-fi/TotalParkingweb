@@ -69,6 +69,7 @@ img{max-width:100%}
 .brand span{color:var(--muted); font-weight:500}
 .topbar .spacer{flex:1}
 .topbar-links{display:none; gap:26px; align-items:center}
+.topbar-login{display:none}
 .topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
 .topbar-links a:hover{color:var(--brand)}
 .btn{
@@ -439,6 +440,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 }
 @media(min-width:860px){
   .topbar-links{display:flex}
+  .topbar-login{display:inline-flex}
   .hero{padding:54px 0 30px}
   .hero-grid{grid-template-columns:1fr 1.12fr; gap:30px; min-height:480px}
   .hero-map-card{min-height:480px}
@@ -466,7 +468,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 
 <header class="topbar">
   <div class="wrap">
-    <button class="burger" id="burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
     <a href="#top" class="brand" aria-label="TotalParking etusivu"><span class="pmark" aria-hidden="true"></span><b>Total</b><span>Parking</span></a>
     <div class="spacer"></div>
     <nav class="topbar-links" aria-label="Päävalikko">
@@ -474,10 +475,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <a href="#yritykset">Yritykset</a>
       <a href="#meista">Meistä</a>
     </nav>
-    <button class="btn btn-primary btn-sm" id="open-login">
+    <button class="btn btn-primary btn-sm topbar-login" id="open-login">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
       Kirjaudu
     </button>
+    <button class="burger" id="burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </header>
 
