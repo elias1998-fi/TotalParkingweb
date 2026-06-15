@@ -989,8 +989,107 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   }
   var heroMap, adminMap, staffMap;
   function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
-  function initAdminMap(){if(adminMap)return; adminMap=newMap('admin-map',12.6,true); setTimeout(function(){if(adminMap)adminMap.resize();},120);}
   function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
+
+  /* ---------- Admin map: real TotalParking data on the app's Digitransit basemap ----------
+     Read-only overview for the master view. Uses the same client-side keys the app
+     already ships, the same omakartta_style.json basemap, the same parking-area
+     colours, garage icon and charging icon. ------------------------------------------------ */
+  var TP_DIGITRANSIT_KEY='a002614565b24559b3feddfca8d01918';
+  var TP_SUPABASE_URL='https://glphxelazjodpiekmoew.supabase.co';
+  var TP_SUPABASE_KEY='sb_publishable_MEZLuJOl-QsZxgLZI3nnTA_e-xL5VQW';
+  var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
+  function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
+  function tpLegacySource(areaType,parkingType,maxHours){
+    if(parkingType==='Pysäköintihalli') return 'hel_halli';
+    if(areaType==='Maksullinen pysäköinti'){var h=parseInt(maxHours,10); if(h===1)return 'hel_kertamaksu_1h'; if(h===2)return 'hel_kertamaksu_2h'; if(h===4)return 'hel_kertamaksu_4h'; return 'hel_maksullinen_ei_tunnusta';}
+    if(areaType==='Kiekoton ilmaispysäköinti') return 'hel_ilmainen_lyhyt';
+    return 'community';
+  }
+  function tpHalliIcon(){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect x="2" y="2" width="60" height="60" rx="10" fill="#1565C0" stroke="white" stroke-width="2.5"/><path d="M12 24 L32 10 L52 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="32" y="52" font-family="Arial" font-weight="bold" font-size="32" fill="white" text-anchor="middle">P</text></svg>');}
+  function tpChargingIcon(bg){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect x="0" y="0" width="128" height="128" rx="26" fill="#1a1a1a"/><rect x="10" y="10" width="108" height="108" rx="17" fill="'+bg+'"/><rect x="31" y="30" width="35" height="68" rx="5" fill="#1a1a1a"/><path d="M90 52 C 90 74 84 92 66 92" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="82" y="40" width="16" height="13" rx="3" fill="#1a1a1a"/><rect x="86" y="33" width="3.6" height="8" rx="1.8" fill="#1a1a1a"/><rect x="92.4" y="33" width="3.6" height="8" rx="1.8" fill="#1a1a1a"/><rect x="37" y="36" width="23" height="15" rx="2.5" fill="'+bg+'"/><path d="M53 55 L40 80 L49 80 L45 99 L62 71 L52 71 Z" fill="'+bg+'"/></svg>');}
+  function tpAddImage(map,name,src,cb){ if(map.hasImage(name)){cb&&cb();return;} var img=new Image(); img.onload=function(){ if(!map.hasImage(name)) map.addImage(name,img,{pixelRatio:2}); cb&&cb(); }; img.onerror=function(){cb&&cb();}; img.src=src; }
+  function tpInBox(c){ return c && c[0]>23.4 && c[0]<25.4 && c[1]>59.9 && c[1]<61.7; }  /* Helsinki + Tampere */
+  async function tpFetchAllRows(table,select,headers){
+    var out=[], PAGE=1000;
+    for(var offset=0;;offset+=PAGE){
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+select+'&order=id.asc&offset='+offset+'&limit='+PAGE,{headers:headers});
+      if(!res.ok) throw new Error(table+' HTTP '+res.status);
+      var batch=await res.json(); out=out.concat(batch);
+      if(batch.length<PAGE||offset>40000) break;
+    }
+    return out;
+  }
+  async function tpLoadAreas(map){
+    try{
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+      var SEL='id,area_type,parking_type,max_hours,polygon_coordinates';
+      var both=await Promise.all([
+        tpFetchAllRows('parking_master',SEL,headers),
+        tpFetchAllRows('parking_master_ilmaiset',SEL,headers).catch(function(){return [];})
+      ]);
+      var rows=both[0].concat(both[1]);
+      var features=rows.filter(function(r){return r.polygon_coordinates&&(r.polygon_coordinates.type==='Polygon'||r.polygon_coordinates.type==='MultiPolygon')&&r.parking_type!=='Pysäköintihalli';})
+        .map(function(r){return {type:'Feature',properties:{source:tpLegacySource(r.area_type,r.parking_type,r.max_hours)},geometry:r.polygon_coordinates};});
+      var geojson={type:'FeatureCollection',features:features};
+      if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
+      else{
+        map.addSource('master-polygons',{type:'geojson',data:geojson});
+        map.addLayer({id:'master-poly-fill',type:'fill',source:'master-polygons',minzoom:11,paint:{'fill-opacity':0.30,'fill-color':['match',['get','source'],'community','#7F1F89','hel_ilmainen_pitka','#7F1F89','hel_ilmainen_lyhyt','#7F1F89','hel_sallittu_kiellon_ulkopuolella','#7F1F89','hel_kertamaksu_1h','#4A90D9','hel_kertamaksu_2h','#4A90D9','hel_kertamaksu_4h','#4A90D9','hel_maksullinen_ei_tunnusta','#4A90D9','hel_kertamaksu_1h_ei_tunnusta','#4A90D9','#4A90D9']}});
+        map.addLayer({id:'master-poly-line',type:'line',source:'master-polygons',minzoom:11,paint:{'line-width':1.5,'line-opacity':0.30,'line-color':['match',['get','source'],'community','#611868','hel_ilmainen_pitka','#611868','hel_ilmainen_lyhyt','#611868','hel_sallittu_kiellon_ulkopuolella','#611868','#2B6CB0']}});
+      }
+      ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
+      console.log('Admin-kartta: alueita',features.length);
+    }catch(e){console.error('Alueiden lataus epäonnistui',e);}
+  }
+  async function tpLoadHallit(map){
+    try{
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/parking_master?select=id,polygon_coordinates,info_additional,zone_number&parking_type=eq.Pysäköintihalli',{headers:headers});
+      if(!res.ok) return;
+      var rows=await res.json();
+      var feats=rows.filter(function(r){return r.polygon_coordinates&&r.polygon_coordinates.type==='Point';})
+        .map(function(r){return {type:'Feature',properties:{id:r.id,name:r.info_additional||'Pysäköintihalli'},geometry:r.polygon_coordinates};});
+      var gj={type:'FeatureCollection',features:feats};
+      tpAddImage(map,'halli-icon',tpHalliIcon(),function(){
+        if(map.getSource('halli-points')){ map.getSource('halli-points').setData(gj); }
+        else{
+          map.addSource('halli-points',{type:'geojson',data:gj});
+          map.addLayer({id:'halli-icons',type:'symbol',source:'halli-points',minzoom:11,layout:{'icon-image':'halli-icon','icon-size':0.50,'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-anchor':'center'}});
+        }
+        if(map.getLayer('halli-icons')) map.moveLayer('halli-icons');
+      });
+      console.log('Admin-kartta: halleja',feats.length);
+    }catch(e){console.error('Hallien lataus epäonnistui',e);}
+  }
+  async function tpLoadCharging(map){
+    try{
+      var res=await fetch(TP_AFIR_BASE+'/locations?limit=ALL'); if(!res.ok) return;
+      var data=await res.json(); var locs=Array.isArray(data.features)?data.features:[];
+      var feats=locs.filter(function(f){return f&&f.geometry&&f.geometry.coordinates&&tpInBox(f.geometry.coordinates);})
+        .map(function(f){var p=f.properties||{};return {type:'Feature',geometry:{type:'Point',coordinates:f.geometry.coordinates},properties:{id:p.id||'',name:p.name||'Latausasema',available:true}};});
+      var gj={type:'FeatureCollection',features:feats};
+      tpAddImage(map,'charging-green',tpChargingIcon('#4caf50'),function(){
+        if(map.getSource('charging-points')){ map.getSource('charging-points').setData(gj); }
+        else{
+          map.addSource('charging-points',{type:'geojson',data:gj});
+          map.addLayer({id:'charging-icons',type:'symbol',source:'charging-points',minzoom:11,layout:{'icon-image':'charging-green','icon-size':0.25,'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-anchor':'center'}});
+        }
+        if(map.getLayer('charging-icons')) map.moveLayer('charging-icons');
+      });
+      console.log('Admin-kartta: latauspisteitä',feats.length);
+    }catch(e){console.error('Latauspisteiden lataus epäonnistui',e);}
+  }
+  function initAdminMap(){
+    if(adminMap)return;
+    if(typeof maplibregl==='undefined'){adminMap=null;return;}
+    adminMap=new maplibregl.Map({container:'admin-map',style:'omakartta_style.json',center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
+    try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
+    adminMap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    adminMap.on('load',function(){ tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('error',function(e){ if(e&&e.error) console.warn('Admin-kartta:',e.error.message); });
+    setTimeout(function(){if(adminMap)adminMap.resize();},150);
+  }
 
   /* ---------- Live counter ---------- */
   var liveEl=$('#live-spots');
