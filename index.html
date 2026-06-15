@@ -1131,9 +1131,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     if(typeof maplibregl==='undefined'){ adminMapStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
     if(!document.getElementById('admin-map')) return;
     adminMapStatus('Ladataan karttaa…',false);
-    // Fetch the style with cache-busting so a stale 404 in the browser cache can't
-    // break it. If we get HTML back instead of JSON, the file isn't being served.
-    fetch('omakartta_style.json?v='+Date.now(),{cache:'no-store'}).then(function(r){
+    // Load the basemap style from the working Oma-kartta deployment (same origin,
+    // always in sync with the app). Cache-busted; HTML response means it 404'd.
+    fetch('https://elias1998-fi.github.io/Oma-kartta/omakartta_style.json?v='+Date.now(),{cache:'no-store'}).then(function(r){
       return r.text().then(function(t){
         if(!r.ok) throw new Error('Tyylitiedosto ei latautunut (HTTP '+r.status+').');
         if(t.charAt(0)==='<') throw new Error('omakartta_style.json palautti HTML-sivun JSON:in sijaan (todennäköisesti 404). Varmista että tiedosto on repon juuressa, ja avaa sivu tuoreessa yksityisessä ikkunassa.');
