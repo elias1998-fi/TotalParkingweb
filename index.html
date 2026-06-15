@@ -69,7 +69,7 @@ img{max-width:100%}
 .brand span{color:var(--muted); font-weight:500}
 .topbar .spacer{flex:1}
 .topbar-links{display:none; gap:26px; align-items:center}
-.topbar-login{display:none}
+.topbar .topbar-login{display:none}
 .topbar-links a{font-weight:500; color:var(--ink-soft); font-size:15px}
 .topbar-links a:hover{color:var(--brand)}
 .btn{
@@ -105,14 +105,31 @@ img{max-width:100%}
 .drawer .brand{color:#fff}
 .drawer .brand .pmark{background:#fff; color:var(--brand)}
 .drawer-close{width:40px; height:40px; border-radius:11px; border:1px solid rgba(255,255,255,.22); background:transparent; color:#fff; font-size:20px; display:grid; place-items:center}
-.drawer nav{display:flex; flex-direction:column; gap:4px; margin-top:8px}
-.drawer nav a{
-  display:flex; align-items:center; justify-content:space-between; padding:16px 6px;
-  font-family:var(--font-display); font-size:22px; font-weight:500; letter-spacing:-.02em;
-  border-bottom:1px solid rgba(255,255,255,.12);
+.drawer nav{display:flex; flex-direction:column; gap:0; margin-top:4px; flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch}
+.acc{border-bottom:1px solid rgba(255,255,255,.12)}
+.acc-head{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:15px 6px; background:transparent; border:0; color:#fff; text-align:left; cursor:pointer;
+  font-family:var(--font-display); font-size:21px; font-weight:500; letter-spacing:-.02em;
 }
-.drawer nav a .n{font-family:var(--font-mono); font-size:12px; opacity:.6; font-weight:700}
-.drawer nav a:hover{color:var(--park-50)}
+.acc-head:hover{color:var(--park-50)}
+.acc-ic{position:relative; width:20px; height:20px; flex:0 0 auto; opacity:.85}
+.acc-ic::before,.acc-ic::after{content:""; position:absolute; background:currentColor; border-radius:2px; transition:transform .3s var(--ease), opacity .3s}
+.acc-ic::before{left:1px; right:1px; top:9px; height:2px}
+.acc-ic::after{top:1px; bottom:1px; left:9px; width:2px}
+.acc.open .acc-ic{opacity:1}
+.acc.open .acc-ic::after{transform:scaleY(0); opacity:0}
+.acc-panel{display:grid; grid-template-rows:0fr; transition:grid-template-rows .34s var(--ease)}
+.acc.open .acc-panel{grid-template-rows:1fr}
+.acc-panel-inner{overflow:hidden; display:flex; flex-direction:column}
+.acc-panel-inner a{
+  display:block; padding:11px 0 11px 16px; margin-left:2px;
+  font-family:var(--font-body); font-size:15.5px; font-weight:500;
+  color:rgba(255,255,255,.82); border-left:2px solid rgba(255,255,255,.2);
+}
+.acc-panel-inner a:first-child{margin-top:2px}
+.acc-panel-inner a:last-child{margin-bottom:12px}
+.acc-panel-inner a:hover{color:#fff; border-left-color:var(--park)}
 .drawer-foot{margin-top:auto; display:flex; flex-direction:column; gap:12px}
 .drawer-foot .btn{width:100%}
 .drawer-mini{font-size:13px; color:rgba(255,255,255,.6); line-height:1.5}
@@ -440,7 +457,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 }
 @media(min-width:860px){
   .topbar-links{display:flex}
-  .topbar-login{display:inline-flex}
+  .topbar .topbar-login{display:inline-flex}
   .hero{padding:54px 0 30px}
   .hero-grid{grid-template-columns:1fr 1.12fr; gap:30px; min-height:480px}
   .hero-map-card{min-height:480px}
@@ -490,9 +507,52 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <button class="drawer-close" id="drawer-close" aria-label="Sulje valikko">✕</button>
   </div>
   <nav>
-    <a href="#kuluttajat" data-close><span>Kuluttaja-asiakkaat</span><span class="n">01</span></a>
-    <a href="#yritykset" data-close><span>Yritykset</span><span class="n">02</span></a>
-    <a href="#meista" data-close><span>Meistä</span><span class="n">03</span></a>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Kuluttaja-asiakkaat<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#kuluttajat" data-close>Yleistä</a>
+        <a href="#kuluttajat" data-close>Näin se toimii</a>
+        <a href="#kuluttajat" data-close>Hinnoittelu</a>
+        <a href="#kuluttajat" data-close>Lataus sähköautolle</a>
+        <a href="#kuluttajat" data-close>Lataa sovellus</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Yritykset<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#yritykset" data-close>Yleistä</a>
+        <a href="#yritykset" data-close>Yrityspysäköinti</a>
+        <a href="#yritykset" data-close>Laskutus ja kustannuspaikat</a>
+        <a href="#yritykset" data-close>Hinnoittelu</a>
+        <a href="#yritykset" data-close>Ota yhteyttä myyntiin</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Pysäköinnin tarjoajat<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#top" data-close>Liity tarjoajaksi</a>
+        <a href="#top" data-close>Alueiden hallinta</a>
+        <a href="#top" data-close>Tulot ja tilitykset</a>
+        <a href="#top" data-close>Rajapinnat ja integraatiot</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Asiakaspalvelu<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#top" data-close>Usein kysytyt kysymykset</a>
+        <a href="#meista" data-close>Ota yhteyttä</a>
+        <a href="#top" data-close>Palvelutilanne</a>
+      </div></div>
+    </div>
+    <div class="acc">
+      <button class="acc-head" aria-expanded="false">Meistä<span class="acc-ic" aria-hidden="true"></span></button>
+      <div class="acc-panel"><div class="acc-panel-inner">
+        <a href="#meista" data-close>Yritys</a>
+        <a href="#meista" data-close>Vastuullisuus</a>
+        <a href="#meista" data-close>Työpaikat</a>
+        <a href="#meista" data-close>Yhteystiedot</a>
+      </div></div>
+    </div>
   </nav>
   <div class="drawer-foot">
     <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
@@ -807,11 +867,12 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   /* ---------- Drawer ---------- */
   var drawer=$('#drawer'), scrim=$('#scrim'), burger=$('#burger');
   function openDrawer(){drawer.classList.add('open'); scrim.classList.add('open'); burger.setAttribute('aria-expanded','true'); document.body.classList.add('no-scroll');}
-  function closeDrawer(){drawer.classList.remove('open'); scrim.classList.remove('open'); burger.setAttribute('aria-expanded','false'); document.body.classList.remove('no-scroll');}
+  function closeDrawer(){drawer.classList.remove('open'); scrim.classList.remove('open'); burger.setAttribute('aria-expanded','false'); document.body.classList.remove('no-scroll'); $all('.acc.open').forEach(function(a){a.classList.remove('open'); var h=a.querySelector('.acc-head'); if(h){h.setAttribute('aria-expanded','false');}});}
   burger.addEventListener('click',openDrawer);
   $('#drawer-close').addEventListener('click',closeDrawer);
   scrim.addEventListener('click',closeDrawer);
   $all('[data-close]').forEach(function(a){a.addEventListener('click',closeDrawer);});
+  $all('.acc-head').forEach(function(head){head.addEventListener('click',function(){var acc=head.parentElement; var open=acc.classList.toggle('open'); head.setAttribute('aria-expanded', open?'true':'false');});});
 
   /* ---------- Login modal ---------- */
   var modal=$('#login-modal'), roleList=$('#role-list'), loginForm=$('#login-form'), roleNote=$('#role-note'), loginCtx=$('#login-ctx');
