@@ -75,6 +75,8 @@ img{max-width:100%}
 .topbar .spacer{flex:1}
 .topbar-links{display:none; gap:6px; align-items:center}
 .topbar .topbar-login{display:none}
+.btn.topbar-login{background:var(--beige); color:var(--foot)}
+.btn.topbar-login:hover{background:var(--beige-700)}
 .topbar .topbar-user{display:none}
 .nav-dd{position:relative}
 .nav-dd-btn{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-weight:500; color:var(--ink-soft); font-size:15px; background:transparent; border:0; cursor:pointer; padding:8px 11px; border-radius:10px; white-space:nowrap}
@@ -632,38 +634,38 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Kuluttaja-asiakkaat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#kuluttajat">Yleistä</a>
-          <a href="#kuluttajat">Näin se toimii</a>
-          <a href="#kuluttajat">Hinnoittelu</a>
-          <a href="#kuluttajat">Lataus sähköautolle</a>
-          <a href="#kuluttajat">Lataa sovellus</a>
+          <a href="#" data-page="page-kuluttajat" data-section="k-yleista">Yleistä</a>
+          <a href="#" data-page="page-kuluttajat" data-section="k-toiminta">Näin se toimii</a>
+          <a href="#" data-page="page-kuluttajat" data-section="k-hinnoittelu">Hinnoittelu</a>
+          <a href="#" data-page="page-kuluttajat" data-section="k-lataus">Lataus sähköautolle</a>
+          <a href="#" data-page="page-kuluttajat" data-section="k-lataa">Lataa sovellus</a>
         </div>
       </div>
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Yritysasiakkaat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#yritykset">Yleistä</a>
-          <a href="#yritykset">Yrityspysäköinti</a>
-          <a href="#yritykset">Laskutus ja kustannuspaikat</a>
-          <a href="#yritykset">Hinnoittelu</a>
-          <a href="#yritykset">Ota yhteyttä myyntiin</a>
+          <a href="#" data-page="page-yritykset" data-section="y-yleista">Yleistä</a>
+          <a href="#" data-page="page-yritykset" data-section="y-pysakointi">Yrityspysäköinti</a>
+          <a href="#" data-page="page-yritykset" data-section="y-laskutus">Laskutus ja kustannuspaikat</a>
+          <a href="#" data-page="page-yritykset" data-section="y-hinnoittelu">Hinnoittelu</a>
+          <a href="#" data-page="page-yritykset" data-section="y-myynti">Ota yhteyttä myyntiin</a>
         </div>
       </div>
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Pysäköinnin tarjoajat<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#top">Liity tarjoajaksi</a>
-          <a href="#top">Alueiden hallinta</a>
-          <a href="#top">Tulot ja tilitykset</a>
-          <a href="#top">Rajapinnat ja integraatiot</a>
+          <a href="#" data-page="page-tarjoajat" data-section="t-liity">Liity tarjoajaksi</a>
+          <a href="#" data-page="page-tarjoajat" data-section="t-alueet">Alueiden hallinta</a>
+          <a href="#" data-page="page-tarjoajat" data-section="t-tulot">Tulot ja tilitykset</a>
+          <a href="#" data-page="page-tarjoajat" data-section="t-rajapinnat">Rajapinnat ja integraatiot</a>
         </div>
       </div>
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Asiakaspalvelu<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#top">Usein kysytyt kysymykset</a>
-          <a href="#meista">Ota yhteyttä</a>
-          <a href="#top">Palvelutilanne</a>
+          <a href="#" data-page="page-asiakaspalvelu" data-section="a-ukk">Usein kysytyt kysymykset</a>
+          <a href="#" data-page="page-asiakaspalvelu" data-section="a-yhteys">Ota yhteyttä</a>
+          <a href="#" data-page="page-asiakaspalvelu" data-section="a-tilanne">Palvelutilanne</a>
         </div>
       </div>
       <div class="nav-dd">
@@ -702,38 +704,38 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Kuluttaja-asiakkaat<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#kuluttajat" data-close>Yleistä</a>
-        <a href="#kuluttajat" data-close>Näin se toimii</a>
-        <a href="#kuluttajat" data-close>Hinnoittelu</a>
-        <a href="#kuluttajat" data-close>Lataus sähköautolle</a>
-        <a href="#kuluttajat" data-close>Lataa sovellus</a>
+        <a href="#" data-page="page-kuluttajat" data-section="k-yleista" data-close>Yleistä</a>
+        <a href="#" data-page="page-kuluttajat" data-section="k-toiminta" data-close>Näin se toimii</a>
+        <a href="#" data-page="page-kuluttajat" data-section="k-hinnoittelu" data-close>Hinnoittelu</a>
+        <a href="#" data-page="page-kuluttajat" data-section="k-lataus" data-close>Lataus sähköautolle</a>
+        <a href="#" data-page="page-kuluttajat" data-section="k-lataa" data-close>Lataa sovellus</a>
       </div></div>
     </div>
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Yritysasiakkaat<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#yritykset" data-close>Yleistä</a>
-        <a href="#yritykset" data-close>Yrityspysäköinti</a>
-        <a href="#yritykset" data-close>Laskutus ja kustannuspaikat</a>
-        <a href="#yritykset" data-close>Hinnoittelu</a>
-        <a href="#yritykset" data-close>Ota yhteyttä myyntiin</a>
+        <a href="#" data-page="page-yritykset" data-section="y-yleista" data-close>Yleistä</a>
+        <a href="#" data-page="page-yritykset" data-section="y-pysakointi" data-close>Yrityspysäköinti</a>
+        <a href="#" data-page="page-yritykset" data-section="y-laskutus" data-close>Laskutus ja kustannuspaikat</a>
+        <a href="#" data-page="page-yritykset" data-section="y-hinnoittelu" data-close>Hinnoittelu</a>
+        <a href="#" data-page="page-yritykset" data-section="y-myynti" data-close>Ota yhteyttä myyntiin</a>
       </div></div>
     </div>
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Pysäköinnin tarjoajat<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#top" data-close>Liity tarjoajaksi</a>
-        <a href="#top" data-close>Alueiden hallinta</a>
-        <a href="#top" data-close>Tulot ja tilitykset</a>
-        <a href="#top" data-close>Rajapinnat ja integraatiot</a>
+        <a href="#" data-page="page-tarjoajat" data-section="t-liity" data-close>Liity tarjoajaksi</a>
+        <a href="#" data-page="page-tarjoajat" data-section="t-alueet" data-close>Alueiden hallinta</a>
+        <a href="#" data-page="page-tarjoajat" data-section="t-tulot" data-close>Tulot ja tilitykset</a>
+        <a href="#" data-page="page-tarjoajat" data-section="t-rajapinnat" data-close>Rajapinnat ja integraatiot</a>
       </div></div>
     </div>
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Asiakaspalvelu<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#top" data-close>Usein kysytyt kysymykset</a>
-        <a href="#meista" data-close>Ota yhteyttä</a>
-        <a href="#top" data-close>Palvelutilanne</a>
+        <a href="#" data-page="page-asiakaspalvelu" data-section="a-ukk" data-close>Usein kysytyt kysymykset</a>
+        <a href="#" data-page="page-asiakaspalvelu" data-section="a-yhteys" data-close>Ota yhteyttä</a>
+        <a href="#" data-page="page-asiakaspalvelu" data-section="a-tilanne" data-close>Palvelutilanne</a>
       </div></div>
     </div>
     <div class="acc">
@@ -750,7 +752,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <button class="btn btn-ember drawer-goapp" id="drawer-goapp">Oma näkymä</button>
     <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
     <button class="btn drawer-logout-btn" id="drawer-logout">Kirjaudu ulos</button>
-    <p class="drawer-mini">Pysäköinti ja sähkölataus yhdellä kartalla. Helsinki · Tampere</p>
   </div>
 </aside>
 
@@ -1147,6 +1148,151 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     </div>
   </div>
 </section>
+<!-- ============ PAGE: KULUTTAJA-ASIAKKAAT ============ -->
+<section class="page-overlay" id="page-kuluttajat" aria-label="Kuluttaja-asiakkaat">
+  <header class="page-top">
+    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
+    <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+  </header>
+  <div class="page-body">
+    <div class="wrap-narrow">
+      <p class="eyebrow">Kuluttaja-asiakkaat</p>
+      <h1 class="page-title">Pysäköinti ja lataus yhdellä sovelluksella</h1>
+      <p class="page-lead">TotalParking kokoaa Suomen pysäköintialueet ja sähköauton latauspisteet yhdelle kartalle. Löydä lähin vapaa paikka, navigoi perille ja maksa suoraan sovelluksessa.</p>
+
+      <section class="meista-sec" id="k-yleista">
+        <h2 class="meista-h">Yleistä</h2>
+        <p>TotalParking on suunniteltu tekemään pysäköinnistä ja latauksesta mahdollisimman vaivatonta. Yhdestä näkymästä näet reaaliaikaisesti lähimmät pysäköintialueet ja vapaat latauspisteet — ei enää hyppimistä eri palveluntarjoajien sovellusten välillä.</p>
+      </section>
+
+      <section class="meista-sec" id="k-toiminta">
+        <h2 class="meista-h">Näin se toimii</h2>
+        <p>Avaa sovellus ja salli sijaintisi käyttö. Kartta näyttää ympärilläsi olevat pysäköintialueet ja latauspisteet, niiden hinnat ja saatavuuden. Valitse kohde, navigoi perille ja käynnistä pysäköinti tai lataus muutamalla napautuksella.</p>
+        <p>Pysäköinnin voi päättää koska tahansa, ja maksu veloitetaan käytön mukaan. Kaikki kuitit löytyvät kätevästi sovelluksesta.</p>
+      </section>
+
+      <section class="meista-sec" id="k-hinnoittelu">
+        <h2 class="meista-h">Hinnoittelu</h2>
+        <p>Maksat vain käyttämästäsi ajasta. Sovelluksen käyttö on maksutonta — emme veloita kuukausimaksua, etkä sitoudu mihinkään. Kohteen hinnan näet aina selkeästi kartalla ennen pysäköinnin tai latauksen aloittamista.</p>
+      </section>
+
+      <section class="meista-sec" id="k-lataus">
+        <h2 class="meista-h">Lataus sähköautolle</h2>
+        <p>Sähköauton lataus on mukana samalla kartalla pysäköinnin rinnalla. Näet latauspisteen liittimet, tehon ja sen, onko piste juuri nyt vapaana. Näin latauksen suunnittelu matkan varrelle on helppoa.</p>
+      </section>
+
+      <section class="meista-sec" id="k-lataa">
+        <h2 class="meista-h">Lataa sovellus</h2>
+        <p>TotalParking toimii suoraan selaimessa, ja sen voi lisätä puhelimen kotinäytölle kuin minkä tahansa sovelluksen. Avaa sivusto puhelimellasi ja valitse selaimen valikosta "Lisää kotivalikkoon", niin saat sovelluksen aina mukaasi.</p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: YRITYSASIAKKAAT ============ -->
+<section class="page-overlay" id="page-yritykset" aria-label="Yritysasiakkaat">
+  <header class="page-top">
+    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
+    <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+  </header>
+  <div class="page-body">
+    <div class="wrap-narrow">
+      <p class="eyebrow">Yritysasiakkaat</p>
+      <h1 class="page-title">Pysäköinti ja lataus yrityksen käyttöön</h1>
+      <p class="page-lead">Tarjoamme yrityksille keskitetyn tavan hallita henkilöstön pysäköintiä ja sähköauton latausta — selkeällä laskutuksella ja kustannuspaikkakohtaisella seurannalla.</p>
+
+      <section class="meista-sec" id="y-yleista">
+        <h2 class="meista-h">Yleistä</h2>
+        <p>Yritysasiakkaana saat käyttöösi näkymän, jossa hallitset koko organisaation pysäköintiä ja latausta yhdestä paikasta. Ratkaisu sopii niin pienille tiimeille kuin laajemmille työsuhdeauto- ja työmatkatarpeille.</p>
+      </section>
+
+      <section class="meista-sec" id="y-pysakointi">
+        <h2 class="meista-h">Yrityspysäköinti</h2>
+        <p>Henkilöstö löytää lähimmät pysäköintialueet samalla sovelluksella kuin kuluttajat, mutta kulut ohjautuvat suoraan yritykselle. Voit määrittää käyttöoikeudet ja seurata pysäköintiä työntekijä- tai tiimikohtaisesti.</p>
+      </section>
+
+      <section class="meista-sec" id="y-laskutus">
+        <h2 class="meista-h">Laskutus ja kustannuspaikat</h2>
+        <p>Kaikki pysäköinti- ja latauskulut kootaan yhdelle koontilaskulle. Voit kohdistaa kulut kustannuspaikoille ja projekteille, mikä helpottaa raportointia ja kirjanpitoa. Laskutus tapahtuu sovitulla jaksolla.</p>
+      </section>
+
+      <section class="meista-sec" id="y-hinnoittelu">
+        <h2 class="meista-h">Hinnoittelu</h2>
+        <p>Yrityshinnoittelu räätälöidään käytön ja organisaation koon mukaan. Ei piilokuluja — maksat toteutuneesta käytöstä ja mahdollisesta sovitusta palvelumaksusta. Pyydä tarjous, niin rakennamme teille sopivan kokonaisuuden.</p>
+      </section>
+
+      <section class="meista-sec" id="y-myynti">
+        <h2 class="meista-h">Ota yhteyttä myyntiin</h2>
+        <p>Haluatko kuulla lisää yrityskäytöstä? Ota yhteyttä myyntiimme osoitteessa <a href="mailto:myynti@totalparking.fi">myynti@totalparking.fi</a>, niin kartoitamme tarpeenne ja teemme tarjouksen.</p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: PYSÄKÖINNIN TARJOAJAT ============ -->
+<section class="page-overlay" id="page-tarjoajat" aria-label="Pysäköinnin tarjoajat">
+  <header class="page-top">
+    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
+    <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+  </header>
+  <div class="page-body">
+    <div class="wrap-narrow">
+      <p class="eyebrow">Pysäköinnin tarjoajat</p>
+      <h1 class="page-title">Tuo pysäköintialueesi kartalle</h1>
+      <p class="page-lead">Oletko pysäköintialueen tai latauspisteiden omistaja? Liitä kohteesi TotalParkingiin ja tavoita käyttäjät, jotka etsivät juuri sitä mitä tarjoat.</p>
+
+      <section class="meista-sec" id="t-liity">
+        <h2 class="meista-h">Liity tarjoajaksi</h2>
+        <p>Tarjoajaksi liittyminen on suoraviivaista. Kerro kohteistasi, ja lisäämme ne kartalle käyttäjien nähtäville. Saat käyttöösi näkymän, josta hallitset alueitasi ja seuraat käyttöä.</p>
+      </section>
+
+      <section class="meista-sec" id="t-alueet">
+        <h2 class="meista-h">Alueiden hallinta</h2>
+        <p>Hallitse pysäköintialueidesi tietoja yhdestä näkymästä: hinnat, aukioloajat, paikkamäärät ja saatavuus. Päivitykset näkyvät käyttäjille välittömästi kartalla.</p>
+      </section>
+
+      <section class="meista-sec" id="t-tulot">
+        <h2 class="meista-h">Tulot ja tilitykset</h2>
+        <p>Näet pysäköinti- ja laustuottosi selkeästi näkymästä. Tilitykset tapahtuvat sovitulla jaksolla, ja raportit auttavat seuraamaan alueidesi suosiota ja tuottoa.</p>
+      </section>
+
+      <section class="meista-sec" id="t-rajapinnat">
+        <h2 class="meista-h">Rajapinnat ja integraatiot</h2>
+        <p>Tarjoamme rajapinnat olemassa olevien järjestelmien integrointiin — esimerkiksi saatavuus- ja paikkatiedon välittämiseen automaattisesti. Näin tiedot pysyvät ajan tasalla ilman manuaalista työtä.</p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: ASIAKASPALVELU ============ -->
+<section class="page-overlay" id="page-asiakaspalvelu" aria-label="Asiakaspalvelu">
+  <header class="page-top">
+    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
+    <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+  </header>
+  <div class="page-body">
+    <div class="wrap-narrow">
+      <p class="eyebrow">Asiakaspalvelu</p>
+      <h1 class="page-title">Apua ja tukea</h1>
+      <p class="page-lead">Autamme mielellämme kaikissa TotalParkingiin liittyvissä kysymyksissä — niin pysäköinnissä, latauksessa kuin laskutuksessa.</p>
+
+      <section class="meista-sec" id="a-ukk">
+        <h2 class="meista-h">Usein kysytyt kysymykset</h2>
+        <p>Suuri osa kysymyksistä ratkeaa nopeasti usein kysytyistä kysymyksistä. Kokoamme tänne yleisimmät aiheet pysäköinnin aloittamisesta, maksamisesta ja latauksesta. Jos et löydä vastausta, ota yhteyttä — autamme mielellämme.</p>
+      </section>
+
+      <section class="meista-sec" id="a-yhteys">
+        <h2 class="meista-h">Ota yhteyttä</h2>
+        <p>Tavoitat asiakaspalvelumme sähköpostitse osoitteesta <a href="mailto:asiakaspalvelu@totalparking.fi">asiakaspalvelu@totalparking.fi</a>. Vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee, niin pääsemme auttamaan nopeammin.</p>
+      </section>
+
+      <section class="meista-sec" id="a-tilanne">
+        <h2 class="meista-h">Palvelutilanne</h2>
+        <p>Seuraamme palvelun toimivuutta jatkuvasti. Mahdollisista häiriöistä ja huoltokatkoista tiedotamme täällä. Tällä hetkellä kaikki järjestelmät toimivat normaalisti.</p>
+      </section>
+    </div>
+  </div>
+</section>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1234,18 +1380,23 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       closeLogin(); enterApp('admin');
     }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
   });
-  function openMeista(sectionId){
-    var p=document.getElementById('page-meista'); if(!p)return;
+  function openPage(pageId, sectionId){
+    var p=document.getElementById(pageId); if(!p)return;
     closeDrawer();
+    document.querySelectorAll('.page-overlay.active').forEach(function(o){ if(o!==p) o.classList.remove('active'); });
     p.classList.add('active'); document.body.classList.add('no-scroll'); p.scrollTop=0;
     var sec = sectionId ? document.getElementById(sectionId) : null;
     if(sec){ requestAnimationFrame(function(){ var top=sec.getBoundingClientRect().top - p.getBoundingClientRect().top + p.scrollTop - 70; p.scrollTo({top:Math.max(0,top), behavior:'auto'}); }); }
   }
-  function closeMeista(){ var p=document.getElementById('page-meista'); if(!p)return; p.classList.remove('active'); document.body.classList.remove('no-scroll'); }
+  function closePage(){ document.querySelectorAll('.page-overlay.active').forEach(function(p){ p.classList.remove('active'); }); document.body.classList.remove('no-scroll'); }
+  function openMeista(sectionId){ openPage('page-meista', sectionId); }
+  function closeMeista(){ closePage(); }
   $all('[data-meista]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openMeista(a.getAttribute('data-meista')); }); });
-  (function(){ var b=document.getElementById('meista-back'); if(b) b.addEventListener('click',closeMeista); var h=document.getElementById('meista-home'); if(h) h.addEventListener('click',function(e){ e.preventDefault(); closeMeista(); }); })();
+  $all('[data-page]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openPage(a.getAttribute('data-page'), a.getAttribute('data-section')); }); });
+  $all('.page-overlay .page-back').forEach(function(b){ b.addEventListener('click', closePage); });
+  $all('.page-overlay .page-top .brand').forEach(function(h){ h.addEventListener('click', function(e){ e.preventDefault(); closePage(); }); });
   (function(){ var foot=document.querySelector('footer.foot'); if(!foot) return; document.querySelectorAll('.page-overlay').forEach(function(ov){ ov.appendChild(foot.cloneNode(true)); }); })();
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closeMeista();}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closePage();}});
 
   /* ---------- Session + app enter / exit / logout ---------- */
   var sess=null;   // {role,email} while logged in (kept across site<->app navigation)
