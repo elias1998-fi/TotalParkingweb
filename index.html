@@ -14,7 +14,7 @@
 <style>
 :root{
   --ink:#0A1A33; --ink-soft:#3E4D67; --muted:#717A8C;
-  --brand:#021E45; --brand-700:#0C0243; --brand-50:#EAEDF3; --brand-100:#D1D7E5;
+  --brand:#021E45; --brand-700:#01122E; --brand-50:#EAEDF3; --brand-100:#D1D7E5; --foot:#031E45;
   --charge:#13B17C; --charge-700:#021E45; --charge-50:#E3F6EE;
   --park:#F5D1C1; --park-700:#021E45; --park-50:#FBEDE6;
   --paper:#FAF5F0; --card:#FFFFFF; --line:#E7E1DB; --line-soft:#F1ECE6;
@@ -111,7 +111,7 @@ img{max-width:100%}
 .scrim.open{opacity:1; visibility:visible}
 .drawer{
   position:fixed; top:0; left:0; bottom:0; width:min(360px,86vw); z-index:90;
-  background:var(--brand-700); color:#fff; transform:translateX(-102%);
+  background:var(--foot); color:#fff; transform:translateX(-102%);
   transition:transform .38s var(--ease); display:flex; flex-direction:column;
   padding:22px 22px 26px; box-shadow:var(--shadow-lg);
 }
@@ -322,7 +322,7 @@ body.logged-in #drawer-login{display:none}
 .ctaband .hero-cta{justify-content:center}
 
 /* Footer */
-.foot{background:var(--brand-700); color:rgba(255,255,255,.8); padding:54px 0 30px; margin-top:8px}
+.foot{background:var(--foot); color:rgba(255,255,255,.8); padding:54px 0 30px; margin-top:8px}
 .foot-grid{display:grid; grid-template-columns:1fr; gap:28px}
 .foot .brand{color:#fff; margin-bottom:14px}
 .foot-blurb{font-size:14.5px; max-width:34ch; color:rgba(255,255,255,.72)}
