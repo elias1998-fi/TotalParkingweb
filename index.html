@@ -14,7 +14,7 @@
 <style>
 :root{
   --ink:#0A1A33; --ink-soft:#3E4D67; --muted:#717A8C;
-  --brand:#021E45; --brand-700:#01122E; --brand-50:#EAEDF3; --brand-100:#D1D7E5;
+  --brand:#021E45; --brand-700:#0C0243; --brand-50:#EAEDF3; --brand-100:#D1D7E5;
   --charge:#13B17C; --charge-700:#021E45; --charge-50:#E3F6EE;
   --park:#F5D1C1; --park-700:#021E45; --park-50:#FBEDE6;
   --paper:#FAF5F0; --card:#FFFFFF; --line:#E7E1DB; --line-soft:#F1ECE6;
@@ -1244,6 +1244,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function closeMeista(){ var p=document.getElementById('page-meista'); if(!p)return; p.classList.remove('active'); document.body.classList.remove('no-scroll'); }
   $all('[data-meista]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openMeista(a.getAttribute('data-meista')); }); });
   (function(){ var b=document.getElementById('meista-back'); if(b) b.addEventListener('click',closeMeista); var h=document.getElementById('meista-home'); if(h) h.addEventListener('click',function(e){ e.preventDefault(); closeMeista(); }); })();
+  (function(){ var foot=document.querySelector('footer.foot'); if(!foot) return; document.querySelectorAll('.page-overlay').forEach(function(ov){ ov.appendChild(foot.cloneNode(true)); }); })();
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closeMeista();}});
 
   /* ---------- Session + app enter / exit / logout ---------- */
