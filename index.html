@@ -108,11 +108,11 @@ img{max-width:100%}
 /* ---------- Drawer (burger menu) ---------- */
 .scrim{
   position:fixed; inset:0; background:rgba(9,40,36,.42); backdrop-filter:blur(2px);
-  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; z-index:80;
+  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; z-index:310;
 }
 .scrim.open{opacity:1; visibility:visible}
 .drawer{
-  position:fixed; top:0; left:0; bottom:0; width:min(360px,86vw); z-index:90;
+  position:fixed; top:0; left:0; bottom:0; width:min(360px,86vw); z-index:320;
   background:var(--foot); color:#fff; transform:translateX(-102%);
   transition:transform .38s var(--ease); display:flex; flex-direction:column;
   padding:22px 22px 26px; box-shadow:var(--shadow-lg);
@@ -176,8 +176,6 @@ img{max-width:100%}
 .page-overlay{position:fixed; inset:0; background:var(--paper); z-index:200; overflow-y:auto; -webkit-overflow-scrolling:touch; display:none}
 .page-overlay.active{display:block}
 .page-top{position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:16px; justify-content:space-between; padding:13px 20px; background:rgba(247,246,241,.9); backdrop-filter:saturate(160%) blur(12px); border-bottom:1px solid var(--line)}
-.page-back{display:inline-flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-pill); padding:9px 16px; font-weight:600; font-size:14px; color:var(--ink); cursor:pointer}
-.page-back:hover{border-color:var(--brand-100); color:var(--brand)}
 .page-body{padding:46px 20px 80px}
 .wrap-narrow{max-width:880px; margin:0 auto}
 .page-overlay .eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brand)}
@@ -210,6 +208,33 @@ img{max-width:100%}
 .meista-sec > p{font-size:16.5px; line-height:1.7; color:var(--ink-soft); margin:0 0 15px; max-width:66ch}
 .meista-sec > p a{color:var(--brand); font-weight:600}
 .meista-sub{margin-bottom:30px !important}
+.contact-options{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:8px}
+@media(min-width:620px){ .contact-options{grid-template-columns:1fr 1fr} }
+.contact-opt{display:flex; flex-direction:column; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); padding:24px; box-shadow:var(--shadow)}
+.contact-opt-ic{width:46px; height:46px; border-radius:13px; display:grid; place-items:center; margin-bottom:15px}
+.contact-opt-ic svg{width:23px; height:23px}
+.contact-opt-ic.pertti{background:var(--brand); color:var(--park)}
+.contact-opt-ic.mail{background:var(--beige); color:var(--brand)}
+.contact-opt h3{font-family:var(--font-display); font-size:18.5px; font-weight:700; letter-spacing:-.01em; margin:0 0 7px}
+.contact-opt p{font-size:14.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 18px}
+.contact-opt-btn{margin-top:auto; width:100%; justify-content:center}
+.pertti-chat{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden}
+.pertti-head{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:var(--brand-50)}
+.pertti-avatar{width:38px; height:38px; border-radius:50%; background:var(--brand); color:var(--park); display:grid; place-items:center; flex:0 0 auto}
+.pertti-avatar svg{width:20px; height:20px}
+.pertti-head b{font-family:var(--font-display); font-size:15.5px; display:block; line-height:1.2}
+.pertti-status{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted)}
+.pertti-dot{width:8px; height:8px; border-radius:50%; background:var(--charge)}
+.pertti-close{margin-left:auto; width:32px; height:32px; border:0; background:transparent; color:var(--muted); border-radius:9px; cursor:pointer; display:grid; place-items:center; flex:0 0 auto}
+.pertti-close:hover{background:var(--brand-100); color:var(--ink)}
+.pertti-close svg{width:18px; height:18px}
+.pertti-msgs{padding:16px; display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto}
+.pertti-bubble{max-width:84%; padding:10px 14px; border-radius:15px; font-size:14px; line-height:1.5}
+.pertti-bubble.bot{align-self:flex-start; background:var(--brand-50); color:var(--ink); border-bottom-left-radius:5px}
+.pertti-bubble.user{align-self:flex-end; background:var(--brand); color:#fff; border-bottom-right-radius:5px}
+.pertti-chips{display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 16px}
+.pertti-chip{font-family:inherit; font-size:13px; font-weight:500; color:var(--brand); background:var(--card); border:1px solid var(--brand-100); border-radius:var(--r-pill); padding:8px 13px; cursor:pointer; transition:background .15s, border-color .15s}
+.pertti-chip:hover{background:var(--brand-50); border-color:var(--brand)}
 
 /* ---------- Auth UI (top-bar user menu + drawer buttons) ---------- */
 .topbar-user{position:relative}
@@ -348,7 +373,7 @@ body.logged-in #drawer-login{display:none}
 .foot-legal a:hover{color:#fff}
 
 /* ---------- Login modal ---------- */
-.modal-scrim{position:fixed; inset:0; background:rgba(9,40,36,.5); backdrop-filter:blur(3px); z-index:120; display:grid; place-items:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s}
+.modal-scrim{position:fixed; inset:0; background:rgba(9,40,36,.5); backdrop-filter:blur(3px); z-index:340; display:grid; place-items:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s}
 .modal-scrim.open{opacity:1; visibility:visible}
 .modal{
   background:var(--card); border-radius:24px; width:min(520px,100%); max-height:92vh; overflow:auto;
@@ -663,9 +688,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <div class="nav-dd">
         <button class="nav-dd-btn" aria-expanded="false">Asiakaspalvelu<svg class="nav-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-dd-panel">
-          <a href="#" data-page="page-asiakaspalvelu" data-section="a-ukk">Usein kysytyt kysymykset</a>
           <a href="#" data-page="page-asiakaspalvelu" data-section="a-yhteys">Ota yhteyttä</a>
-          <a href="#" data-page="page-asiakaspalvelu" data-section="a-tilanne">Palvelutilanne</a>
         </div>
       </div>
       <div class="nav-dd">
@@ -733,9 +756,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="acc">
       <button class="acc-head" aria-expanded="false">Asiakaspalvelu<span class="acc-ic" aria-hidden="true"></span></button>
       <div class="acc-panel"><div class="acc-panel-inner">
-        <a href="#" data-page="page-asiakaspalvelu" data-section="a-ukk" data-close>Usein kysytyt kysymykset</a>
         <a href="#" data-page="page-asiakaspalvelu" data-section="a-yhteys" data-close>Ota yhteyttä</a>
-        <a href="#" data-page="page-asiakaspalvelu" data-section="a-tilanne" data-close>Palvelutilanne</a>
       </div></div>
     </div>
     <div class="acc">
@@ -1069,8 +1090,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <!-- ============ PAGE: YHTEYSTIEDOT ============ -->
 <section class="page-overlay" id="page-meista" aria-label="Meistä">
   <header class="page-top">
-    <button class="page-back" id="meista-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
-    <a href="#" class="brand" id="meista-home" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="burger page-burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1151,8 +1172,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <!-- ============ PAGE: KULUTTAJA-ASIAKKAAT ============ -->
 <section class="page-overlay" id="page-kuluttajat" aria-label="Kuluttaja-asiakkaat">
   <header class="page-top">
-    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
     <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="burger page-burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1192,8 +1213,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <!-- ============ PAGE: YRITYSASIAKKAAT ============ -->
 <section class="page-overlay" id="page-yritykset" aria-label="Yritysasiakkaat">
   <header class="page-top">
-    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
     <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="burger page-burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1232,8 +1253,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <!-- ============ PAGE: PYSÄKÖINNIN TARJOAJAT ============ -->
 <section class="page-overlay" id="page-tarjoajat" aria-label="Pysäköinnin tarjoajat">
   <header class="page-top">
-    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
     <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="burger page-burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1267,8 +1288,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 <!-- ============ PAGE: ASIAKASPALVELU ============ -->
 <section class="page-overlay" id="page-asiakaspalvelu" aria-label="Asiakaspalvelu">
   <header class="page-top">
-    <button class="page-back" aria-label="Takaisin"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Takaisin</button>
     <a href="#" class="brand" aria-label="Etusivu"><span class="pmark" aria-hidden="true"></span><span class="brand-name"><b>Total</b><span>Parking</span></span></a>
+    <button class="burger page-burger" aria-label="Avaa valikko" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
   <div class="page-body">
     <div class="wrap-narrow">
@@ -1276,19 +1297,44 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <h1 class="page-title">Apua ja tukea</h1>
       <p class="page-lead">Autamme mielellämme kaikissa TotalParkingiin liittyvissä kysymyksissä — niin pysäköinnissä, latauksessa kuin laskutuksessa.</p>
 
-      <section class="meista-sec" id="a-ukk">
-        <h2 class="meista-h">Usein kysytyt kysymykset</h2>
-        <p>Suuri osa kysymyksistä ratkeaa nopeasti usein kysytyistä kysymyksistä. Kokoamme tänne yleisimmät aiheet pysäköinnin aloittamisesta, maksamisesta ja latauksesta. Jos et löydä vastausta, ota yhteyttä — autamme mielellämme.</p>
-      </section>
-
       <section class="meista-sec" id="a-yhteys">
         <h2 class="meista-h">Ota yhteyttä</h2>
-        <p>Tavoitat asiakaspalvelumme sähköpostitse osoitteesta <a href="mailto:asiakaspalvelu@totalparking.fi">asiakaspalvelu@totalparking.fi</a>. Vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee, niin pääsemme auttamaan nopeammin.</p>
-      </section>
+        <p class="meista-sub">Valitse sinulle sopivin tapa — Pertti auttaa heti chatissa, tai lähetä viesti sähköpostitse.</p>
 
-      <section class="meista-sec" id="a-tilanne">
-        <h2 class="meista-h">Palvelutilanne</h2>
-        <p>Seuraamme palvelun toimivuutta jatkuvasti. Mahdollisista häiriöistä ja huoltokatkoista tiedotamme täällä. Tällä hetkellä kaikki järjestelmät toimivat normaalisti.</p>
+        <div class="contact-options">
+          <div class="contact-opt">
+            <span class="contact-opt-ic pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+            <h3>Hoida asia Pertin kanssa</h3>
+            <p>Pertti, asiakaspalveluavustajamme, vastaa yleisimpiin kysymyksiin heti. Nopein tapa saada apua.</p>
+            <button class="btn btn-primary contact-opt-btn" id="open-pertti" aria-expanded="false">Keskustele Pertin kanssa</button>
+          </div>
+          <div class="contact-opt">
+            <span class="contact-opt-ic mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+            <h3>Lähetä sähköposti asiakaspalveluun</h3>
+            <p>Kirjoita meille sähköpostitse, niin vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee.</p>
+            <a href="mailto:asiakaspalvelu@totalparking.fi" class="btn btn-ember contact-opt-btn">Lähetä sähköposti</a>
+          </div>
+        </div>
+
+        <div class="pertti-chat" id="pertti-chat" hidden>
+          <div class="pertti-head">
+            <span class="pertti-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M12 8V4M9 4h6"/><circle cx="9.2" cy="13.3" r="1.25" fill="currentColor" stroke="none"/><circle cx="14.8" cy="13.3" r="1.25" fill="currentColor" stroke="none"/></svg></span>
+            <div>
+              <b>Pertti</b>
+              <span class="pertti-status"><span class="pertti-dot"></span>Asiakaspalveluavustaja</span>
+            </div>
+            <button class="pertti-close" id="pertti-close" aria-label="Sulje keskustelu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div class="pertti-msgs" id="pertti-msgs">
+            <div class="pertti-bubble bot">Moi! Olen Pertti, TotalParkingin asiakaspalveluavustaja. Valitse aihe tai kysy vapaasti — autan mielelläni.</div>
+          </div>
+          <div class="pertti-chips" id="pertti-chips">
+            <button class="pertti-chip" data-q="parkki">Miten aloitan pysäköinnin?</button>
+            <button class="pertti-chip" data-q="lataus">Miten lataus toimii?</button>
+            <button class="pertti-chip" data-q="lasku">Laskutus ja maksut</button>
+            <button class="pertti-chip" data-q="ihminen">Haluan puhua ihmiselle</button>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -1393,10 +1439,31 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function closeMeista(){ closePage(); }
   $all('[data-meista]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openMeista(a.getAttribute('data-meista')); }); });
   $all('[data-page]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openPage(a.getAttribute('data-page'), a.getAttribute('data-section')); }); });
-  $all('.page-overlay .page-back').forEach(function(b){ b.addEventListener('click', closePage); });
+  $all('.page-overlay .page-burger').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); openDrawer(); }); });
   $all('.page-overlay .page-top .brand').forEach(function(h){ h.addEventListener('click', function(e){ e.preventDefault(); closePage(); }); });
   (function(){ var foot=document.querySelector('footer.foot'); if(!foot) return; document.querySelectorAll('.page-overlay').forEach(function(ov){ ov.appendChild(foot.cloneNode(true)); }); })();
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closePage();}});
+  (function(){
+    var openBtn=document.getElementById('open-pertti'), chat=document.getElementById('pertti-chat');
+    if(!openBtn||!chat) return;
+    var msgs=document.getElementById('pertti-msgs'), closeBtn=document.getElementById('pertti-close');
+    var answers={
+      parkki:"Avaa sovelluksen kartta, valitse lähin vapaa pysäköintialue ja paina 'Aloita pysäköinti'. Pysäköinnin voit lopettaa milloin tahansa, ja maksu veloitetaan käytön mukaan.",
+      lataus:"Latauspisteet näkyvät samalla kartalla pysäköinnin rinnalla. Valitse vapaa piste, liitä auto ja käynnistä lataus sovelluksesta. Näet liittimet, tehon ja saatavuuden ennen latausta.",
+      lasku:"Kuluttajana maksat vain käyttämästäsi ajasta, eikä kuukausimaksua ole. Yritysasiakkaille kulut kootaan koontilaskulle, ja kaikki kuitit löytyvät sovelluksesta.",
+      ihminen:"Selvä! Lähetä viesti osoitteeseen asiakaspalvelu@totalparking.fi, niin asiakaspalvelijamme vastaa arkisin mahdollisimman pian."
+    };
+    function bubble(text,who){ var d=document.createElement('div'); d.className='pertti-bubble '+who; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
+    openBtn.addEventListener('click',function(){ chat.hidden=false; openBtn.setAttribute('aria-expanded','true'); chat.scrollIntoView({behavior:'smooth', block:'nearest'}); });
+    if(closeBtn) closeBtn.addEventListener('click',function(){ chat.hidden=true; openBtn.setAttribute('aria-expanded','false'); });
+    $all('#pertti-chips .pertti-chip').forEach(function(chip){
+      chip.addEventListener('click',function(){
+        var q=chip.getAttribute('data-q');
+        bubble(chip.textContent,'user');
+        setTimeout(function(){ bubble(answers[q]||"Autan mielelläni — voit myös lähettää viestin osoitteeseen asiakaspalvelu@totalparking.fi.",'bot'); },350);
+      });
+    });
+  })();
 
   /* ---------- Session + app enter / exit / logout ---------- */
   var sess=null;   // {role,email} while logged in (kept across site<->app navigation)
