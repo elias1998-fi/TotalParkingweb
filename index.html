@@ -262,7 +262,11 @@ img{max-width:100%}
 .cform-field textarea{resize:vertical; min-height:90px}
 .cform-send{margin-top:4px; width:100%; justify-content:center}
 .cform-done{margin:0; padding:26px 18px; text-align:center; font-size:15px; color:var(--yellow-700); font-weight:600}
-.req{color:#cc4b37; font-weight:700; margin-left:1px}
+.req{display:none; color:#cc4b37; font-weight:700; margin-left:1px}
+.cform-field.invalid .cform-label{color:#cc4b37}
+.cform-field.invalid .req{display:inline}
+.cform-field[hidden]{display:none}
+.cform-body[hidden]{display:none}
 .cform-select{font-family:inherit; font-size:14.5px; font-weight:400; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); padding:11px 38px 11px 13px; width:100%; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%233E4D67'%20stroke-width='2'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 13px center; background-size:17px}
 .cform-select:focus{outline:none; border-color:var(--brand); background-color:#fff}
 .cform-select:disabled{opacity:.55; cursor:not-allowed; background-color:var(--brand-50)}
@@ -1376,9 +1380,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <button class="pertti-close" id="form-close" aria-label="Sulje lomake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="cform-body" id="cform-body">
-      <label class="cform-field">Nimi <span class="req">*</span><input type="text" id="cf-name" autocomplete="name"></label>
-      <label class="cform-field">Sähköposti <span class="req">*</span><input type="email" id="cf-email" autocomplete="email"></label>
-      <label class="cform-field">Valitse rooli <span class="req">*</span>
+      <label class="cform-field"><span class="cform-label">Nimi<span class="req">*</span></span><input type="text" id="cf-name" autocomplete="name"></label>
+      <label class="cform-field"><span class="cform-label">Sähköposti<span class="req">*</span></span><input type="email" id="cf-email" autocomplete="email"></label>
+      <label class="cform-field"><span class="cform-label">Valitse rooli<span class="req">*</span></span>
         <select id="cf-role" class="cform-select">
           <option value="" selected disabled>Valitse…</option>
           <option value="kuluttaja">Kuluttaja-asiakas</option>
@@ -1386,13 +1390,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
           <option value="tarjoaja">Pysäköinnin tarjoaja</option>
         </select>
       </label>
-      <label class="cform-field">Yhteydenoton syy <span class="req">*</span>
+      <label class="cform-field" id="cf-company-field" hidden><span class="cform-label">Yrityksen nimi<span class="req">*</span></span><input type="text" id="cf-company" autocomplete="organization"></label>
+      <label class="cform-field"><span class="cform-label">Yhteydenoton syy<span class="req">*</span></span>
         <select id="cf-reason" class="cform-select" disabled>
           <option value="" selected disabled>Valitse ensin rooli…</option>
         </select>
       </label>
-      <label class="cform-field">Viesti <span class="req">*</span><textarea id="cf-msg" rows="4"></textarea></label>
-      <button class="btn btn-primary cform-send" id="cf-send" disabled>Lähetä viesti</button>
+      <label class="cform-field"><span class="cform-label">Viesti<span class="req">*</span></span><textarea id="cf-msg" rows="4"></textarea></label>
+      <button class="btn btn-primary cform-send" id="cf-send">Lähetä viesti</button>
     </div>
     <p class="cform-done" id="cf-done" hidden>Kiitos! Viestisi on lähetetty. Olemme sinuun yhteydessä arkisin mahdollisimman pian.</p>
   </div>
@@ -1548,11 +1553,16 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       var fClose=document.getElementById('form-close'), cfBody=document.getElementById('cform-body'), cfDone=document.getElementById('cf-done');
       var roleSel=document.getElementById('cf-role'), reasonSel=document.getElementById('cf-reason');
       var cfName=document.getElementById('cf-name'), cfEmail=document.getElementById('cf-email'), cfMsg=document.getElementById('cf-msg'), cfSend=document.getElementById('cf-send');
+      var cfCompany=document.getElementById('cf-company'), compField=document.getElementById('cf-company-field');
       var reasons={
         kuluttaja:['Pysäköinnin aloitus tai lopetus','Sähköauton lataus','Hinnoittelu ja maksut','Sovellus tai käyttäjätili','Kuitti tai laskutus','Muu asia'],
         yritys:['Yrityspysäköinnin käyttöönotto','Laskutus ja kustannuspaikat','Käyttäjien hallinta','Hinnoittelu ja sopimus','Myynti ja tarjouspyyntö','Muu asia'],
         tarjoaja:['Tarjoajaksi liittyminen','Alueiden hallinta','Tulot ja tilitykset','Rajapinnat ja integraatiot','Sopimus ja ehdot','Muu asia']
       };
+      function wrapOf(el){ return el ? el.closest('.cform-field') : null; }
+      function flag(el, bad){ var w=wrapOf(el); if(w) w.classList.toggle('invalid', !!bad); }
+      function emptyVal(el){ return !el || !String(el.value||'').trim(); }
+      function clearFlags(){ [cfName,cfEmail,roleSel,cfCompany,reasonSel,cfMsg].forEach(function(el){ flag(el,false); }); }
       function fillReasons(){
         if(!reasonSel) return;
         var r=roleSel?roleSel.value:'';
@@ -1560,19 +1570,25 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         var ph=document.createElement('option'); ph.value=''; ph.disabled=true; ph.selected=true; ph.textContent = r ? 'Valitse…' : 'Valitse ensin rooli…'; reasonSel.appendChild(ph);
         if(r && reasons[r]){ reasons[r].forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; reasonSel.appendChild(o); }); reasonSel.disabled=false; }
         else { reasonSel.disabled=true; }
-        validate();
       }
-      function validate(){
-        if(!cfSend) return;
-        var ok = cfName && cfName.value.trim() && cfEmail && cfEmail.value.trim() && roleSel && roleSel.value && reasonSel && reasonSel.value && cfMsg && cfMsg.value.trim();
-        cfSend.disabled = !ok;
+      function toggleCompany(){
+        var r=roleSel?roleSel.value:'';
+        var biz=(r==='yritys'||r==='tarjoaja');
+        if(compField){ compField.hidden=!biz; if(!biz){ if(cfCompany)cfCompany.value=''; compField.classList.remove('invalid'); } }
       }
-      if(roleSel) roleSel.addEventListener('change', fillReasons);
-      [cfName,cfEmail,reasonSel,cfMsg].forEach(function(el){ if(el){ el.addEventListener('input', validate); el.addEventListener('change', validate); } });
-      openF.addEventListener('click',function(){ if(pModal){pModal.classList.remove('open'); if(openP)openP.setAttribute('aria-expanded','false');} openModal(fModal); openF.setAttribute('aria-expanded','true'); if(cfBody)cfBody.hidden=false; if(cfDone)cfDone.hidden=true; validate(); });
+      if(roleSel) roleSel.addEventListener('change', function(){ toggleCompany(); fillReasons(); flag(roleSel,false); flag(reasonSel,false); });
+      [cfName,cfEmail,cfCompany,reasonSel,cfMsg].forEach(function(el){ if(el){ el.addEventListener('input',function(){ flag(el,false); }); el.addEventListener('change',function(){ flag(el,false); }); } });
+      openF.addEventListener('click',function(){ if(pModal){pModal.classList.remove('open'); if(openP)openP.setAttribute('aria-expanded','false');} openModal(fModal); openF.setAttribute('aria-expanded','true'); if(cfBody)cfBody.hidden=false; if(cfDone)cfDone.hidden=true; clearFlags(); });
       if(fClose) fClose.addEventListener('click',function(){ closeModal(fModal); openF.setAttribute('aria-expanded','false'); });
-      if(cfSend) cfSend.addEventListener('click',function(){ if(cfSend.disabled) return; if(cfBody)cfBody.hidden=true; if(cfDone)cfDone.hidden=false; if(cfName)cfName.value=''; if(cfEmail)cfEmail.value=''; if(cfMsg)cfMsg.value=''; if(roleSel)roleSel.value=''; fillReasons(); });
-      validate();
+      if(cfSend) cfSend.addEventListener('click',function(){
+        var bad=false;
+        [cfName,cfEmail,roleSel,reasonSel,cfMsg].forEach(function(el){ var e=emptyVal(el); flag(el,e); if(e) bad=true; });
+        if(compField && !compField.hidden){ var ce=emptyVal(cfCompany); flag(cfCompany,ce); if(ce) bad=true; }
+        if(bad) return;
+        if(cfBody)cfBody.hidden=true; if(cfDone)cfDone.hidden=false;
+        if(cfName)cfName.value=''; if(cfEmail)cfEmail.value=''; if(cfMsg)cfMsg.value=''; if(cfCompany)cfCompany.value='';
+        if(roleSel)roleSel.value=''; toggleCompany(); fillReasons(); clearFlags();
+      });
     }
   })();
 
