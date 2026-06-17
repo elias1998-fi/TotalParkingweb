@@ -228,7 +228,9 @@ img{max-width:100%}
 .contact-opt h3{font-family:var(--font-display); font-size:18.5px; font-weight:700; letter-spacing:-.01em; margin:0 0 7px}
 .contact-opt p{font-size:14.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 18px}
 .contact-opt-btn{margin-top:auto; width:100%; justify-content:center}
-.pertti-chat{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden}
+.modal-chat{width:min(440px,100%); height:560px; max-height:80vh; overflow:hidden; display:flex; flex-direction:column}
+.modal-chat .pertti-head, .modal-chat .pertti-input{flex:0 0 auto}
+.modal-chat .pertti-msgs{flex:1 1 auto; min-height:0; max-height:none}
 .pertti-head{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:var(--brand-50)}
 .pertti-avatar{width:38px; height:38px; border-radius:50%; background:var(--brand); color:#fff; display:grid; place-items:center; flex:0 0 auto; font-family:var(--font-display); font-weight:700; font-size:18px}
 .pertti-head b{font-family:var(--font-display); font-size:15.5px; display:block; line-height:1.2}
@@ -247,7 +249,10 @@ img{max-width:100%}
 .pertti-send{flex:0 0 auto; width:40px; height:40px; border:0; border-radius:50%; background:var(--brand); color:#fff; display:grid; place-items:center; cursor:pointer; transition:background .2s}
 .pertti-send:hover{background:var(--brand-700)}
 .pertti-send svg{width:18px; height:18px}
-.contact-form{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden}
+.modal-form{width:min(460px,100%); max-height:90vh; overflow:hidden; display:flex; flex-direction:column}
+.modal-form .cform-head{flex:0 0 auto}
+.modal-form .cform-body{flex:1 1 auto; min-height:0; overflow-y:auto}
+.modal-form .cform-done{flex:0 0 auto}
 .cform-head{display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--brand-50)}
 .cform-head b{font-family:var(--font-display); font-size:16px; flex:1 1 auto}
 .cform-body{padding:18px; display:flex; flex-direction:column; gap:14px}
@@ -257,6 +262,11 @@ img{max-width:100%}
 .cform-field textarea{resize:vertical; min-height:90px}
 .cform-send{margin-top:4px; width:100%; justify-content:center}
 .cform-done{margin:0; padding:26px 18px; text-align:center; font-size:15px; color:var(--yellow-700); font-weight:600}
+.req{color:#cc4b37; font-weight:700; margin-left:1px}
+.cform-select{font-family:inherit; font-size:14.5px; font-weight:400; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); padding:11px 38px 11px 13px; width:100%; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%233E4D67'%20stroke-width='2'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 13px center; background-size:17px}
+.cform-select:focus{outline:none; border-color:var(--brand); background-color:#fff}
+.cform-select:disabled{opacity:.55; cursor:not-allowed; background-color:var(--brand-50)}
+.cform-send:disabled{opacity:.45; cursor:not-allowed; box-shadow:none}
 
 /* ---------- Auth UI (top-bar user menu + drawer buttons) ---------- */
 .topbar-user{position:relative}
@@ -1325,51 +1335,68 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
           <span class="contact-opt-ic pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
           <h3>Hoida asia Pertin kanssa</h3>
           <p>Pertti, asiakaspalvelijamme, vastaa yleisimpiin kysymyksiin heti chatissa. Nopein tapa saada apua.</p>
-          <button class="btn btn-primary contact-opt-btn" id="open-pertti" aria-expanded="false">Keskustele Pertin kanssa</button>
+          <button class="btn btn-primary contact-opt-btn" id="open-pertti" aria-haspopup="dialog">Keskustele Pertin kanssa</button>
         </div>
         <div class="contact-opt">
           <span class="contact-opt-ic mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
           <h3>Lähetä sähköposti asiakaspalveluun</h3>
           <p>Täytä yhteydenottolomake, niin vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee.</p>
-          <button class="btn btn-ember contact-opt-btn" id="open-form" aria-expanded="false">Avaa yhteydenottolomake</button>
+          <button class="btn btn-ember contact-opt-btn" id="open-form" aria-haspopup="dialog">Avaa yhteydenottolomake</button>
         </div>
-      </div>
-
-      <div class="pertti-chat" id="pertti-chat" hidden>
-        <div class="pertti-head">
-          <span class="pertti-avatar">P</span>
-          <div>
-            <b>Pertti</b>
-            <span class="pertti-status"><span class="pertti-dot"></span>Kouvolasta · paikalla</span>
-          </div>
-          <button class="pertti-close" id="pertti-close" aria-label="Sulje keskustelu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </div>
-        <div class="pertti-msgs" id="pertti-msgs">
-          <div class="pertti-bubble bot">Moro! Olen Pertti Kouvolasta, TotalParkingin asiakaspalvelija. Miten voin auttaa?</div>
-        </div>
-        <div class="pertti-input">
-          <input type="text" id="pertti-text" placeholder="Kirjoita viesti…" autocomplete="off">
-          <button class="pertti-send" id="pertti-send" aria-label="Lähetä viesti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
-        </div>
-      </div>
-
-      <div class="contact-form" id="contact-form" hidden>
-        <div class="cform-head">
-          <b>Yhteydenottolomake</b>
-          <button class="pertti-close" id="form-close" aria-label="Sulje lomake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </div>
-        <div class="cform-body" id="cform-body">
-          <label class="cform-field">Nimi<input type="text" id="cf-name" autocomplete="name"></label>
-          <label class="cform-field">Sähköposti<input type="email" id="cf-email" autocomplete="email"></label>
-          <label class="cform-field">Aihe<input type="text" id="cf-subject"></label>
-          <label class="cform-field">Viesti<textarea id="cf-msg" rows="4"></textarea></label>
-          <button class="btn btn-primary cform-send" id="cf-send">Lähetä viesti</button>
-        </div>
-        <p class="cform-done" id="cf-done" hidden>Kiitos! Viestisi on lähetetty. Olemme sinuun yhteydessä arkisin mahdollisimman pian.</p>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Asiakaspalvelu: Pertti-chat ja yhteydenottolomake modaaleina -->
+<div class="modal-scrim" id="pertti-modal">
+  <div class="modal modal-chat" role="dialog" aria-modal="true" aria-label="Keskustele Pertin kanssa">
+    <div class="pertti-head">
+      <span class="pertti-avatar">P</span>
+      <div>
+        <b>Pertti</b>
+        <span class="pertti-status"><span class="pertti-dot"></span>Kouvolasta · paikalla</span>
+      </div>
+      <button class="pertti-close" id="pertti-close" aria-label="Sulje keskustelu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="pertti-msgs" id="pertti-msgs">
+      <div class="pertti-bubble bot">Moro! Olen Pertti Kouvolasta, TotalParkingin asiakaspalvelija. Miten voin auttaa?</div>
+    </div>
+    <div class="pertti-input">
+      <input type="text" id="pertti-text" placeholder="Kirjoita viesti…" autocomplete="off">
+      <button class="pertti-send" id="pertti-send" aria-label="Lähetä viesti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-scrim" id="form-modal">
+  <div class="modal modal-form" role="dialog" aria-modal="true" aria-label="Yhteydenottolomake">
+    <div class="cform-head">
+      <b>Yhteydenottolomake</b>
+      <button class="pertti-close" id="form-close" aria-label="Sulje lomake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="cform-body" id="cform-body">
+      <label class="cform-field">Nimi <span class="req">*</span><input type="text" id="cf-name" autocomplete="name"></label>
+      <label class="cform-field">Sähköposti <span class="req">*</span><input type="email" id="cf-email" autocomplete="email"></label>
+      <label class="cform-field">Valitse rooli <span class="req">*</span>
+        <select id="cf-role" class="cform-select">
+          <option value="" selected disabled>Valitse…</option>
+          <option value="kuluttaja">Kuluttaja-asiakas</option>
+          <option value="yritys">Yritysasiakas</option>
+          <option value="tarjoaja">Pysäköinnin tarjoaja</option>
+        </select>
+      </label>
+      <label class="cform-field">Yhteydenoton syy <span class="req">*</span>
+        <select id="cf-reason" class="cform-select" disabled>
+          <option value="" selected disabled>Valitse ensin rooli…</option>
+        </select>
+      </label>
+      <label class="cform-field">Viesti <span class="req">*</span><textarea id="cf-msg" rows="4"></textarea></label>
+      <button class="btn btn-primary cform-send" id="cf-send" disabled>Lähetä viesti</button>
+    </div>
+    <p class="cform-done" id="cf-done" hidden>Kiitos! Viestisi on lähetetty. Olemme sinuun yhteydessä arkisin mahdollisimman pian.</p>
+  </div>
+</div>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1474,13 +1501,28 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   $all('[data-page]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openPage(a.getAttribute('data-page'), a.getAttribute('data-section')); }); });
   $all('.page-overlay .page-burger').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); openDrawer(); }); });
   $all('.page-overlay .page-top .brand').forEach(function(h){ h.addEventListener('click', function(e){ e.preventDefault(); closePage(); }); });
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closePage();}});
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    var pm=document.getElementById('pertti-modal'), fm=document.getElementById('form-modal');
+    if((pm&&pm.classList.contains('open'))||(fm&&fm.classList.contains('open'))){
+      if(pm)pm.classList.remove('open'); if(fm)fm.classList.remove('open');
+      var op=document.getElementById('open-pertti'), of=document.getElementById('open-form');
+      if(op)op.setAttribute('aria-expanded','false'); if(of)of.setAttribute('aria-expanded','false');
+      if(!document.querySelector('.modal-scrim.open') && !document.querySelector('.page-overlay.active')) document.body.classList.remove('no-scroll');
+      return;
+    }
+    closeLogin(); closeDrawer(); closePage();
+  });
   (function(){
-    var openBtn=document.getElementById('open-pertti'), chat=document.getElementById('pertti-chat');
-    var openForm=document.getElementById('open-form'), form=document.getElementById('contact-form');
-    // Pertti-chat (vapaa teksti, avainsanapohjaiset vastaukset kuten sovelluksessa)
-    if(openBtn && chat){
-      var msgs=document.getElementById('pertti-msgs'), closeBtn=document.getElementById('pertti-close');
+    var openP=document.getElementById('open-pertti'), pModal=document.getElementById('pertti-modal');
+    var openF=document.getElementById('open-form'), fModal=document.getElementById('form-modal');
+    function openModal(m){ if(!m)return; m.classList.add('open'); document.body.classList.add('no-scroll'); }
+    function closeModal(m){ if(!m)return; m.classList.remove('open'); if(!document.querySelector('.modal-scrim.open') && !document.querySelector('.page-overlay.active')) document.body.classList.remove('no-scroll'); }
+    [pModal,fModal].forEach(function(m){ if(m) m.addEventListener('click',function(e){ if(e.target===m){ closeModal(m); if(openP)openP.setAttribute('aria-expanded','false'); if(openF)openF.setAttribute('aria-expanded','false'); } }); });
+
+    // ---- Pertti-chat ----
+    if(openP && pModal){
+      var msgs=document.getElementById('pertti-msgs'), pClose=document.getElementById('pertti-close');
       var input=document.getElementById('pertti-text'), sendBtn=document.getElementById('pertti-send');
       function bubble(text,who){ var d=document.createElement('div'); d.className='pertti-bubble '+who; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
       function perttiReply(msg){
@@ -1495,24 +1537,42 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         return 'Kiitos viestistä! Otan asian hoitooni. Voisitko tarkentaa hieman, niin osaan auttaa sinua paremmin?';
       }
       function send(){ var t=input.value.trim(); if(!t) return; bubble(t,'user'); input.value=''; setTimeout(function(){ bubble(perttiReply(t),'bot'); }, 650); }
-      openBtn.addEventListener('click',function(){ chat.hidden=false; openBtn.setAttribute('aria-expanded','true'); if(form){form.hidden=true; if(openForm)openForm.setAttribute('aria-expanded','false');} chat.scrollIntoView({behavior:'smooth', block:'nearest'}); if(input)input.focus(); });
-      if(closeBtn) closeBtn.addEventListener('click',function(){ chat.hidden=true; openBtn.setAttribute('aria-expanded','false'); });
+      openP.addEventListener('click',function(){ if(fModal){fModal.classList.remove('open'); if(openF)openF.setAttribute('aria-expanded','false');} openModal(pModal); openP.setAttribute('aria-expanded','true'); if(input) setTimeout(function(){input.focus();},60); });
+      if(pClose) pClose.addEventListener('click',function(){ closeModal(pModal); openP.setAttribute('aria-expanded','false'); });
       if(sendBtn) sendBtn.addEventListener('click', send);
       if(input) input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } });
     }
-    // Yhteydenottolomake
-    if(openForm && form){
-      var formClose=document.getElementById('form-close'), cfBody=document.getElementById('cform-body'), cfSend=document.getElementById('cf-send'), cfDone=document.getElementById('cf-done');
-      openForm.addEventListener('click',function(){ form.hidden=false; openForm.setAttribute('aria-expanded','true'); if(cfBody)cfBody.hidden=false; if(cfDone)cfDone.hidden=true; if(chat){chat.hidden=true; if(openBtn)openBtn.setAttribute('aria-expanded','false');} form.scrollIntoView({behavior:'smooth', block:'nearest'}); });
-      if(formClose) formClose.addEventListener('click',function(){ form.hidden=true; openForm.setAttribute('aria-expanded','false'); });
-      if(cfSend) cfSend.addEventListener('click',function(){
-        var n=document.getElementById('cf-name'), e=document.getElementById('cf-email'), msg=document.getElementById('cf-msg');
-        if(!n.value.trim()){ n.focus(); return; }
-        if(!e.value.trim()){ e.focus(); return; }
-        if(!msg.value.trim()){ msg.focus(); return; }
-        if(cfBody) cfBody.hidden=true;
-        if(cfDone) cfDone.hidden=false;
-      });
+
+    // ---- Yhteydenottolomake ----
+    if(openF && fModal){
+      var fClose=document.getElementById('form-close'), cfBody=document.getElementById('cform-body'), cfDone=document.getElementById('cf-done');
+      var roleSel=document.getElementById('cf-role'), reasonSel=document.getElementById('cf-reason');
+      var cfName=document.getElementById('cf-name'), cfEmail=document.getElementById('cf-email'), cfMsg=document.getElementById('cf-msg'), cfSend=document.getElementById('cf-send');
+      var reasons={
+        kuluttaja:['Pysäköinnin aloitus tai lopetus','Sähköauton lataus','Hinnoittelu ja maksut','Sovellus tai käyttäjätili','Kuitti tai laskutus','Muu asia'],
+        yritys:['Yrityspysäköinnin käyttöönotto','Laskutus ja kustannuspaikat','Käyttäjien hallinta','Hinnoittelu ja sopimus','Myynti ja tarjouspyyntö','Muu asia'],
+        tarjoaja:['Tarjoajaksi liittyminen','Alueiden hallinta','Tulot ja tilitykset','Rajapinnat ja integraatiot','Sopimus ja ehdot','Muu asia']
+      };
+      function fillReasons(){
+        if(!reasonSel) return;
+        var r=roleSel?roleSel.value:'';
+        reasonSel.innerHTML='';
+        var ph=document.createElement('option'); ph.value=''; ph.disabled=true; ph.selected=true; ph.textContent = r ? 'Valitse…' : 'Valitse ensin rooli…'; reasonSel.appendChild(ph);
+        if(r && reasons[r]){ reasons[r].forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; reasonSel.appendChild(o); }); reasonSel.disabled=false; }
+        else { reasonSel.disabled=true; }
+        validate();
+      }
+      function validate(){
+        if(!cfSend) return;
+        var ok = cfName && cfName.value.trim() && cfEmail && cfEmail.value.trim() && roleSel && roleSel.value && reasonSel && reasonSel.value && cfMsg && cfMsg.value.trim();
+        cfSend.disabled = !ok;
+      }
+      if(roleSel) roleSel.addEventListener('change', fillReasons);
+      [cfName,cfEmail,reasonSel,cfMsg].forEach(function(el){ if(el){ el.addEventListener('input', validate); el.addEventListener('change', validate); } });
+      openF.addEventListener('click',function(){ if(pModal){pModal.classList.remove('open'); if(openP)openP.setAttribute('aria-expanded','false');} openModal(fModal); openF.setAttribute('aria-expanded','true'); if(cfBody)cfBody.hidden=false; if(cfDone)cfDone.hidden=true; validate(); });
+      if(fClose) fClose.addEventListener('click',function(){ closeModal(fModal); openF.setAttribute('aria-expanded','false'); });
+      if(cfSend) cfSend.addEventListener('click',function(){ if(cfSend.disabled) return; if(cfBody)cfBody.hidden=true; if(cfDone)cfDone.hidden=false; if(cfName)cfName.value=''; if(cfEmail)cfEmail.value=''; if(cfMsg)cfMsg.value=''; if(roleSel)roleSel.value=''; fillReasons(); });
+      validate();
     }
   })();
 
