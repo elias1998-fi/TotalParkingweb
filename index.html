@@ -155,6 +155,7 @@ img{max-width:100%}
 .acc-panel-inner a:hover{color:#fff; border-left-color:var(--park)}
 .drawer-foot{margin-top:auto; display:flex; flex-direction:column; gap:12px}
 .drawer-foot .btn{width:100%}
+.drawer-copy{margin:10px 0 0; text-align:center; font-size:12.5px; color:rgba(255,255,255,.5)}
 .drawer-mini{font-size:13px; color:rgba(255,255,255,.6); line-height:1.5}
 
 /* ---------- Hero ---------- */
@@ -229,21 +230,33 @@ img{max-width:100%}
 .contact-opt-btn{margin-top:auto; width:100%; justify-content:center}
 .pertti-chat{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden}
 .pertti-head{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:var(--brand-50)}
-.pertti-avatar{width:38px; height:38px; border-radius:50%; background:var(--brand); color:var(--park); display:grid; place-items:center; flex:0 0 auto}
-.pertti-avatar svg{width:20px; height:20px}
+.pertti-avatar{width:38px; height:38px; border-radius:50%; background:var(--brand); color:#fff; display:grid; place-items:center; flex:0 0 auto; font-family:var(--font-display); font-weight:700; font-size:18px}
 .pertti-head b{font-family:var(--font-display); font-size:15.5px; display:block; line-height:1.2}
 .pertti-status{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted)}
 .pertti-dot{width:8px; height:8px; border-radius:50%; background:var(--charge)}
 .pertti-close{margin-left:auto; width:32px; height:32px; border:0; background:transparent; color:var(--muted); border-radius:9px; cursor:pointer; display:grid; place-items:center; flex:0 0 auto}
 .pertti-close:hover{background:var(--brand-100); color:var(--ink)}
 .pertti-close svg{width:18px; height:18px}
-.pertti-msgs{padding:16px; display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto}
-.pertti-bubble{max-width:84%; padding:10px 14px; border-radius:15px; font-size:14px; line-height:1.5}
-.pertti-bubble.bot{align-self:flex-start; background:var(--brand-50); color:var(--ink); border-bottom-left-radius:5px}
+.pertti-msgs{padding:16px; display:flex; flex-direction:column; gap:10px; min-height:120px; max-height:320px; overflow-y:auto; background:var(--paper)}
+.pertti-bubble{max-width:84%; padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.45}
+.pertti-bubble.bot{align-self:flex-start; background:#fff; color:var(--ink); border-bottom-left-radius:5px; box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .pertti-bubble.user{align-self:flex-end; background:var(--brand); color:#fff; border-bottom-right-radius:5px}
-.pertti-chips{display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 16px}
-.pertti-chip{font-family:inherit; font-size:13px; font-weight:500; color:var(--brand); background:var(--card); border:1px solid var(--brand-100); border-radius:var(--r-pill); padding:8px 13px; cursor:pointer; transition:background .15s, border-color .15s}
-.pertti-chip:hover{background:var(--brand-50); border-color:var(--brand)}
+.pertti-input{display:flex; align-items:center; gap:8px; padding:12px 14px; border-top:1px solid var(--line); background:var(--card)}
+.pertti-text{flex:1 1 auto; min-width:0; border:1px solid var(--line); border-radius:var(--r-pill); padding:10px 15px; font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper)}
+.pertti-text:focus{outline:none; border-color:var(--brand); background:#fff}
+.pertti-send{flex:0 0 auto; width:40px; height:40px; border:0; border-radius:50%; background:var(--brand); color:#fff; display:grid; place-items:center; cursor:pointer; transition:background .2s}
+.pertti-send:hover{background:var(--brand-700)}
+.pertti-send svg{width:18px; height:18px}
+.contact-form{margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden}
+.cform-head{display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--brand-50)}
+.cform-head b{font-family:var(--font-display); font-size:16px; flex:1 1 auto}
+.cform-body{padding:18px; display:flex; flex-direction:column; gap:14px}
+.cform-field{display:flex; flex-direction:column; gap:6px; font-size:13.5px; font-weight:600; color:var(--ink-soft)}
+.cform-field input, .cform-field textarea{font-family:inherit; font-size:14.5px; font-weight:400; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); padding:11px 13px; width:100%}
+.cform-field input:focus, .cform-field textarea:focus{outline:none; border-color:var(--brand); background:#fff}
+.cform-field textarea{resize:vertical; min-height:90px}
+.cform-send{margin-top:4px; width:100%; justify-content:center}
+.cform-done{margin:0; padding:26px 18px; text-align:center; font-size:15px; color:var(--yellow-700); font-weight:600}
 
 /* ---------- Auth UI (top-bar user menu + drawer buttons) ---------- */
 .topbar-user{position:relative}
@@ -372,6 +385,7 @@ body.logged-in #drawer-login{display:none}
 .fc-line>svg{width:17px; height:17px; flex:0 0 auto; margin-top:2px; opacity:.6}
 .fc-line a{color:#fff; text-decoration:underline; text-underline-offset:2px}
 .fc-line a:hover{color:var(--beige)}
+.fc-addr-label{display:block; font-weight:600; color:#fff; margin-bottom:1px}
 .fc-map{display:inline-flex; align-items:center; gap:3px; white-space:nowrap}
 .fc-map svg{width:13px; height:13px}
 .fc-btn{margin-top:7px; display:inline-flex}
@@ -796,6 +810,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <button class="btn btn-ember drawer-goapp" id="drawer-goapp">Oma näkymä</button>
     <button class="btn btn-ember" id="drawer-login">Kirjaudu palveluun</button>
     <button class="btn drawer-logout-btn" id="drawer-logout">Kirjaudu ulos</button>
+    <p class="drawer-copy">© 2026 TotalParking Oy</p>
   </div>
 </aside>
 
@@ -942,10 +957,10 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <div class="foot-main">
         <div class="foot-contact">
           <h3 class="fc-name">TotalParking Oy</h3>
-          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span>Postiosoite: Esimerkkikatu 1, 00100 Helsinki&nbsp;&nbsp;<a class="fc-map" href="https://www.google.com/maps/search/?api=1&amp;query=Esimerkkikatu+1,+00100+Helsinki" target="_blank" rel="noopener">(katso kartalla)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17 17 7M9 7h8v8"/></svg></a></span></div>
+          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span><span class="fc-addr-label">Postiosoite</span>Esimerkkikatu 1, 00100 Helsinki&nbsp;&nbsp;<a class="fc-map" href="https://www.google.com/maps/search/?api=1&amp;query=Esimerkkikatu+1,+00100+Helsinki" target="_blank" rel="noopener">(katso kartalla)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17 17 7M9 7h8v8"/></svg></a></span></div>
           <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V8l6-3 6 3v13"/><path d="M10 21v-5h4v5"/></svg><span>Y-tunnus 3312345-6</span></div>
-          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><a href="mailto:asiakaspalvelu@totalparking.fi">asiakaspalvelu@totalparking.fi</a></div>
-          <a class="btn btn-ember btn-sm fc-btn" href="mailto:asiakaspalvelu@totalparking.fi">Ota yhteyttä</a>
+          <div class="fc-line"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><a href="#" data-page="page-asiakaspalvelu">asiakaspalvelu@totalparking.fi</a></div>
+          <a class="btn btn-ember btn-sm fc-btn" href="#" data-page="page-asiakaspalvelu">Ota yhteyttä</a>
         </div>
       </div>
       <div class="foot-trust">
@@ -960,7 +975,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© 2026 TotalParking Oy · Demo</span>
+      <span>© 2026 TotalParking Oy</span>
     </div>
   </div>
 </footer>
@@ -1302,48 +1317,56 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   <div class="page-body">
     <div class="wrap-narrow">
       <p class="eyebrow">Asiakaspalvelu</p>
-      <h1 class="page-title">Apua ja tukea</h1>
-      <p class="page-lead">Autamme mielellämme kaikissa TotalParkingiin liittyvissä kysymyksissä — niin pysäköinnissä, latauksessa kuin laskutuksessa.</p>
+      <h1 class="page-title">Ota yhteyttä</h1>
+      <p class="page-lead">Valitse alhaalta sinulle sopivin tapa ottaa yhteyttä.</p>
 
-      <section class="meista-sec" id="a-yhteys">
-        <h2 class="meista-h">Ota yhteyttä</h2>
-        <p class="meista-sub">Valitse sinulle sopivin tapa — Pertti auttaa heti chatissa, tai lähetä viesti sähköpostitse.</p>
-
-        <div class="contact-options">
-          <div class="contact-opt">
-            <span class="contact-opt-ic pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
-            <h3>Hoida asia Pertin kanssa</h3>
-            <p>Pertti, asiakaspalveluavustajamme, vastaa yleisimpiin kysymyksiin heti. Nopein tapa saada apua.</p>
-            <button class="btn btn-primary contact-opt-btn" id="open-pertti" aria-expanded="false">Keskustele Pertin kanssa</button>
-          </div>
-          <div class="contact-opt">
-            <span class="contact-opt-ic mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
-            <h3>Lähetä sähköposti asiakaspalveluun</h3>
-            <p>Kirjoita meille sähköpostitse, niin vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee.</p>
-            <a href="mailto:asiakaspalvelu@totalparking.fi" class="btn btn-ember contact-opt-btn">Lähetä sähköposti</a>
-          </div>
+      <div class="contact-options">
+        <div class="contact-opt">
+          <span class="contact-opt-ic pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+          <h3>Hoida asia Pertin kanssa</h3>
+          <p>Pertti, asiakaspalvelijamme, vastaa yleisimpiin kysymyksiin heti chatissa. Nopein tapa saada apua.</p>
+          <button class="btn btn-primary contact-opt-btn" id="open-pertti" aria-expanded="false">Keskustele Pertin kanssa</button>
         </div>
-
-        <div class="pertti-chat" id="pertti-chat" hidden>
-          <div class="pertti-head">
-            <span class="pertti-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M12 8V4M9 4h6"/><circle cx="9.2" cy="13.3" r="1.25" fill="currentColor" stroke="none"/><circle cx="14.8" cy="13.3" r="1.25" fill="currentColor" stroke="none"/></svg></span>
-            <div>
-              <b>Pertti</b>
-              <span class="pertti-status"><span class="pertti-dot"></span>Asiakaspalveluavustaja</span>
-            </div>
-            <button class="pertti-close" id="pertti-close" aria-label="Sulje keskustelu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-          </div>
-          <div class="pertti-msgs" id="pertti-msgs">
-            <div class="pertti-bubble bot">Moi! Olen Pertti, TotalParkingin asiakaspalveluavustaja. Valitse aihe tai kysy vapaasti — autan mielelläni.</div>
-          </div>
-          <div class="pertti-chips" id="pertti-chips">
-            <button class="pertti-chip" data-q="parkki">Miten aloitan pysäköinnin?</button>
-            <button class="pertti-chip" data-q="lataus">Miten lataus toimii?</button>
-            <button class="pertti-chip" data-q="lasku">Laskutus ja maksut</button>
-            <button class="pertti-chip" data-q="ihminen">Haluan puhua ihmiselle</button>
-          </div>
+        <div class="contact-opt">
+          <span class="contact-opt-ic mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+          <h3>Lähetä sähköposti asiakaspalveluun</h3>
+          <p>Täytä yhteydenottolomake, niin vastaamme arkisin mahdollisimman pian. Kerro viestissäsi mahdollisimman tarkasti, mitä asia koskee.</p>
+          <button class="btn btn-ember contact-opt-btn" id="open-form" aria-expanded="false">Avaa yhteydenottolomake</button>
         </div>
-      </section>
+      </div>
+
+      <div class="pertti-chat" id="pertti-chat" hidden>
+        <div class="pertti-head">
+          <span class="pertti-avatar">P</span>
+          <div>
+            <b>Pertti</b>
+            <span class="pertti-status"><span class="pertti-dot"></span>Kouvolasta · paikalla</span>
+          </div>
+          <button class="pertti-close" id="pertti-close" aria-label="Sulje keskustelu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="pertti-msgs" id="pertti-msgs">
+          <div class="pertti-bubble bot">Moro! Olen Pertti Kouvolasta, TotalParkingin asiakaspalvelija. Miten voin auttaa?</div>
+        </div>
+        <div class="pertti-input">
+          <input type="text" id="pertti-text" placeholder="Kirjoita viesti…" autocomplete="off">
+          <button class="pertti-send" id="pertti-send" aria-label="Lähetä viesti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+        </div>
+      </div>
+
+      <div class="contact-form" id="contact-form" hidden>
+        <div class="cform-head">
+          <b>Yhteydenottolomake</b>
+          <button class="pertti-close" id="form-close" aria-label="Sulje lomake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="cform-body" id="cform-body">
+          <label class="cform-field">Nimi<input type="text" id="cf-name" autocomplete="name"></label>
+          <label class="cform-field">Sähköposti<input type="email" id="cf-email" autocomplete="email"></label>
+          <label class="cform-field">Aihe<input type="text" id="cf-subject"></label>
+          <label class="cform-field">Viesti<textarea id="cf-msg" rows="4"></textarea></label>
+          <button class="btn btn-primary cform-send" id="cf-send">Lähetä viesti</button>
+        </div>
+        <p class="cform-done" id="cf-done" hidden>Kiitos! Viestisi on lähetetty. Olemme sinuun yhteydessä arkisin mahdollisimman pian.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1446,32 +1469,51 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function openMeista(sectionId){ openPage('page-meista', sectionId); }
   function closeMeista(){ closePage(); }
   (function(){ var nav=document.querySelector('.topbar-links'); if(!nav) return; document.querySelectorAll('.page-overlay .page-top').forEach(function(top){ var clone=nav.cloneNode(true); clone.classList.add('page-nav'); var brand=top.querySelector('.brand'); if(brand){ brand.insertAdjacentElement('afterend', clone); } else { top.insertBefore(clone, top.firstChild); } }); })();
+  (function(){ var foot=document.querySelector('footer.foot'); if(!foot) return; document.querySelectorAll('.page-overlay').forEach(function(ov){ ov.appendChild(foot.cloneNode(true)); }); })();
   $all('[data-meista]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openMeista(a.getAttribute('data-meista')); }); });
   $all('[data-page]').forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); openPage(a.getAttribute('data-page'), a.getAttribute('data-section')); }); });
   $all('.page-overlay .page-burger').forEach(function(b){ b.addEventListener('click', function(e){ e.preventDefault(); openDrawer(); }); });
   $all('.page-overlay .page-top .brand').forEach(function(h){ h.addEventListener('click', function(e){ e.preventDefault(); closePage(); }); });
-  (function(){ var foot=document.querySelector('footer.foot'); if(!foot) return; document.querySelectorAll('.page-overlay').forEach(function(ov){ ov.appendChild(foot.cloneNode(true)); }); })();
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLogin(); closeDrawer(); closePage();}});
   (function(){
     var openBtn=document.getElementById('open-pertti'), chat=document.getElementById('pertti-chat');
-    if(!openBtn||!chat) return;
-    var msgs=document.getElementById('pertti-msgs'), closeBtn=document.getElementById('pertti-close');
-    var answers={
-      parkki:"Avaa sovelluksen kartta, valitse lähin vapaa pysäköintialue ja paina 'Aloita pysäköinti'. Pysäköinnin voit lopettaa milloin tahansa, ja maksu veloitetaan käytön mukaan.",
-      lataus:"Latauspisteet näkyvät samalla kartalla pysäköinnin rinnalla. Valitse vapaa piste, liitä auto ja käynnistä lataus sovelluksesta. Näet liittimet, tehon ja saatavuuden ennen latausta.",
-      lasku:"Kuluttajana maksat vain käyttämästäsi ajasta, eikä kuukausimaksua ole. Yritysasiakkaille kulut kootaan koontilaskulle, ja kaikki kuitit löytyvät sovelluksesta.",
-      ihminen:"Selvä! Lähetä viesti osoitteeseen asiakaspalvelu@totalparking.fi, niin asiakaspalvelijamme vastaa arkisin mahdollisimman pian."
-    };
-    function bubble(text,who){ var d=document.createElement('div'); d.className='pertti-bubble '+who; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
-    openBtn.addEventListener('click',function(){ chat.hidden=false; openBtn.setAttribute('aria-expanded','true'); chat.scrollIntoView({behavior:'smooth', block:'nearest'}); });
-    if(closeBtn) closeBtn.addEventListener('click',function(){ chat.hidden=true; openBtn.setAttribute('aria-expanded','false'); });
-    $all('#pertti-chips .pertti-chip').forEach(function(chip){
-      chip.addEventListener('click',function(){
-        var q=chip.getAttribute('data-q');
-        bubble(chip.textContent,'user');
-        setTimeout(function(){ bubble(answers[q]||"Autan mielelläni — voit myös lähettää viestin osoitteeseen asiakaspalvelu@totalparking.fi.",'bot'); },350);
+    var openForm=document.getElementById('open-form'), form=document.getElementById('contact-form');
+    // Pertti-chat (vapaa teksti, avainsanapohjaiset vastaukset kuten sovelluksessa)
+    if(openBtn && chat){
+      var msgs=document.getElementById('pertti-msgs'), closeBtn=document.getElementById('pertti-close');
+      var input=document.getElementById('pertti-text'), sendBtn=document.getElementById('pertti-send');
+      function bubble(text,who){ var d=document.createElement('div'); d.className='pertti-bubble '+who; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
+      function perttiReply(msg){
+        var m=msg.toLowerCase();
+        if(/(^| )(moro|moi|hei|terve|morjens|moikka)/.test(m)) return 'Moro! Mukava kuulla sinusta. Kerro vain, missä asiassa voin auttaa.';
+        if(/(hinta|maksaa|maksu|euro|veloitus|kallis)/.test(m)) return 'Pysäköinnin hinta määräytyy alueen vyöhykkeen mukaan. Näet aluekohtaisen hinnan, kun viet P-merkin alueen päälle kartalla. Kerro alue, niin autan tarkemmin.';
+        if(/(pysäköi|paikoit|aloita|lopeta|aloitus)/.test(m)) return 'Aloita pysäköinti viemällä P-merkki haluamasi alueen päälle ja paina aloituspainiketta. Voit lopettaa pysäköinnin samasta näkymästä milloin tahansa.';
+        if(/(lataus|sähköaut|laturi|teho|liitin)/.test(m)) return 'Latauspisteet näkyvät kartalla pysäköinnin rinnalla. Valitse vapaa piste, liitä auto ja käynnistä lataus sovelluksesta. Näet liittimet, tehon ja saatavuuden ennen latausta.';
+        if(/(apple pay|kortti|maksutapa|lasku)/.test(m)) return 'Voit lisätä maksutavan (kortti tai Apple Pay) profiilin maksutapa-asetuksista. Tarvitsetko apua sen lisäämisessä?';
+        if(/(kiitos|kiitti|thanks|thx)/.test(m)) return 'Eipä kestä! Autan mielelläni. Onko vielä jotain muuta?';
+        if(/(näkemiin|heippa|hei hei|kuittaan)/.test(m)) return 'Kiitos yhteydenotosta ja oikein mukavaa päivänjatkoa!';
+        return 'Kiitos viestistä! Otan asian hoitooni. Voisitko tarkentaa hieman, niin osaan auttaa sinua paremmin?';
+      }
+      function send(){ var t=input.value.trim(); if(!t) return; bubble(t,'user'); input.value=''; setTimeout(function(){ bubble(perttiReply(t),'bot'); }, 650); }
+      openBtn.addEventListener('click',function(){ chat.hidden=false; openBtn.setAttribute('aria-expanded','true'); if(form){form.hidden=true; if(openForm)openForm.setAttribute('aria-expanded','false');} chat.scrollIntoView({behavior:'smooth', block:'nearest'}); if(input)input.focus(); });
+      if(closeBtn) closeBtn.addEventListener('click',function(){ chat.hidden=true; openBtn.setAttribute('aria-expanded','false'); });
+      if(sendBtn) sendBtn.addEventListener('click', send);
+      if(input) input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } });
+    }
+    // Yhteydenottolomake
+    if(openForm && form){
+      var formClose=document.getElementById('form-close'), cfBody=document.getElementById('cform-body'), cfSend=document.getElementById('cf-send'), cfDone=document.getElementById('cf-done');
+      openForm.addEventListener('click',function(){ form.hidden=false; openForm.setAttribute('aria-expanded','true'); if(cfBody)cfBody.hidden=false; if(cfDone)cfDone.hidden=true; if(chat){chat.hidden=true; if(openBtn)openBtn.setAttribute('aria-expanded','false');} form.scrollIntoView({behavior:'smooth', block:'nearest'}); });
+      if(formClose) formClose.addEventListener('click',function(){ form.hidden=true; openForm.setAttribute('aria-expanded','false'); });
+      if(cfSend) cfSend.addEventListener('click',function(){
+        var n=document.getElementById('cf-name'), e=document.getElementById('cf-email'), msg=document.getElementById('cf-msg');
+        if(!n.value.trim()){ n.focus(); return; }
+        if(!e.value.trim()){ e.focus(); return; }
+        if(!msg.value.trim()){ msg.focus(); return; }
+        if(cfBody) cfBody.hidden=true;
+        if(cfDone) cfDone.hidden=false;
       });
-    });
+    }
   })();
 
   /* ---------- Session + app enter / exit / logout ---------- */
