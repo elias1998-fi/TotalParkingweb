@@ -1332,7 +1332,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="wrap-narrow">
       <p class="eyebrow">Asiakaspalvelu</p>
       <h1 class="page-title">Ota yhteyttä</h1>
-      <p class="page-lead">Valitse alhaalta sinulle sopivin tapa ottaa yhteyttä.</p>
 
       <div class="contact-options">
         <div class="contact-opt">
@@ -1382,6 +1381,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <div class="cform-body" id="cform-body">
       <label class="cform-field"><span class="cform-label">Nimi<span class="req">*</span></span><input type="text" id="cf-name" autocomplete="name"></label>
       <label class="cform-field"><span class="cform-label">Sähköposti<span class="req">*</span></span><input type="email" id="cf-email" autocomplete="email"></label>
+      <label class="cform-field"><span class="cform-label">Puhelinnumero (Jota käytät palvelussamme)</span><input type="tel" id="cf-phone" autocomplete="tel"></label>
       <label class="cform-field"><span class="cform-label">Valitse rooli<span class="req">*</span></span>
         <select id="cf-role" class="cform-select">
           <option value="" selected disabled>Valitse…</option>
@@ -1390,7 +1390,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
           <option value="tarjoaja">Pysäköinnin tarjoaja</option>
         </select>
       </label>
-      <label class="cform-field" id="cf-company-field" hidden><span class="cform-label">Yrityksen nimi<span class="req">*</span></span><input type="text" id="cf-company" autocomplete="organization"></label>
+      <label class="cform-field" id="cf-company-field" hidden><span class="cform-label">Organisaation nimi<span class="req">*</span></span><input type="text" id="cf-company" autocomplete="organization"></label>
       <label class="cform-field"><span class="cform-label">Yhteydenoton syy<span class="req">*</span></span>
         <select id="cf-reason" class="cform-select" disabled>
           <option value="" selected disabled>Valitse ensin rooli…</option>
@@ -1552,7 +1552,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     if(openF && fModal){
       var fClose=document.getElementById('form-close'), cfBody=document.getElementById('cform-body'), cfDone=document.getElementById('cf-done');
       var roleSel=document.getElementById('cf-role'), reasonSel=document.getElementById('cf-reason');
-      var cfName=document.getElementById('cf-name'), cfEmail=document.getElementById('cf-email'), cfMsg=document.getElementById('cf-msg'), cfSend=document.getElementById('cf-send');
+      var cfName=document.getElementById('cf-name'), cfEmail=document.getElementById('cf-email'), cfPhone=document.getElementById('cf-phone'), cfMsg=document.getElementById('cf-msg'), cfSend=document.getElementById('cf-send');
       var cfCompany=document.getElementById('cf-company'), compField=document.getElementById('cf-company-field');
       var reasons={
         kuluttaja:['Pysäköinnin aloitus tai lopetus','Sähköauton lataus','Hinnoittelu ja maksut','Sovellus tai käyttäjätili','Kuitti tai laskutus','Muu asia'],
@@ -1586,7 +1586,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
         if(compField && !compField.hidden){ var ce=emptyVal(cfCompany); flag(cfCompany,ce); if(ce) bad=true; }
         if(bad) return;
         if(cfBody)cfBody.hidden=true; if(cfDone)cfDone.hidden=false;
-        if(cfName)cfName.value=''; if(cfEmail)cfEmail.value=''; if(cfMsg)cfMsg.value=''; if(cfCompany)cfCompany.value='';
+        if(cfName)cfName.value=''; if(cfEmail)cfEmail.value=''; if(cfPhone)cfPhone.value=''; if(cfMsg)cfMsg.value=''; if(cfCompany)cfCompany.value='';
         if(roleSel)roleSel.value=''; toggleCompany(); fillReasons(); clearFlags();
       });
     }
