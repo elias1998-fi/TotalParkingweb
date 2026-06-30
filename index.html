@@ -601,7 +601,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .cell-user{display:flex; align-items:center; gap:10px}
 
 /* admin map panel */
-.map-panel{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:min(64vh,560px); box-shadow:var(--shadow)}
+.map-panel{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
 .map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
 .tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
 .tool-btn svg{width:16px; height:16px}
@@ -628,6 +628,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
 .map-hint{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:7; display:none; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-lg); padding:9px 15px; font-size:13px; line-height:1.45; color:var(--ink-soft); max-width:calc(100% - 28px); text-align:center}
 .map-hint.open{display:block}
+.map-vresizer{position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:9; width:66px; height:19px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; background:rgba(255,255,255,.96); border:1px solid var(--line); border-bottom:none; border-radius:9px 9px 0 0; box-shadow:0 -2px 8px rgba(0,0,0,.08); touch-action:none}
+.map-vresizer::before{content:""; width:30px; height:4px; border-radius:2px; background:var(--line); transition:background .15s}
+.map-vresizer:hover::before, body.vresizing .map-vresizer::before{background:var(--brand)}
+body.vresizing{cursor:ns-resize; user-select:none}
+body.vresizing *{cursor:ns-resize !important}
 .area-row{padding:11px 12px; border-radius:11px; cursor:pointer; transition:background .15s}
 .area-row:hover{background:var(--paper)}
 .area-row .ar-t{display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px}
@@ -692,6 +697,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   .app-menu-btn{display:inline-flex}
   .map-areas{position:relative; right:auto; top:auto; bottom:auto; width:100%; max-width:none; margin-top:14px; height:auto; max-height:300px}
   .map-panel{height:auto; min-height:420px}
+  .map-vresizer{display:none}
   .map-panel .map-el{position:relative; height:420px}
 }
 @media(max-width:560px){
@@ -1789,7 +1795,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       ]);
       var rows=both[0].concat(both[1]);
       var features=rows.filter(function(r){return r.polygon_coordinates&&(r.polygon_coordinates.type==='Polygon'||r.polygon_coordinates.type==='MultiPolygon')&&r.parking_type!=='Pysäköintihalli';})
-        .map(function(r){return {type:'Feature',properties:{source:tpLegacySource(r.area_type,r.parking_type,r.max_hours)},geometry:r.polygon_coordinates};});
+        .map(function(r){return {type:'Feature',properties:{source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),id:r.id,area_type:r.area_type||'',parking_type:r.parking_type||'',max_hours:r.max_hours||''},geometry:r.polygon_coordinates};});
       var geojson={type:'FeatureCollection',features:features};
       if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
       else{
@@ -1859,10 +1865,28 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     var loaded=false, lastErr='';
     adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
-    adminMap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
     adminMap.addControl(new maplibregl.FullscreenControl(),'top-right');
     adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
     adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
+    var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
+    function infoLayers(){ return INFO_LAYERS.filter(function(id){return adminMap.getLayer(id);}); }
+    adminMap.on('click',function(e){
+      if(adminMap.__drawing) return;
+      var ls=infoLayers(); if(!ls.length) return;
+      var fs=adminMap.queryRenderedFeatures(e.point,{layers:ls}); if(!fs.length) return;
+      var f=fs[0], p=f.properties||{}, lid=f.layer.id, t, s;
+      if(lid==='halli-icons'){ t=p.name||'Pysäköintihalli'; s='Pysäköintihalli'; }
+      else if(lid==='charging-icons'){ t=p.name||p.title||p.operator||'Latauspiste'; s='Latauspiste'; }
+      else { t=p.parking_type||'Pysäköintialue'; var ex=[]; if(p.area_type)ex.push(p.area_type); if(p.max_hours)ex.push('Maksimi '+p.max_hours+' h'); s=ex.join(' \u00b7 ')||'Pysäköintialue'; }
+      var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+p.id+'</span>' : '';
+      new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'260px'}).setLngLat(e.lngLat).setHTML('<div class="pop-t">'+t+'</div><div class="pop-s">'+s+idline+'</div>').addTo(adminMap);
+    });
+    adminMap.on('mousemove',function(e){
+      if(adminMap.__drawing) return;
+      var ls=infoLayers();
+      var hit = ls.length && adminMap.queryRenderedFeatures(e.point,{layers:ls}).length;
+      adminMap.getCanvas().style.cursor = hit ? 'pointer' : '';
+    });
     [60,250,600].forEach(function(ms){ setTimeout(function(){ if(adminMap)adminMap.resize(); }, ms); });
     setTimeout(function(){ if(!loaded) adminMapStatus('Karttapohja ei latautunut 10 sekunnissa.'+(lastErr?('\n\nViimeisin virhe:\n'+lastErr):''),true); }, 10000);
   }
@@ -1981,6 +2005,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       +tool('danger','trash','Poista')
       +tool('','layers','Tasot')
       +'</div>'
+      +'<div class="map-vresizer" data-vresizer title="Vedä kartan korkeutta"></div>'
       +'</div>';
     html+='</div>';
 
@@ -2295,6 +2320,35 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     });
   })();
 
+  /* ---------- Map height resize (bottom drag handle) ---------- */
+  (function(){
+    function startV(e){
+      var handle=e.target.closest('.map-vresizer'); if(!handle) return;
+      e.preventDefault();
+      var panel=handle.closest('.map-panel'); if(!panel) return;
+      var sy=(e.touches? e.touches[0].clientY : e.clientY);
+      var sh=panel.getBoundingClientRect().height;
+      document.body.classList.add('vresizing');
+      var raf=null;
+      function move(ev){
+        var y=(ev.touches? ev.touches[0].clientY : ev.clientY);
+        var h=Math.max(300, Math.min(window.innerHeight-110, sh + (y - sy)));
+        document.documentElement.style.setProperty('--map-h', h+'px');
+        if(!raf){ raf=requestAnimationFrame(function(){ raf=null; if(adminMap){ try{adminMap.resize();}catch(e){} } }); }
+      }
+      function end(){
+        document.body.classList.remove('vresizing');
+        document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',end);
+        document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end);
+        if(adminMap){ try{adminMap.resize();}catch(e){} }
+      }
+      document.addEventListener('mousemove',move); document.addEventListener('mouseup',end);
+      document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',end);
+    }
+    document.addEventListener('mousedown', startV);
+    document.addEventListener('touchstart', startV, {passive:false});
+  })();
+
   /* ---------- Master map tools (Tasot, Lisää alue, ...) ---------- */
   (function(){
     var LAYERS=[
@@ -2373,7 +2427,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       if(!adminMap){ hint('Karttaa ei ole viel\u00e4 ladattu.',true); return; }
       var panel=panelEl(); if(!panel)return;
       clearModes(); btn.classList.add('active');
-      drawOn=true; clearShape();
+      drawOn=true; if(adminMap) adminMap.__drawing=true; clearShape();
       adminMap.getCanvas().style.cursor='crosshair';
       clickH=function(e){ addCorner(e.lngLat); };
       adminMap.on('click', clickH);
@@ -2381,7 +2435,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       hint('Piirr\u00e4 alue klikkaamalla karttaa. V\u00e4hint\u00e4\u00e4n 3 kulmaa, sitten Valmis.');
     }
     function endDraw(){
-      drawOn=false;
+      drawOn=false; if(adminMap) adminMap.__drawing=false;
       if(adminMap){ adminMap.getCanvas().style.cursor=''; if(clickH){ adminMap.off('click', clickH); clickH=null; } }
       var b=document.getElementById('map-drawbar'); if(b)b.classList.remove('open');
       var pb=document.querySelector('#app-admin [data-tool="plus"]'); if(pb)pb.classList.remove('active');
