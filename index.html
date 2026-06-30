@@ -601,7 +601,26 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .cell-user{display:flex; align-items:center; gap:10px}
 
 /* admin map panel */
-.map-panel{position:relative; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
+.map-panel{position:relative; display:flex; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
+.map-stage{position:relative; flex:1 1 auto; min-width:0; height:100%}
+.phone-pane{flex:0 0 auto; display:none; align-items:center; justify-content:center; height:100%; padding:16px; box-sizing:border-box; background:var(--paper); border-left:1px solid var(--line)}
+.phone-pane.open{display:flex}
+.phone-frame{position:relative; width:auto; height:100%; max-width:100%; aspect-ratio:393/852; border-radius:40px; overflow:hidden; background:#000; border:6px solid #111; box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.phone-notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:110px; height:22px; background:#000; border-radius:0 0 14px 14px; z-index:5}
+.phone-toggle-btn{position:absolute; top:54px; right:14px; z-index:7; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; padding:0}
+.phone-toggle-btn svg{width:18px; height:18px}
+.phone-toggle-btn:hover{background:var(--brand-50)}
+.phone-toggle-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .2s ease; z-index:6; display:flex; flex-direction:column}
+.phone-sheet.open{transform:translateY(calc(100% - 132px))}
+.phone-sheet-handle-area{width:100%; padding:7px 0 5px; display:flex; justify-content:center; flex-shrink:0}
+.phone-sheet-handle{width:32px; height:4px; background:#ddd; border-radius:2px}
+.phone-sheet-summary{padding:9px 15px 6px; font-family:Arial,sans-serif; flex-shrink:0}
+.phone-sheet-header{font-size:12.5px; font-weight:bold; color:#222; margin-bottom:2px; line-height:1.3}
+.phone-sheet-type{font-size:11.5px; color:#555}
+.phone-sheet-operator{font-size:11.5px; color:#555; margin-top:1px}
+.phone-sheet-divider{border:none; border-top:1px solid #eee; margin:4px 15px 0; display:none; flex-shrink:0}
+.phone-sheet-details{padding:0 15px 14px; font-family:Arial,sans-serif; font-size:11.5px; color:#555; overflow-y:auto}
 .map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
 .tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
 .tool-btn svg{width:16px; height:16px}
@@ -611,12 +630,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .map-areas{position:absolute; right:14px; top:14px; bottom:14px; width:264px; max-width:46%; z-index:6; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; overflow:hidden}
 .map-areas h4{padding:14px 16px 10px; font-size:14px; border-bottom:1px solid var(--line)}
 .map-areas .list{overflow:auto; padding:6px}
-.layers-pop{position:absolute; left:14px; top:60px; z-index:7; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-lg); padding:9px; min-width:212px; display:none}
-.layers-pop.open{display:block}
-.layers-pop h5{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:3px 7px 7px; font-weight:700}
-.layers-pop label{display:flex; align-items:center; gap:10px; padding:8px 7px; font-size:14px; color:var(--ink); cursor:pointer; border-radius:8px}
-.layers-pop label:hover{background:var(--paper)}
-.layers-pop input{width:16px; height:16px; accent-color:var(--brand); cursor:pointer; flex:0 0 auto}
 .draw-corner{width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid #0C8A60; box-shadow:0 1px 3px rgba(0,0,0,.35); cursor:pointer}
 .map-drawbar{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:8; display:none; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-lg); padding:8px 10px 8px 15px; max-width:calc(100% - 28px)}
 .map-drawbar.open{display:flex}
@@ -626,8 +639,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.ok{background:var(--brand); color:#fff}
 .drawbtn.ok:disabled{opacity:.45; cursor:not-allowed}
 .drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
-.map-editrail{position:absolute; right:14px; top:60px; z-index:7; display:none; flex-direction:column; gap:8px}
-.map-editrail.open{display:flex}
+.map-side-rail{position:absolute; right:14px; top:100px; z-index:7; display:none; flex-direction:column; gap:8px; align-items:flex-end}
+.map-side-rail.open{display:flex}
+.addrail-btn{display:flex; align-items:center; gap:7px; height:38px; padding:0 13px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); color:var(--ink); font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit}
+.addrail-btn svg{width:16px; height:16px; flex:0 0 auto}
+.addrail-btn:hover{background:var(--brand-50)}
+.addrail-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.addrail-btn:disabled{opacity:.45; cursor:not-allowed}
+.addrail-btn:disabled:hover{background:rgba(255,255,255,.96)}
 .editrail-btn{width:42px; height:42px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; transition:background .15s, color .15s, border-color .15s; padding:0}
 .editrail-btn svg{width:19px; height:19px}
 .editrail-btn:hover{background:var(--brand-50)}
@@ -706,6 +725,8 @@ body.vresizing *{cursor:ns-resize !important}
   .map-areas{position:relative; right:auto; top:auto; bottom:auto; width:100%; max-width:none; margin-top:14px; height:auto; max-height:300px}
   .map-panel{height:auto; min-height:420px}
   .map-vresizer{display:none}
+  .phone-toggle-btn{display:none}
+  .phone-pane{display:none !important}
   .map-panel .map-el{position:relative; height:420px}
 }
 @media(max-width:560px){
@@ -713,7 +734,13 @@ body.vresizing *{cursor:ns-resize !important}
   .app-top .brand b, .app-top .brand>span:not(.pmark){display:none}
   .app-user-btn{max-width:160px}
 }
-@media(min-width:860px){.app-menu-btn{display:none}}
+.side-collapse-btn{display:none; width:40px; height:40px; border:1px solid var(--line); border-radius:11px; background:var(--card); align-items:center; justify-content:center; flex-direction:column; gap:4px; cursor:pointer; flex:0 0 auto}
+.side-collapse-btn span{width:18px; height:2px; background:var(--ink); border-radius:2px}
+@media(min-width:860px){
+  .app-menu-btn{display:none}
+  .side-collapse-btn{display:inline-flex}
+  body.side-collapsed .app-side{display:none}
+}
 @media(prefers-reduced-motion:reduce){
   *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
   .reveal{opacity:1; transform:none}
@@ -1099,6 +1126,7 @@ body.vresizing *{cursor:ns-resize !important}
         <button class="app-user-dd-item danger js-logout" role="menuitem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Kirjaudu ulos</button>
       </div>
     </div>
+    <button class="side-collapse-btn" data-side-desktop aria-label="Piilota tai näytä Yleiskatsaus-valikko" title="Piilota / näytä valikko"><span></span><span></span><span></span></button>
   </header>
   <div class="app-body">
     <nav class="app-side" data-app="admin">
@@ -1674,6 +1702,12 @@ body.vresizing *{cursor:ns-resize !important}
     closeDrawer();
   }
   $all('[data-side]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.toggle('side-open');});});
+  $all('[data-side-desktop]').forEach(function(b){b.addEventListener('click',function(){
+    document.body.classList.toggle('side-collapsed');
+    setTimeout(function(){
+      [heroMap, adminMap, staffMap, phoneMap].forEach(function(m){ if(m){ try{m.resize();}catch(e){} } });
+    }, 60);
+  });});
   (function(){
     var tu=$('#topbar-user'), ub=$('#user-btn');
     if(ub&&tu){
@@ -1759,7 +1793,8 @@ body.vresizing *{cursor:ns-resize !important}
     map.on('load',function(){addPoints(map);});
     return map;
   }
-  var heroMap, adminMap, staffMap;
+  var heroMap, adminMap, staffMap, phoneMap;
+  var TP_MAP_STYLE=null;
   var MASTER_AREA_FEATURES=[];
   function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
   function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
@@ -1901,7 +1936,7 @@ body.vresizing *{cursor:ns-resize !important}
         if(t.charAt(0)==='<') throw new Error('omakartta_style.json palautti HTML-sivun JSON:in sijaan (todennäköisesti 404). Varmista että tiedosto on repon juuressa, ja avaa sivu tuoreessa yksityisessä ikkunassa.');
         return JSON.parse(t);
       });
-    }).then(function(style){ buildAdminMap(style); }).catch(function(err){ adminMapStatus('Kartan lataus epäonnistui:\n'+((err&&err.message)||err),true); });
+    }).then(function(style){ TP_MAP_STYLE=style; buildAdminMap(style); }).catch(function(err){ adminMapStatus('Kartan lataus epäonnistui:\n'+((err&&err.message)||err),true); });
   }
   function buildAdminMap(style){
     var loaded=false, lastErr='';
@@ -2038,15 +2073,32 @@ body.vresizing *{cursor:ns-resize !important}
     /* map */
     html+='<div class="panel" data-id="a-map">';
     html+=panelHead('Kartta &amp; alueet','Hallitse pysäköintialueita ja latauspisteitä master-työkaluilla');
-    html+='<div class="map-panel"><div class="map-el" id="admin-map"></div>'
+    html+='<div class="map-panel" id="admin-map-panel">'
+      +'<div class="map-stage">'
+      +'<div class="map-el" id="admin-map"></div>'
       +'<div class="map-status" id="admin-map-status">Ladataan karttaa…</div>'
       +'<div class="map-tools">'
       +tool('primary','plus','Lisää alue')
       +tool('','edit','Muokkaa')
-      +tool('','check','Hyväksy')
-      +tool('danger','trash','Poista')
-      +tool('','layers','Tasot')
       +tool('','zone','Pysäköinnin maksuvyöhykkeet')
+      +'</div>'
+      +'<button class="phone-toggle-btn" id="phone-mode-btn" type="button" title="Puhelinnäkymä">'+ic('phone')+'</button>'
+      +'</div>'
+      +'<div class="phone-pane" id="phone-pane">'
+      +'<div class="phone-frame">'
+      +'<div class="phone-notch"></div>'
+      +'<div class="map-el" id="phone-map"></div>'
+      +'<div class="phone-sheet" id="phone-sheet">'
+      +'<div class="phone-sheet-handle-area"><div class="phone-sheet-handle"></div></div>'
+      +'<div class="phone-sheet-summary">'
+      +'<div class="phone-sheet-header" id="phone-sheet-header"></div>'
+      +'<div class="phone-sheet-type" id="phone-sheet-type"></div>'
+      +'<div class="phone-sheet-operator" id="phone-sheet-operator"></div>'
+      +'</div>'
+      +'<hr class="phone-sheet-divider" id="phone-sheet-divider">'
+      +'<div class="phone-sheet-details" id="phone-sheet-details"></div>'
+      +'</div>'
+      +'</div>'
       +'</div>'
       +'<div class="map-vresizer" data-vresizer title="Vedä kartan korkeutta"></div>'
       +'</div>';
@@ -2291,7 +2343,13 @@ body.vresizing *{cursor:ns-resize !important}
     eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
-    zone:'<path d="m12 2 8.66 5v10L12 22l-8.66-5V7L12 2Z"/><path d="M12 2v20M3.34 7l8.66 5 8.66-5"/>'
+    zone:'<path d="m12 2 8.66 5v10L12 22l-8.66-5V7L12 2Z"/><path d="M12 2v20M3.34 7l8.66 5 8.66-5"/>',
+    phone:'<rect x="7" y="2" width="10" height="20" rx="2.2"/><path d="M11 18h2"/>',
+    minus:'<path d="M5 12h14"/>',
+    compass:'<circle cx="12" cy="12" r="9"/><path d="m14.5 9.5-1.4 5-5 1.4 1.4-5 5-1.4Z"/>',
+    download:'<path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/>',
+    crosshair:'<circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    pin:'<path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.3"/>'
   };
   function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
@@ -2393,14 +2451,9 @@ body.vresizing *{cursor:ns-resize !important}
     document.addEventListener('touchstart', startV, {passive:false});
   })();
 
-  /* ---------- Master map tools (Tasot, Lisää alue, ...) ---------- */
+  /* ---------- Master map tools (Lisää alue, Muokkaa, ...) ---------- */
   (function(){
-    var LAYERS=[
-      {key:'areas',label:'Pysäköintialueet',ids:['master-poly-fill','master-poly-line']},
-      {key:'halls',label:'Pysäköintihallit',ids:['halli-icons']},
-      {key:'charge',label:'Latauspisteet',ids:['charging-icons']}
-    ];
-    function panelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-panel'); }
+    function panelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-stage'); }
     var hintT=null;
     function hint(msg,auto){
       var panel=panelEl(); if(!panel)return;
@@ -2411,30 +2464,8 @@ body.vresizing *{cursor:ns-resize !important}
       h.textContent=msg; h.classList.add('open');
       if(auto){ hintT=setTimeout(function(){ h.classList.remove('open'); }, 5000); }
     }
-    /* layers popup */
-    var pop=null;
-    function buildPop(panel){
-      pop=document.createElement('div'); pop.className='layers-pop'; pop.id='layers-pop';
-      var h='<h5>Karttatasot</h5>';
-      LAYERS.forEach(function(L){ h+='<label><input type="checkbox" data-layer="'+L.key+'" checked>'+L.label+'</label>'; });
-      pop.innerHTML=h; panel.appendChild(pop);
-      $all('input[data-layer]',pop).forEach(function(cb){
-        cb.addEventListener('change',function(){
-          var L=LAYERS.filter(function(x){return x.key===cb.getAttribute('data-layer');})[0];
-          if(!L||!adminMap)return;
-          L.ids.forEach(function(id){ if(adminMap.getLayer(id)) adminMap.setLayoutProperty(id,'visibility',cb.checked?'visible':'none'); });
-        });
-      });
-    }
-    function toggleLayers(btn){
-      var panel=panelEl(); if(!panel)return;
-      if(!pop || !panel.contains(pop)) buildPop(panel);
-      var open=pop.classList.toggle('open');
-      btn.classList.toggle('active',open);
-    }
-    function closeLayers(){ if(pop)pop.classList.remove('open'); var b=document.querySelector('#app-admin [data-tool="layers"]'); if(b)b.classList.remove('active'); }
     /* draw "Lisää alue" */
-    var drawOn=false, pts=[], markers=[], clickH=null;
+    var drawOn=false, pts=[], markers=[], clickH=null, drawBtnRef=null, drawFollow=false;
     function geo(){
       if(pts.length>=3) return {type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[pts.concat([pts[0]])]}};
       if(pts.length>=2) return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:pts}};
@@ -2451,12 +2482,27 @@ body.vresizing *{cursor:ns-resize !important}
       if(adminMap && adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData(geo());
       var c=document.getElementById('draw-count'); if(c)c.textContent=pts.length;
       var d=document.getElementById('draw-done'); if(d)d.disabled=pts.length<3;
+      var mb=document.getElementById('add-minus-btn'); if(mb)mb.disabled=pts.length===0;
+    }
+    function fitToPoints(animate){
+      if(!adminMap || !pts.length) return;
+      if(pts.length===1){ adminMap.easeTo({center:pts[0], duration:animate?400:0}); return; }
+      var lons=pts.map(function(p){return p[0];}), lats=pts.map(function(p){return p[1];});
+      adminMap.fitBounds([[Math.min.apply(null,lons),Math.min.apply(null,lats)],[Math.max.apply(null,lons),Math.max.apply(null,lats)]],{padding:70, duration:animate?400:0, maxZoom:19});
     }
     function addCorner(ll){
       pts.push([ll.lng,ll.lat]);
       var el=document.createElement('div'); el.className='draw-corner';
       markers.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(ll).addTo(adminMap));
       ensureSrc(); update();
+      if(drawFollow) fitToPoints(true);
+    }
+    function removeLastCorner(){
+      if(!pts.length) return;
+      pts.pop();
+      var m=markers.pop(); if(m) m.remove();
+      update();
+      if(drawFollow) fitToPoints(true);
     }
     function clearShape(){ pts=[]; markers.forEach(function(m){m.remove();}); markers=[]; if(adminMap&&adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData({type:'FeatureCollection',features:[]}); }
     function makeBar(panel){
@@ -2467,21 +2513,59 @@ body.vresizing *{cursor:ns-resize !important}
       document.getElementById('draw-done').addEventListener('click', finishDraw);
       document.getElementById('draw-cancel').addEventListener('click', cancelDraw);
     }
+    function buildAddRail(panel){
+      var r=document.getElementById('map-addrail');
+      if(!r){
+        r=document.createElement('div'); r.className='map-side-rail'; r.id='map-addrail'; panel.appendChild(r);
+        r.innerHTML =
+          '<button class="addrail-btn" id="add-minus-btn" type="button" disabled title="Poista viimeisin kulma">'+ic('minus')+'<span>Poista kulma</span></button>'
+          +'<button class="addrail-btn" id="add-follow-btn" type="button" title="Kartta seuraa piirrett\u00e4v\u00e4\u00e4 aluetta">'+ic('compass')+'<span>Seuraa karttaa</span></button>'
+          +'<button class="addrail-btn" id="add-sat-btn" type="button" disabled title="Ei viel\u00e4 k\u00e4yt\u00f6ss\u00e4 sovelluksessakaan">'+ic('layers')+'<span>Satelliitti</span></button>'
+          +'<button class="addrail-btn" id="add-center-btn" type="button" title="Keskit\u00e4 piirretty alue">'+ic('crosshair')+'<span>Keskit\u00e4</span></button>'
+          +'<button class="addrail-btn" id="add-import-btn" type="button" title="Tuo polygoni">'+ic('download')+'<span>Tuo polygoni</span></button>'
+          +'<button class="addrail-btn" id="add-locate-btn" type="button" title="Siirry omaan sijaintiisi">'+ic('pin')+'<span>Sijaintini</span></button>';
+        document.getElementById('add-minus-btn').addEventListener('click', removeLastCorner);
+        document.getElementById('add-follow-btn').addEventListener('click', function(){
+          drawFollow=!drawFollow;
+          this.classList.toggle('active', drawFollow);
+          if(drawFollow) fitToPoints(true);
+        });
+        document.getElementById('add-center-btn').addEventListener('click', function(){ fitToPoints(true); });
+        document.getElementById('add-import-btn').addEventListener('click', function(){ hint('Polygonin tuonti ei ole viel\u00e4 k\u00e4yt\u00f6ss\u00e4 t\u00e4ss\u00e4 demossa.', true); });
+        document.getElementById('add-locate-btn').addEventListener('click', function(){
+          if(!navigator.geolocation){ hint('Selain ei tue paikannusta.', true); return; }
+          hint('Haetaan sijaintia\u2026');
+          navigator.geolocation.getCurrentPosition(function(pos){
+            if(adminMap) adminMap.flyTo({center:[pos.coords.longitude,pos.coords.latitude], zoom:16, duration:600});
+            hint(null);
+          }, function(){ hint('Sijaintia ei saatu \u2014 tarkista selaimen sijaintilupa.', true); }, {enableHighAccuracy:true, timeout:8000});
+        });
+      }
+      r.classList.add('open');
+    }
+    function closeAddRail(){
+      var r=document.getElementById('map-addrail'); if(r) r.classList.remove('open');
+      drawFollow=false;
+      var fb=document.getElementById('add-follow-btn'); if(fb) fb.classList.remove('active');
+    }
     function startDraw(btn){
       if(!adminMap){ hint('Karttaa ei ole viel\u00e4 ladattu.',true); return; }
       var panel=panelEl(); if(!panel)return;
-      clearModes(); btn.classList.add('active');
-      drawOn=true; if(adminMap) adminMap.__drawing=true; clearShape();
+      clearModes();
+      drawBtnRef=btn; btn.classList.add('active');
+      drawOn=true; adminMap.__drawing=true; clearShape();
       adminMap.getCanvas().style.cursor='crosshair';
       clickH=function(e){ addCorner(e.lngLat); };
       adminMap.on('click', clickH);
-      makeBar(panel); update();
+      makeBar(panel); buildAddRail(panel); update();
       hint('Piirr\u00e4 alue klikkaamalla karttaa. V\u00e4hint\u00e4\u00e4n 3 kulmaa, sitten Valmis.');
     }
     function endDraw(){
       drawOn=false; if(adminMap) adminMap.__drawing=false;
       if(adminMap){ adminMap.getCanvas().style.cursor=''; if(clickH){ adminMap.off('click', clickH); clickH=null; } }
       var b=document.getElementById('map-drawbar'); if(b)b.classList.remove('open');
+      closeAddRail();
+      if(drawBtnRef){ drawBtnRef.classList.remove('active'); drawBtnRef=null; }
       var pb=document.querySelector('#app-admin [data-tool="plus"]'); if(pb)pb.classList.remove('active');
     }
     function finishDraw(){
@@ -2493,20 +2577,11 @@ body.vresizing *{cursor:ns-resize !important}
     }
     function cancelDraw(){ endDraw(); clearShape(); hint(null); }
     /* mode buttons */
-    var MSG={
-      check:'Hyv\u00e4ksynt\u00e4tila aktiivinen \u2014 odottavien alueiden hyv\u00e4ksynt\u00e4 liitet\u00e4\u00e4n seuraavassa vaiheessa.',
-      trash:'Poistotila aktiivinen \u2014 alueen valinta ja poisto liitet\u00e4\u00e4n seuraavassa vaiheessa.'
-    };
     function clearModes(){
-      $all('#app-admin .map-tools .tool-btn').forEach(function(b){ var dt=b.getAttribute('data-tool'); if(dt!=='layers' && dt!=='zone') b.classList.remove('active'); });
+      $all('#app-admin .map-tools .tool-btn').forEach(function(b){ if(b.getAttribute('data-tool')!=='zone') b.classList.remove('active'); });
       if(drawOn) endDraw();
       exitEditMode();
       hint(null);
-    }
-    function toggleMode(btn,t){
-      var was=btn.classList.contains('active');
-      clearModes(); clearShape();
-      if(!was){ btn.classList.add('active'); hint(MSG[t]||null); }
     }
     function toggleEditMode(btn){
       var was=btn.classList.contains('active');
@@ -2535,17 +2610,72 @@ body.vresizing *{cursor:ns-resize !important}
         hint('Maksuvy\u00f6hykkeiden lataus ep\u00e4onnistui \u2014 tarkista ett\u00e4 payment_zones-taulu on luotu Supabaseen.', true);
       });
     }
+    /* ---------- Puhelin-tila (synkronoitu esikatselu) ---------- */
+    function buildPhoneMap(){
+      if(phoneMap || !TP_MAP_STYLE || !adminMap) return;
+      phoneMap=new maplibregl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, transformRequest:tpTransformRequest, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false, interactive:false});
+      try{ phoneMap.touchZoomRotate.disableRotation(); }catch(e){}
+      phoneMap.on('load',function(){
+        phoneMap.resize();
+        tpLoadAreas(phoneMap); tpLoadHallit(phoneMap); tpLoadCharging(phoneMap);
+        syncPhoneMap();
+      });
+      var PHONE_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
+      function phoneLayers(){ return PHONE_LAYERS.filter(function(id){return phoneMap.getLayer(id);}); }
+      phoneMap.on('click',function(e){
+        var ls=phoneLayers();
+        var fs=ls.length? phoneMap.queryRenderedFeatures(e.point,{layers:ls}) : [];
+        if(!fs.length){ closePhoneSheet(); return; }
+        var f=fs[0], p=f.properties||{}, lid=f.layer.id, header, type, operator='Helsingin kaupunki';
+        if(lid==='halli-icons'){ header=p.name||'Pysäköintihalli'; type='Pysäköintihalli'; }
+        else if(lid==='charging-icons'){ header=p.name||p.title||p.operator||'Latauspiste'; type='Latauspiste'; operator=p.operator||operator; }
+        else {
+          var areaName=(p.area_name && p.area_name!=='')? p.area_name : (p.parking_type||'Pysäköintialue');
+          var maxSuffix = p.max_hours ? ('  |  Max. '+p.max_hours+'h') : '';
+          header = areaName + (/Max\./.test(areaName)? '' : maxSuffix);
+          type = p.parking_type || 'Pysäköintialue';
+        }
+        openPhoneSheet(header,type,operator);
+      });
+    }
+    function openPhoneSheet(header,type,operator){
+      var sh=document.getElementById('phone-sheet'); if(!sh) return;
+      var hEl=document.getElementById('phone-sheet-header'); if(hEl) hEl.textContent=header;
+      var tEl=document.getElementById('phone-sheet-type'); if(tEl) tEl.textContent=type;
+      var oEl=document.getElementById('phone-sheet-operator'); if(oEl) oEl.textContent=operator;
+      var dEl=document.getElementById('phone-sheet-divider'); if(dEl) dEl.style.display='block';
+      sh.classList.add('open');
+    }
+    function closePhoneSheet(){ var sh=document.getElementById('phone-sheet'); if(sh) sh.classList.remove('open'); }
+    function syncPhoneMap(){
+      if(!phoneMap || !adminMap) return;
+      phoneMap.jumpTo({center:adminMap.getCenter(), zoom:adminMap.getZoom(), bearing:adminMap.getBearing(), pitch:adminMap.getPitch()});
+    }
+    var phoneModeOn=false, phoneSyncBound=false;
+    function togglePhoneMode(btn){
+      var pane=document.getElementById('phone-pane'); if(!pane) return;
+      phoneModeOn=!phoneModeOn;
+      btn.classList.toggle('active', phoneModeOn);
+      pane.classList.toggle('open', phoneModeOn);
+      if(phoneModeOn){
+        buildPhoneMap();
+        if(!phoneSyncBound && adminMap){ phoneSyncBound=true; adminMap.on('move', syncPhoneMap); }
+        setTimeout(function(){ if(adminMap)adminMap.resize(); if(phoneMap){ phoneMap.resize(); syncPhoneMap(); } }, 60);
+      } else {
+        closePhoneSheet();
+        setTimeout(function(){ if(adminMap)adminMap.resize(); }, 60);
+      }
+    }
     /* delegated clicks */
     document.addEventListener('click',function(e){
+      var pBtn=e.target.closest('#phone-mode-btn');
+      if(pBtn && pBtn.closest('#app-admin')){ togglePhoneMode(pBtn); return; }
       var btn=e.target.closest('.tool-btn'); if(!btn) return;
       if(!btn.closest('#app-admin')) return;
       var t=btn.getAttribute('data-tool'); e.preventDefault();
-      if(t==='layers'){ toggleLayers(btn); return; }
       if(t==='zone'){ toggleZones(btn); return; }
-      closeLayers();
       if(t==='plus'){ if(drawOn) cancelDraw(); else startDraw(btn); return; }
       if(t==='edit'){ toggleEditMode(btn); return; }
-      if(t==='check'||t==='trash'){ toggleMode(btn,t); return; }
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawOn) cancelDraw(); });
   })();
@@ -2561,7 +2691,7 @@ body.vresizing *{cursor:ns-resize !important}
   var edSelected=new Set(), edFirstProps=null, edHistory=[], edInPreview=false, edPreviewGeom=null;
   var COMPAT_KEYS=['area_type','parking_type','owner_parking_area','location_city','city_zone','zone_number','max_hours','max_minutes','valid_mape_from','valid_mape_to','valid_la_from','valid_la_to','valid_su_from','valid_su_to','data_exceptions','info_additional'];
 
-  function edPanelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-panel'); }
+  function edPanelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-stage'); }
   var edHintT=null;
   function edHint(msg,auto){
     var panel=edPanelEl(); if(!panel) return;
@@ -2717,7 +2847,7 @@ body.vresizing *{cursor:ns-resize !important}
     var panel=edPanelEl(); if(!panel) return null;
     var r=document.getElementById('map-editrail');
     if(!r){
-      r=document.createElement('div'); r.className='map-editrail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); panel.appendChild(r);
+      r=document.createElement('div'); r.className='map-side-rail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); panel.appendChild(r);
       document.getElementById('ed-pen-btn').addEventListener('click',function(){ edHint('Valitse alueita klikkaamalla niit\u00e4 kartalta.'); });
       document.getElementById('ed-undo-btn').addEventListener('click', undoEdit);
       document.getElementById('ed-exit-btn').addEventListener('click',function(){ var b=document.querySelector('#app-admin [data-tool="edit"]'); if(b) b.classList.remove('active'); exitEditMode(); });
