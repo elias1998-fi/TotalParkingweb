@@ -626,11 +626,19 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.ok{background:var(--brand); color:#fff}
 .drawbtn.ok:disabled{opacity:.45; cursor:not-allowed}
 .drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
+.map-editrail{position:absolute; right:14px; top:60px; z-index:7; display:none; flex-direction:column; gap:8px}
+.map-editrail.open{display:flex}
+.editrail-btn{width:42px; height:42px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; transition:background .15s, color .15s, border-color .15s; padding:0}
+.editrail-btn svg{width:19px; height:19px}
+.editrail-btn:hover{background:var(--brand-50)}
+.editrail-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.editrail-btn.danger:hover{background:#FDE7E2; color:#C0392B; border-color:#F3C5BC}
+.editrail-btn:disabled{opacity:.4; cursor:not-allowed}
 .map-hint{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:7; display:none; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-lg); padding:9px 15px; font-size:13px; line-height:1.45; color:var(--ink-soft); max-width:calc(100% - 28px); text-align:center}
 .map-hint.open{display:block}
-.map-vresizer{position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:9; width:66px; height:19px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; background:rgba(255,255,255,.96); border:1px solid var(--line); border-bottom:none; border-radius:9px 9px 0 0; box-shadow:0 -2px 8px rgba(0,0,0,.08); touch-action:none}
-.map-vresizer::before{content:""; width:30px; height:4px; border-radius:2px; background:var(--line); transition:background .15s}
-.map-vresizer:hover::before, body.vresizing .map-vresizer::before{background:var(--brand)}
+.map-vresizer{position:absolute; left:0; right:0; bottom:0; height:14px; z-index:9; cursor:ns-resize; touch-action:none; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; background:transparent}
+.map-vresizer::after{content:""; width:44px; height:4px; border-radius:2px; background:var(--line); opacity:0; transition:opacity .15s, background .15s}
+.map-vresizer:hover::after, body.vresizing .map-vresizer::after{opacity:1; background:var(--brand)}
 body.vresizing{cursor:ns-resize; user-select:none}
 body.vresizing *{cursor:ns-resize !important}
 .area-row{padding:11px 12px; border-radius:11px; cursor:pointer; transition:background .15s}
@@ -1752,6 +1760,7 @@ body.vresizing *{cursor:ns-resize !important}
     return map;
   }
   var heroMap, adminMap, staffMap;
+  var MASTER_AREA_FEATURES=[];
   function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
   function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
 
@@ -1788,14 +1797,29 @@ body.vresizing *{cursor:ns-resize !important}
   async function tpLoadAreas(map){
     try{
       var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
-      var SEL='id,area_type,parking_type,max_hours,polygon_coordinates';
+      var SEL='id,area_name,area_type,parking_type,owner_parking_area,location_city,city_zone,zone_number,estimated_spots_total,area_code,max_hours,max_minutes,valid_mape_from,valid_mape_to,valid_la_from,valid_la_to,valid_su_from,valid_su_to,data_exceptions,info_additional,polygon_coordinates';
       var both=await Promise.all([
         tpFetchAllRows('parking_master',SEL,headers),
         tpFetchAllRows('parking_master_ilmaiset',SEL,headers).catch(function(){return [];})
       ]);
+      /* Ilmaisten id:t etuliitetään 'ilm_', jotta ne eivät törmää maksullisten
+         id-avaruuteen valinnassa/yhdistämisessä — sama käytäntö kuin sovelluksen
+         alue-editorissa (loadEditorFeatures). */
+      both[1].forEach(function(r){ r.id='ilm_'+r.id; });
       var rows=both[0].concat(both[1]);
       var features=rows.filter(function(r){return r.polygon_coordinates&&(r.polygon_coordinates.type==='Polygon'||r.polygon_coordinates.type==='MultiPolygon')&&r.parking_type!=='Pysäköintihalli';})
-        .map(function(r){return {type:'Feature',properties:{source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),id:r.id,area_type:r.area_type||'',parking_type:r.parking_type||'',max_hours:r.max_hours||''},geometry:r.polygon_coordinates};});
+        .map(function(r){return {type:'Feature',properties:{
+          source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),
+          id:r.id, area_name:r.area_name||'', area_type:r.area_type||'', parking_type:r.parking_type||'',
+          owner_parking_area:r.owner_parking_area||'', location_city:r.location_city||'', city_zone:r.city_zone||'',
+          zone_number:r.zone_number||'', estimated_spots_total:r.estimated_spots_total||'', area_code:r.area_code||'',
+          max_hours:r.max_hours||'', max_minutes:r.max_minutes||'',
+          valid_mape_from:r.valid_mape_from||'', valid_mape_to:r.valid_mape_to||'',
+          valid_la_from:r.valid_la_from||'', valid_la_to:r.valid_la_to||'',
+          valid_su_from:r.valid_su_from||'', valid_su_to:r.valid_su_to||'',
+          data_exceptions:r.data_exceptions||'', info_additional:r.info_additional||''
+        },geometry:r.polygon_coordinates};});
+      MASTER_AREA_FEATURES=features;
       var geojson={type:'FeatureCollection',features:features};
       if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
       else{
@@ -1804,6 +1828,7 @@ body.vresizing *{cursor:ns-resize !important}
         map.addLayer({id:'master-poly-line',type:'line',source:'master-polygons',minzoom:11,paint:{'line-width':1.5,'line-opacity':0.30,'line-color':['match',['get','source'],'community','#611868','hel_ilmainen_pitka','#611868','hel_ilmainen_lyhyt','#611868','hel_sallittu_kiellon_ulkopuolella','#611868','#2B6CB0']}});
       }
       ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
+      if(typeof refreshEditAfterReload==='function') refreshEditAfterReload();
       console.log('Admin-kartta: alueita',features.length);
     }catch(e){console.error('Alueiden lataus epäonnistui',e);}
   }
@@ -1871,7 +1896,7 @@ body.vresizing *{cursor:ns-resize !important}
     var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
     function infoLayers(){ return INFO_LAYERS.filter(function(id){return adminMap.getLayer(id);}); }
     adminMap.on('click',function(e){
-      if(adminMap.__drawing) return;
+      if(adminMap.__drawing || adminMap.__editActive) return;
       var ls=infoLayers(); if(!ls.length) return;
       var fs=adminMap.queryRenderedFeatures(e.point,{layers:ls}); if(!fs.length) return;
       var f=fs[0], p=f.properties||{}, lid=f.layer.id, t, s;
@@ -1882,7 +1907,7 @@ body.vresizing *{cursor:ns-resize !important}
       new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'260px'}).setLngLat(e.lngLat).setHTML('<div class="pop-t">'+t+'</div><div class="pop-s">'+s+idline+'</div>').addTo(adminMap);
     });
     adminMap.on('mousemove',function(e){
-      if(adminMap.__drawing) return;
+      if(adminMap.__drawing || adminMap.__editActive) return;
       var ls=infoLayers();
       var hit = ls.length && adminMap.queryRenderedFeatures(e.point,{layers:ls}).length;
       adminMap.getCanvas().style.cursor = hit ? 'pointer' : '';
@@ -2450,19 +2475,24 @@ body.vresizing *{cursor:ns-resize !important}
     function cancelDraw(){ endDraw(); clearShape(); hint(null); }
     /* mode buttons */
     var MSG={
-      edit:'Muokkaustila aktiivinen \u2014 alueen valinta ja muokkaus liitet\u00e4\u00e4n seuraavassa vaiheessa.',
       check:'Hyv\u00e4ksynt\u00e4tila aktiivinen \u2014 odottavien alueiden hyv\u00e4ksynt\u00e4 liitet\u00e4\u00e4n seuraavassa vaiheessa.',
       trash:'Poistotila aktiivinen \u2014 alueen valinta ja poisto liitet\u00e4\u00e4n seuraavassa vaiheessa.'
     };
     function clearModes(){
       $all('#app-admin .map-tools .tool-btn').forEach(function(b){ if(b.getAttribute('data-tool')!=='layers') b.classList.remove('active'); });
       if(drawOn) endDraw();
+      exitEditMode();
       hint(null);
     }
     function toggleMode(btn,t){
       var was=btn.classList.contains('active');
       clearModes(); clearShape();
       if(!was){ btn.classList.add('active'); hint(MSG[t]||null); }
+    }
+    function toggleEditMode(btn){
+      var was=btn.classList.contains('active');
+      clearModes(); clearShape();
+      if(!was){ btn.classList.add('active'); enterEditMode(); }
     }
     /* delegated clicks */
     document.addEventListener('click',function(e){
@@ -2472,10 +2502,244 @@ body.vresizing *{cursor:ns-resize !important}
       if(t==='layers'){ toggleLayers(btn); return; }
       closeLayers();
       if(t==='plus'){ if(drawOn) cancelDraw(); else startDraw(btn); return; }
-      if(t==='edit'||t==='check'||t==='trash'){ toggleMode(btn,t); return; }
+      if(t==='edit'){ toggleEditMode(btn); return; }
+      if(t==='check'||t==='trash'){ toggleMode(btn,t); return; }
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawOn) cancelDraw(); });
   })();
+
+  /* ---------- Master area editor (Muokkaa: valitse + yhdistä) ----------
+     Mirrors the real app's unified area editor (loadEditorFeatures /
+     isEditorCompatible / buildMergedGeom / executeMergeEditor in
+     index__9_.html): click-select with a compatibility guard, convex-hull
+     merge preview in amber, then a real write via the same Supabase RPC
+     (merge_parking_areas / merge_parking_areas_ilmaiset) the app itself
+     uses. Lives in the outer scope so tpLoadAreas() above can call
+     refreshEditAfterReload() after every reload. */
+  var edSelected=new Set(), edFirstProps=null, edHistory=[], edInPreview=false, edPreviewGeom=null;
+  var COMPAT_KEYS=['area_type','parking_type','owner_parking_area','location_city','city_zone','zone_number','max_hours','max_minutes','valid_mape_from','valid_mape_to','valid_la_from','valid_la_to','valid_su_from','valid_su_to','data_exceptions','info_additional'];
+
+  function edPanelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-panel'); }
+  var edHintT=null;
+  function edHint(msg,auto){
+    var panel=edPanelEl(); if(!panel) return;
+    var h=document.getElementById('map-hint');
+    if(!h){ h=document.createElement('div'); h.id='map-hint'; h.className='map-hint'; panel.appendChild(h); }
+    if(edHintT){ clearTimeout(edHintT); edHintT=null; }
+    if(!msg){ h.classList.remove('open'); return; }
+    h.textContent=msg; h.classList.add('open');
+    if(auto){ edHintT=setTimeout(function(){ h.classList.remove('open'); },5000); }
+  }
+
+  function findEdFeature(id){ return MASTER_AREA_FEATURES.find(function(f){ return String(f.properties.id)===String(id); }); }
+  function normEdProp(v){ return (v===null||v===undefined||v==='')?'':String(v); }
+  function isEdCompatible(feat){
+    if(!edFirstProps) return true;
+    var p=feat.properties;
+    return COMPAT_KEYS.every(function(k){ return normEdProp(p[k])===normEdProp(edFirstProps[k]); });
+  }
+  function pushEdHistory(){ edHistory.push(new Set(edSelected)); if(edHistory.length>50) edHistory.shift(); }
+
+  function ensureEditLayers(){
+    if(!adminMap || !adminMap.getSource('master-polygons')) return false;
+    if(!adminMap.getLayer('edit-sel-fill')){
+      adminMap.addLayer({id:'edit-sel-fill',type:'fill',source:'master-polygons',paint:{'fill-color':'#021E45','fill-opacity':0.55},filter:['==',['get','id'],'__none__']});
+      adminMap.addLayer({id:'edit-sel-line',type:'line',source:'master-polygons',paint:{'line-color':'#021E45','line-width':2.5},filter:['==',['get','id'],'__none__']});
+    }
+    if(!adminMap.getLayer('edit-reject-fill')){
+      adminMap.addLayer({id:'edit-reject-fill',type:'fill',source:'master-polygons',paint:{'fill-color':'#e53935','fill-opacity':0.75},filter:['==',['get','id'],'__none__']});
+      adminMap.addLayer({id:'edit-reject-line',type:'line',source:'master-polygons',paint:{'line-color':'#e53935','line-width':3},filter:['==',['get','id'],'__none__']});
+    }
+    if(!adminMap.getSource('edit-preview')){
+      adminMap.addSource('edit-preview',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+      adminMap.addLayer({id:'edit-preview-fill',type:'fill',source:'edit-preview',paint:{'fill-color':'#FFD600','fill-opacity':0.55}});
+      adminMap.addLayer({id:'edit-preview-line',type:'line',source:'edit-preview',paint:{'line-color':'#F9A825','line-width':3}});
+    }
+    return true;
+  }
+
+  function flashEdReject(id){
+    if(!adminMap || !adminMap.getLayer('edit-reject-fill')) return;
+    var count=0, total=3;
+    var iv=setInterval(function(){
+      if(count%2===0){ adminMap.setFilter('edit-reject-fill',['==',['get','id'],id]); adminMap.setFilter('edit-reject-line',['==',['get','id'],id]); }
+      else { adminMap.setFilter('edit-reject-fill',['==',['get','id'],'__none__']); adminMap.setFilter('edit-reject-line',['==',['get','id'],'__none__']); }
+      count++;
+      if(count>=total*2){ clearInterval(iv); adminMap.setFilter('edit-reject-fill',['==',['get','id'],'__none__']); adminMap.setFilter('edit-reject-line',['==',['get','id'],'__none__']); }
+    },130);
+    edHint('Alue ei sovi nykyiseen valintaan (eri tyyppi tai ehdot).', true);
+  }
+
+  function handleEditClick(e){
+    if(!adminMap.__editActive || edInPreview) return;
+    if(!adminMap.getLayer('master-poly-fill')) return;
+    var fs=adminMap.queryRenderedFeatures(e.point,{layers:['master-poly-fill']});
+    if(!fs.length) return;
+    var id=String(fs[0].properties.id);
+    var feat=findEdFeature(id); if(!feat) return;
+    if(edSelected.has(id)){
+      pushEdHistory(); edSelected.delete(id);
+      if(edSelected.size===0) edFirstProps=null;
+      else { var fid=edSelected.values().next().value; var ff=findEdFeature(fid); edFirstProps= ff? ff.properties : null; }
+    } else {
+      if(!edFirstProps){ pushEdHistory(); edFirstProps=feat.properties; edSelected.add(id); }
+      else if(isEdCompatible(feat)){ pushEdHistory(); edSelected.add(id); }
+      else { flashEdReject(id); return; }
+    }
+    updateEditUI();
+  }
+
+  function undoEdit(){
+    if(edInPreview){ cancelEditPreview(); return; }
+    if(edHistory.length===0) return;
+    edSelected=edHistory.pop();
+    if(edSelected.size===0){ edFirstProps=null; }
+    else { var fid=edSelected.values().next().value; var ff=findEdFeature(fid); edFirstProps= ff? ff.properties : null; }
+    updateEditUI();
+  }
+
+  function edConvexHull(points){
+    if(points.length<3) return points;
+    points=points.slice().sort(function(a,b){return a[0]-b[0]||a[1]-b[1];});
+    function cross(O,A,B){ return (A[0]-O[0])*(B[1]-O[1])-(A[1]-O[1])*(B[0]-O[0]); }
+    var lower=[],upper=[],i,j,p;
+    for(i=0;i<points.length;i++){ p=points[i]; while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop(); lower.push(p); }
+    for(j=points.length-1;j>=0;j--){ p=points[j]; while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop(); upper.push(p); }
+    upper.pop(); lower.pop();
+    return lower.concat(upper);
+  }
+  function edMergeGeom(){
+    var feats=Array.from(edSelected).map(findEdFeature).filter(Boolean);
+    var pts=[];
+    feats.forEach(function(f){
+      var g=f.geometry;
+      var rings = g.type==='MultiPolygon' ? g.coordinates.map(function(p){return p[0];}) : [g.coordinates[0]];
+      rings.forEach(function(r){ r.forEach(function(pt){ pts.push(pt); }); });
+    });
+    var hull=edConvexHull(pts);
+    return {type:'Polygon',coordinates:[hull.concat([hull[0]])]};
+  }
+
+  function previewMerge(){
+    if(edSelected.size<2) return;
+    edPreviewGeom=edMergeGeom();
+    if(adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[{type:'Feature',geometry:edPreviewGeom,properties:{}}]});
+    edInPreview=true;
+    updateEditUI();
+  }
+  function cancelEditPreview(){
+    edInPreview=false; edPreviewGeom=null;
+    if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
+    updateEditUI();
+  }
+  function clearEdSelection(){
+    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
+    if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
+    updateEditUI();
+  }
+
+  async function confirmMerge(){
+    if(!edPreviewGeom || edSelected.size<2) return;
+    var sids=Array.from(edSelected).map(String);
+    var freeCount=sids.filter(function(s){return s.indexOf('ilm_')===0;}).length;
+    if(freeCount!==0 && freeCount!==sids.length){
+      edHint('Maksullisia ja ilmaisia alueita ei voi yhdist\u00e4\u00e4 kesken\u00e4\u00e4n.', true);
+      return;
+    }
+    var isFree=freeCount===sids.length;
+    var rpc=isFree?'merge_parking_areas_ilmaiset':'merge_parking_areas';
+    var ids=sids.map(function(s){ return parseInt(isFree? s.slice(4) : s, 10); });
+    var btn=document.getElementById('ed-confirm-btn'); if(btn){ btn.disabled=true; btn.textContent='Yhdistet\u00e4\u00e4n\u2026'; }
+    try{
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/rpc/'+rpc,{
+        method:'POST',
+        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({source_ids:ids, merged_geom:edPreviewGeom})
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      clearEdSelection();
+      await tpLoadAreas(adminMap);
+      edHint('\u2713 '+ids.length+' aluetta yhdistetty.', true);
+    }catch(err){
+      edHint('Virhe yhdist\u00e4misess\u00e4: '+((err&&err.message)||err), true);
+      if(btn){ btn.disabled=false; btn.textContent='Hyv\u00e4ksy'; }
+    }
+  }
+
+  function edRailHTML(){
+    return '<button class="editrail-btn active" id="ed-pen-btn" type="button" title="Valitse alueita klikkaamalla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>'
+      +'<button class="editrail-btn" id="ed-undo-btn" type="button" title="Peru viimeisin valinta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></button>'
+      +'<button class="editrail-btn danger" id="ed-exit-btn" type="button" title="Sulje muokkaustila"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
+  }
+  function edRail(){
+    var panel=edPanelEl(); if(!panel) return null;
+    var r=document.getElementById('map-editrail');
+    if(!r){
+      r=document.createElement('div'); r.className='map-editrail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); panel.appendChild(r);
+      document.getElementById('ed-pen-btn').addEventListener('click',function(){ edHint('Valitse alueita klikkaamalla niit\u00e4 kartalta.'); });
+      document.getElementById('ed-undo-btn').addEventListener('click', undoEdit);
+      document.getElementById('ed-exit-btn').addEventListener('click',function(){ var b=document.querySelector('#app-admin [data-tool="edit"]'); if(b) b.classList.remove('active'); exitEditMode(); });
+    }
+    return r;
+  }
+  function edBar(){
+    var panel=edPanelEl(); if(!panel) return null;
+    var b=document.getElementById('map-editbar');
+    if(!b){ b=document.createElement('div'); b.className='map-drawbar'; b.id='map-editbar'; panel.appendChild(b); }
+    return b;
+  }
+
+  function updateEditUI(){
+    if(!adminMap || !adminMap.getLayer('edit-sel-fill')) return;
+    var ids=Array.from(edSelected), n=ids.length;
+    var f= n? ['in',['get','id'],['literal',ids]] : ['==',['get','id'],'__none__'];
+    adminMap.setFilter('edit-sel-fill', f);
+    adminMap.setFilter('edit-sel-line', f);
+    var undoBtn=document.getElementById('ed-undo-btn'); if(undoBtn) undoBtn.disabled = (edHistory.length===0 && !edInPreview);
+    var bar=edBar(); if(!bar) return;
+    if(edInPreview){
+      bar.classList.add('open');
+      bar.innerHTML='<span class="di" id="ed-status">Esikatselu \u2014 oranssi = yhdistetty alue</span>'
+        +'<button class="drawbtn ok" id="ed-confirm-btn" type="button">Hyv\u00e4ksy</button>'
+        +'<button class="drawbtn ghost" id="ed-cancelprev-btn" type="button">Peru yhdist\u00e4minen</button>';
+      document.getElementById('ed-confirm-btn').addEventListener('click', confirmMerge);
+      document.getElementById('ed-cancelprev-btn').addEventListener('click', cancelEditPreview);
+      return;
+    }
+    if(n===0){ bar.classList.remove('open'); bar.innerHTML=''; return; }
+    var ready=n>=2;
+    bar.classList.add('open');
+    bar.innerHTML='<span class="di" id="ed-status">'+n+' valittu'+(ready?' \u2014 valmis yhdistett\u00e4v\u00e4ksi':' \u2014 valitse v\u00e4hint\u00e4\u00e4n 2 samanlaista aluetta')+'</span>'
+      +'<button class="drawbtn ok" id="ed-merge-btn" type="button"'+(ready?'':' disabled')+'>Yhdist\u00e4</button>'
+      +'<button class="drawbtn ghost" id="ed-clear-btn" type="button">Peru valinnat</button>';
+    document.getElementById('ed-merge-btn').addEventListener('click', previewMerge);
+    document.getElementById('ed-clear-btn').addEventListener('click', clearEdSelection);
+  }
+
+  function enterEditMode(){
+    if(!adminMap) return;
+    var ok=ensureEditLayers();
+    adminMap.__editActive=true;
+    if(!adminMap.__editClickBound){ adminMap.__editClickBound=true; adminMap.on('click', handleEditClick); }
+    adminMap.getCanvas().style.cursor='pointer';
+    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
+    var r=edRail(); if(r) r.classList.add('open');
+    updateEditUI();
+    edHint(ok ? 'Valitse alueita klikkaamalla niit\u00e4 kartalta.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
+  }
+  function exitEditMode(){
+    if(adminMap){
+      adminMap.__editActive=false;
+      adminMap.getCanvas().style.cursor='';
+      if(adminMap.getLayer('edit-sel-fill')){ adminMap.setFilter('edit-sel-fill',['==',['get','id'],'__none__']); adminMap.setFilter('edit-sel-line',['==',['get','id'],'__none__']); }
+      if(adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
+    }
+    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
+    var r=document.getElementById('map-editrail'); if(r) r.classList.remove('open');
+    var b=document.getElementById('map-editbar'); if(b){ b.classList.remove('open'); b.innerHTML=''; }
+    edHint(null);
+  }
+  function refreshEditAfterReload(){ if(adminMap && adminMap.__editActive) updateEditUI(); }
 })();
 </script>
 </body>
