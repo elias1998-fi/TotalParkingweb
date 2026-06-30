@@ -549,6 +549,39 @@ body.resizing *{cursor:col-resize !important}
 
 /* web dashboard */
 .wseg{display:inline-flex; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-pill); padding:3px; gap:2px}
+.web-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.web-demo-toggle{display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; flex:0 0 auto; margin-top:4px}
+.wdt-label{font-size:13px; font-weight:600; color:var(--muted)}
+.wdt-switch{position:relative; display:inline-block; width:46px; height:26px; flex:0 0 auto}
+.wdt-switch input{opacity:0; width:0; height:0}
+.wdt-slider{position:absolute; inset:0; background:#ccc; transition:.25s; border-radius:26px}
+.wdt-slider:before{content:""; position:absolute; height:19px; width:19px; left:4px; bottom:3.5px; background:#fff; transition:.25s; border-radius:50%}
+.wdt-switch input:checked + .wdt-slider{background:var(--brand)}
+.wdt-switch input:checked + .wdt-slider:before{transform:translateX(20px)}
+.web-demo-wrap{display:none; margin-bottom:22px}
+.web-demo-wrap.open{display:block}
+.web-demo-frame{position:relative; width:100%; height:min(72vh,720px); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); background:var(--paper)}
+.web-demo-frame iframe{width:100%; height:100%; border:0; display:block}
+.web-demo-note{margin-top:10px; font-size:12.5px; color:var(--muted)}
+.web-demo-note a{color:var(--brand); font-weight:600}
+.seo-divider{display:flex; align-items:center; gap:14px; margin:28px 0 20px; color:var(--ink); font-weight:700; font-size:16px}
+.seo-divider:before,.seo-divider:after{content:""; height:1px; background:var(--line); flex:1}
+.sb-bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+.sb-tabs{display:inline-flex; gap:6px; flex-wrap:wrap; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-pill); padding:4px}
+.sb-tab{border:none; background:transparent; padding:7px 14px; border-radius:var(--r-pill); font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap}
+.sb-tab:hover{color:var(--ink)}
+.sb-tab.active{background:var(--brand); color:#fff}
+.sb-refresh{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); background:var(--card); border-radius:11px; padding:8px 14px; font-weight:600; font-size:13px; color:var(--ink); cursor:pointer; flex:0 0 auto}
+.sb-refresh svg{width:16px; height:16px}
+.sb-refresh:hover{background:var(--brand-50)}
+.sb-meta{font-size:12.5px; color:var(--muted); margin-bottom:10px; font-family:var(--font-mono)}
+.sb-table-wrap{border:1px solid var(--line); border-radius:14px; overflow:auto; max-height:min(64vh,640px); background:var(--card)}
+.sb-empty{padding:40px 20px; text-align:center; color:var(--muted); font-size:13px}
+table.sb-table{border-collapse:collapse; width:100%; font-size:12.5px}
+table.sb-table th{position:sticky; top:0; background:var(--paper); text-align:left; padding:9px 12px; font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap; z-index:1}
+table.sb-table td{padding:8px 12px; border-bottom:1px solid var(--line); white-space:nowrap; max-width:320px; overflow:hidden; text-overflow:ellipsis; font-family:var(--font-mono); color:var(--ink)}
+table.sb-table tr:hover td{background:var(--paper)}
+table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
 .wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
 .wseg-btn.active{background:var(--brand); color:#fff}
 .src-row{margin-bottom:14px}
@@ -629,6 +662,37 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .phone-location-btn svg{width:16px; height:16px}
 .phone-btn-container{position:absolute; left:0; right:0; bottom:0; z-index:12; background:#fff; padding:9px 12px 14px}
 .phone-action-btn{width:100%; height:42px; border:none; border-radius:999px; font-size:13px; font-weight:bold; font-family:Arial,sans-serif; color:#fff; background:#0C0243; cursor:pointer}
+.phone-filter-overlay{position:absolute; inset:0; z-index:20; background:#fff; display:flex; flex-direction:column; font-family:Arial,sans-serif; transform:translateY(100%); transition:transform .28s cubic-bezier(.25,.46,.45,.94); pointer-events:none}
+.phone-filter-overlay.open{transform:translateY(0); pointer-events:auto}
+.phone-filter-head{display:flex; align-items:center; justify-content:space-between; padding:16px 16px 12px; flex-shrink:0; border-bottom:1px solid #eee}
+.phone-filter-head span{font-size:15px; font-weight:bold; color:#222}
+.phone-filter-close{width:30px; height:30px; border:none; background:#f0f0f0; border-radius:50%; color:#555; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0}
+.phone-filter-close svg{width:15px; height:15px}
+.phone-filter-scroll{flex:1; overflow-y:auto; padding:14px 16px}
+.pf-group{background:#f5f5f5; border:1px solid #0C0243; border-radius:14px; padding:14px 16px; margin-bottom:14px}
+.pf-toggle-row{display:flex; justify-content:space-between; align-items:center; gap:12px}
+.pf-toggle-label{font-size:13.5px; color:#222; font-weight:500}
+.pf-switch{position:relative; display:inline-block; width:46px; height:27px; flex:0 0 auto}
+.pf-switch input{opacity:0; width:0; height:0}
+.pf-slider{position:absolute; inset:0; background:#ccc; transition:.3s; border-radius:27px; cursor:pointer}
+.pf-slider:before{content:""; position:absolute; height:20px; width:20px; left:4px; bottom:3.5px; background:#fff; transition:.3s; border-radius:50%}
+.pf-switch input:checked + .pf-slider{background:#0C0243}
+.pf-switch input:checked + .pf-slider:before{transform:translateX(19px)}
+.pf-seg-wrap{display:none; margin-top:14px}
+.pf-seg-wrap.open{display:block}
+.pf-seg-track{position:relative; display:flex; background:#f0f0f0; border-radius:10px; padding:3px}
+.pf-seg-thumb{position:absolute; top:3px; bottom:3px; left:3px; width:calc((100% - 6px)/3); background:linear-gradient(to right,#1565C0 50%,#7F1F89 50%); border-radius:8px; transition:transform .25s cubic-bezier(.25,.46,.45,.94); z-index:0}
+.pf-seg-option{flex:1; position:relative; z-index:1; border:none; background:transparent; padding:9px 4px; font-size:12.5px; font-weight:600; font-family:Arial,sans-serif; color:#555; cursor:pointer; transition:color .2s}
+.pf-seg-option.active{color:#fff}
+.pf-seg-info{margin-top:10px; font-size:12px; color:#888; text-align:center}
+.pf-maxtime-wrap{display:none; margin-top:14px}
+.pf-maxtime-wrap.open{display:block}
+.pf-maxtime-label{font-size:13px; color:#444; margin-bottom:12px}
+.pf-maxtime-label b{color:#0C0243}
+.pf-range{width:100%; accent-color:#0C0243; cursor:pointer}
+.pf-range-ticks{display:flex; justify-content:space-between; font-size:10.5px; color:#999; margin-top:4px}
+.phone-filter-foot{flex-shrink:0; padding:12px 16px 16px; border-top:1px solid #eee}
+.pf-apply-btn{width:100%; height:46px; border:none; border-radius:12px; background:#0C0243; color:#fff; font-size:15px; font-weight:bold; font-family:Arial,sans-serif; cursor:pointer}
 .phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .2s ease; z-index:9; display:flex; flex-direction:column}
 .phone-sheet.open{transform:translateY(calc(100% - 132px))}
 .phone-sheet-handle-area{width:100%; padding:7px 0 5px; display:flex; justify-content:center; flex-shrink:0}
@@ -648,7 +712,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .map-areas{position:absolute; right:14px; top:14px; bottom:14px; width:264px; max-width:46%; z-index:6; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; overflow:hidden}
 .map-areas h4{padding:14px 16px 10px; font-size:14px; border-bottom:1px solid var(--line)}
 .map-areas .list{overflow:auto; padding:6px}
-.draw-corner{width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid #0C8A60; box-shadow:0 1px 3px rgba(0,0,0,.35); cursor:pointer}
+.draw-corner{width:14px; height:14px; border-radius:50%; background:#fff; border:2.5px solid #0C8A60; box-shadow:0 1px 3px rgba(0,0,0,.35); cursor:grab; transition:transform .1s}
+.draw-corner:hover{transform:scale(1.25)}
+.draw-corner:active{cursor:grabbing}
 .map-drawbar{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:8; display:none; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-lg); padding:8px 10px 8px 15px; max-width:calc(100% - 28px)}
 .map-drawbar.open{display:flex}
 .map-drawbar .di{font-size:13px; color:var(--ink-soft)}
@@ -1155,9 +1221,9 @@ body.vresizing *{cursor:ns-resize !important}
       <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
       <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
+      <button class="nav-item" data-panel="a-supabase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg>Supabase</button>
       <div class="grp">Verkkosivu</div>
       <button class="nav-item" data-panel="a-web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>Yleiskatsaus</button>
-      <button class="nav-item" data-panel="a-web-seo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Sisältö &amp; SEO</button>
       <div class="grp">Työkalut</div>
       <button class="nav-item" data-panel="a-tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Asetukset</button>
     </nav>
@@ -1827,6 +1893,33 @@ body.vresizing *{cursor:ns-resize !important}
   var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
   var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(TP_SUPABASE_URL,TP_SUPABASE_KEY):null;
   function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
+  /* Keskinappi-panorointi: MapLibre ei tue hiiren rullapainikkeella raahaamista
+     natiivisti, joten lisätään se canvasin tapahtumilla. Painike pohjassa raahaus
+     siirtää karttaa panBy:llä, ja oletusselaintoiminto (autoscroll) estetään. */
+  function tpEnableMiddleButtonPan(map){
+    if(!map || map.__midPan) return;
+    map.__midPan=true;
+    var c=map.getCanvasContainer();
+    var panning=false, lastX=0, lastY=0;
+    c.addEventListener('mousedown',function(e){
+      if(e.button!==1) return; /* 1 = keskinappi */
+      e.preventDefault();
+      panning=true; lastX=e.clientX; lastY=e.clientY;
+      c.style.cursor='grabbing';
+    });
+    window.addEventListener('mousemove',function(e){
+      if(!panning) return;
+      var dx=e.clientX-lastX, dy=e.clientY-lastY;
+      lastX=e.clientX; lastY=e.clientY;
+      map.panBy([-dx,-dy],{duration:0});
+    });
+    window.addEventListener('mouseup',function(e){
+      if(e.button!==1 || !panning) return;
+      panning=false; c.style.cursor='';
+    });
+    /* estä keskinapin autoscroll-kupla kartan päällä */
+    c.addEventListener('auxclick',function(e){ if(e.button===1) e.preventDefault(); });
+  }
   function tpLegacySource(areaType,parkingType,maxHours){
     if(parkingType==='Pysäköintihalli') return 'hel_halli';
     if(areaType==='Maksullinen pysäköinti'){var h=parseInt(maxHours,10); if(h===1)return 'hel_kertamaksu_1h'; if(h===2)return 'hel_kertamaksu_2h'; if(h===4)return 'hel_kertamaksu_4h'; return 'hel_maksullinen_ei_tunnusta';}
@@ -1882,6 +1975,7 @@ body.vresizing *{cursor:ns-resize !important}
       }
       ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
       if(typeof refreshEditAfterReload==='function') refreshEditAfterReload();
+      if(typeof window.__tpApplyFilters==='function') window.__tpApplyFilters();
       console.log('Admin-kartta: alueita',features.length);
     }catch(e){console.error('Alueiden lataus epäonnistui',e);}
   }
@@ -1961,7 +2055,7 @@ body.vresizing *{cursor:ns-resize !important}
     adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
     adminMap.addControl(new maplibregl.FullscreenControl(),'top-right');
-    adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpEnableMiddleButtonPan(adminMap); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
     adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
     var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
     function infoLayers(){ return INFO_LAYERS.filter(function(id){return adminMap.getLayer(id);}); }
@@ -2096,7 +2190,7 @@ body.vresizing *{cursor:ns-resize !important}
       +'<div class="map-el" id="admin-map"></div>'
       +'<div class="map-status" id="admin-map-status">Ladataan karttaa…</div>'
       +'<div class="map-tools">'
-      +tool('primary','plus','Lisää alue')
+      +tool('','plus','Lisää alue')
       +tool('','edit','Muokkaa')
       +tool('','zone','Pysäköinnin maksuvyöhykkeet')
       +'</div>'
@@ -2127,6 +2221,34 @@ body.vresizing *{cursor:ns-resize !important}
       +'<div class="phone-sheet-details" id="phone-sheet-details"></div>'
       +'</div>'
       +'<div class="phone-btn-container"><button class="phone-action-btn" id="phone-action-btn" type="button">Siirrä kursori pysäköintialueelle</button></div>'
+      +'<div class="phone-filter-overlay" id="phone-filter-overlay">'
+      +'<div class="phone-filter-head"><span>Suodata karttanäkymää</span><button class="phone-filter-close" id="phone-filter-close" type="button" aria-label="Sulje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
+      +'<div class="phone-filter-scroll">'
+      +'<div class="pf-group">'
+      +'<div class="pf-toggle-row"><span class="pf-toggle-label">Näytä ilmaiset pysäköintialueet</span>'
+      +'<label class="pf-switch"><input type="checkbox" id="pf-free-toggle"><span class="pf-slider"></span></label></div>'
+      +'<div class="pf-seg-wrap" id="pf-seg-wrap">'
+      +'<div class="pf-seg-track"><div class="pf-seg-thumb" id="pf-seg-thumb"></div>'
+      +'<button class="pf-seg-option" data-mode="paid">Maksulliset</button>'
+      +'<button class="pf-seg-option active" data-mode="all">Kaikki</button>'
+      +'<button class="pf-seg-option" data-mode="free">Ilmaiset</button>'
+      +'</div><div class="pf-seg-info" id="pf-seg-info">Näytetään kaikki pysäköintialueet kartalla</div>'
+      +'</div></div>'
+      +'<div class="pf-group">'
+      +'<div class="pf-toggle-row"><span class="pf-toggle-label">Rajaa alueita max. pysäköintiajan mukaan</span>'
+      +'<label class="pf-switch"><input type="checkbox" id="pf-maxtime-toggle"><span class="pf-slider"></span></label></div>'
+      +'<div class="pf-maxtime-wrap" id="pf-maxtime-wrap">'
+      +'<div class="pf-maxtime-label">Näytä alueet, joissa max. aika vähintään <b id="pf-maxtime-val">0 h</b></div>'
+      +'<input type="range" class="pf-range" id="pf-maxtime-range" min="0" max="24" step="1" value="0">'
+      +'<div class="pf-range-ticks"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h+</span></div>'
+      +'</div></div>'
+      +'<div class="pf-group">'
+      +'<div class="pf-toggle-row"><span class="pf-toggle-label">Näytä julkiset sähkölatauspisteet</span>'
+      +'<label class="pf-switch"><input type="checkbox" id="pf-ev-toggle" checked><span class="pf-slider"></span></label></div>'
+      +'</div>'
+      +'</div>'
+      +'<div class="phone-filter-foot"><button class="pf-apply-btn" id="pf-apply-btn" type="button">Valmis</button></div>'
+      +'</div>'
       +'</div>'
       +'</div>'
       +'<div class="map-vresizer" data-vresizer title="Vedä kartan korkeutta"></div>'
@@ -2167,9 +2289,28 @@ body.vresizing *{cursor:ns-resize !important}
       +'</tbody></table></div>';
     html+='</div>';
 
+    /* Supabase data browser */
+    html+='<div class="panel" data-id="a-supabase">';
+    html+=panelHead('Supabase','Tietokannan esikatselu suoraan hallintapaneelista');
+    html+='<div class="sb-bar">'
+      +'<div class="sb-tabs" id="sb-tabs">'
+      +'<button class="sb-tab active" data-table="parking_master">parking_master</button>'
+      +'<button class="sb-tab" data-table="parking_master_ilmaiset">parking_master_ilmaiset</button>'
+      +'<button class="sb-tab" data-table="payment_zones">payment_zones</button>'
+      +'</div>'
+      +'<button class="sb-refresh" id="sb-refresh" type="button">'+ic('refresh')+'Päivitä</button>'
+      +'</div>';
+    html+='<div class="sb-meta" id="sb-meta">Valitse taulu ja lataa rivit.</div>';
+    html+='<div class="sb-table-wrap" id="sb-table-wrap"><div class="sb-empty">Ladataan…</div></div>';
+    html+='</div>';
+
     /* website overview */
     html+='<div class="panel" data-id="a-web">';
-    html+=panelHead('Verkkosivu','totalparking.fi · kävijät, liikenne ja konversiot');
+    html+='<div class="panel-head web-head"><div class="ph-left"><h2>Verkkosivu</h2><p>totalparking.fi · kävijät, liikenne ja konversiot</p></div>'
+      +'<label class="web-demo-toggle"><span class="wdt-label">Näytä demo</span><span class="wdt-switch"><input type="checkbox" id="web-demo-switch"><span class="wdt-slider"></span></span></label>'
+      +'</div>';
+    html+='<div id="web-demo-wrap" class="web-demo-wrap"><div class="web-demo-frame"><iframe id="web-demo-iframe" title="Verkkosivun esikatselu" loading="lazy"></iframe></div><div class="web-demo-note">Tämä on sivuston julkinen demo upotettuna. Voit selata sitä tässä tai avata <a href="#" id="web-demo-open" target="_blank" rel="noopener">uuteen välilehteen</a>.</div></div>';
+    html+='<div id="web-stats-wrap">';
     html+='<div class="kpi-grid">'
       +kpi('b','globe','+6,4 %','up','1 284','Kävijät tänään')
       +kpi('c','people','+9,1 %','up','8 940','Kävijät / 7 pv')
@@ -2207,11 +2348,7 @@ body.vresizing *{cursor:ns-resize !important}
       +'<tr><td class="mono strong">/meista</td><td class="mono">3 120</td><td class="mono">1 m 34 s</td><td class="mono">44 %</td></tr>'
       +'<tr><td class="mono strong">/asiakaspalvelu</td><td class="mono">2 740</td><td class="mono">3 m 05 s</td><td class="mono">22 %</td></tr>'
       +'</tbody></table></div>';
-    html+='</div>';
-
-    /* website content & seo */
-    html+='<div class="panel" data-id="a-web-seo">';
-    html+=panelHead('Sisältö &amp; hakukoneet','Hakukonenäkyvyys, avainsanat ja viittaukset');
+    html+='<div class="seo-divider"><span>Sisältö &amp; hakukoneet</span></div>';
     html+='<div class="kpi-grid">'
       +kpi('b','search','+8,3 %','up','128 400','Näyttökerrat haussa')
       +kpi('c','globe','+11 %','up','9 840','Klikkaukset hausta')
@@ -2234,6 +2371,7 @@ body.vresizing *{cursor:ns-resize !important}
       +srcRow('muut',10,'')
       +'</div>';
     html+='</div>';
+    html+='</div>'; /* /web-stats-wrap */
     html+='</div>';
 
     /* tools */
@@ -2260,6 +2398,91 @@ body.vresizing *{cursor:ns-resize !important}
         var d=WEBDATA[b.getAttribute('data-gran')];
         wc.innerHTML=areaChart(d.v,'#021E45'); wx.innerHTML=webX(d.x);
       });
+    }
+
+    /* Verkkosivu: "Näytä demo" -kytkin — upottaa julkisen sivuston iframeen.
+       Iframe ladataan vasta kun kytkin laitetaan päälle (lazy), ja tilastot
+       piilotetaan demon ajaksi jotta näkymä pysyy selkeänä. */
+    var demoSwitch=main.querySelector('#web-demo-switch');
+    if(demoSwitch){
+      var demoWrap=main.querySelector('#web-demo-wrap');
+      var statsWrap=main.querySelector('#web-stats-wrap');
+      var demoIframe=main.querySelector('#web-demo-iframe');
+      var demoOpen=main.querySelector('#web-demo-open');
+      var DEMO_URL=location.pathname.split('#')[0];
+      if(demoOpen) demoOpen.href=DEMO_URL;
+      var demoLoaded=false;
+      demoSwitch.addEventListener('change',function(){
+        var on=demoSwitch.checked;
+        if(on && !demoLoaded){ demoIframe.src=DEMO_URL; demoLoaded=true; }
+        if(demoWrap) demoWrap.classList.toggle('open',on);
+        if(statsWrap) statsWrap.style.display=on?'none':'';
+      });
+    }
+
+    /* Supabase-selain: hakee rivit suoraan REST-rajapinnasta ja näyttää ne
+       taulukkona, jotta tietokantaa voi esikatsella avaamatta Supabasea. */
+    var sbTabs=main.querySelector('#sb-tabs');
+    if(sbTabs){
+      var sbWrap=main.querySelector('#sb-table-wrap');
+      var sbMeta=main.querySelector('#sb-meta');
+      var sbRefresh=main.querySelector('#sb-refresh');
+      var sbCurrent='parking_master';
+      var sbLoadedOnce=false;
+      function sbColCount(t){ return t==='payment_zones'?6:9; }
+      function sbFmt(v){
+        if(v===null||v===undefined) return '<span style="opacity:.4">null</span>';
+        if(typeof v==='object'){
+          var g=v.type?('{'+v.type+'}'):JSON.stringify(v);
+          return '<span class="sb-geom">'+g+'</span>';
+        }
+        var s=String(v);
+        if(s.length>120) s=s.slice(0,120)+'…';
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+      function sbRender(rows){
+        if(!rows || !rows.length){ sbWrap.innerHTML='<div class="sb-empty">Ei rivejä. Taulu voi olla tyhjä, tai sitä ei ole vielä luotu Supabaseen.</div>'; return; }
+        var cols=Object.keys(rows[0]);
+        var h='<table class="sb-table"><thead><tr>';
+        cols.forEach(function(c){ h+='<th>'+c+'</th>'; });
+        h+='</tr></thead><tbody>';
+        rows.forEach(function(r){
+          h+='<tr>';
+          cols.forEach(function(c){ var geom=(c==='polygon_coordinates'); h+='<td'+(geom?' class="sb-geom"':'')+'>'+sbFmt(r[c])+'</td>'; });
+          h+='</tr>';
+        });
+        h+='</tbody></table>';
+        sbWrap.innerHTML=h;
+      }
+      function sbLoad(table){
+        sbCurrent=table;
+        sbWrap.innerHTML='<div class="sb-empty">Ladataan…</div>';
+        sbMeta.textContent='GET '+table+' · haetaan…';
+        var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+        var t0=Date.now();
+        fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select=*&limit=200',{headers:headers}).then(function(res){
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          var cr=res.headers.get('content-range');
+          return res.json().then(function(rows){ return {rows:rows, cr:cr}; });
+        }).then(function(d){
+          var ms=Date.now()-t0;
+          sbMeta.textContent=d.rows.length+' riviä näytetään (max 200) · '+ms+' ms';
+          sbRender(d.rows);
+        }).catch(function(err){
+          sbWrap.innerHTML='<div class="sb-empty">Virhe haettaessa taulua <b>'+table+'</b>: '+((err&&err.message)||err)+'<br>Tarkista että taulu on olemassa ja että sillä on julkinen luku­oikeus (RLS).</div>';
+          sbMeta.textContent='Virhe.';
+        });
+      }
+      sbTabs.addEventListener('click',function(e){
+        var b=e.target.closest('.sb-tab'); if(!b)return;
+        $all('.sb-tab',sbTabs).forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        sbLoad(b.getAttribute('data-table'));
+      });
+      if(sbRefresh) sbRefresh.addEventListener('click',function(){ sbLoad(sbCurrent); });
+      /* lazy: lataa ensimmäisen kerran vasta kun Supabase-välilehti avataan */
+      var sbNavBtn=document.querySelector('#app-admin .nav-item[data-panel="a-supabase"]');
+      if(sbNavBtn) sbNavBtn.addEventListener('click',function(){ if(!sbLoadedOnce){ sbLoadedOnce=true; sbLoad('parking_master'); } });
     }
   }
 
@@ -2336,7 +2559,7 @@ body.vresizing *{cursor:ns-resize !important}
     html+=panelHead('Alueet kartalla','Lisää ja muokkaa alueita oman toimenkuvasi mukaan');
     html+='<div class="map-panel"><div class="map-el" id="staff-map"></div>'
       +'<div class="map-tools">'
-      +tool('primary','plus','Lisää alue')
+      +tool('','plus','Lisää alue')
       +tool('','edit','Muokkaa')
       +tool('','flag','Merkitse tarkistettavaksi')
       +'</div>'
@@ -2378,7 +2601,8 @@ body.vresizing *{cursor:ns-resize !important}
     compass:'<circle cx="12" cy="12" r="9"/><path d="m14.5 9.5-1.4 5-5 1.4 1.4-5 5-1.4Z"/>',
     download:'<path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/>',
     crosshair:'<circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
-    pin:'<path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.3"/>'
+    pin:'<path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.3"/>',
+    refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>'
   };
   function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
@@ -2519,10 +2743,26 @@ body.vresizing *{cursor:ns-resize !important}
       var lons=pts.map(function(p){return p[0];}), lats=pts.map(function(p){return p[1];});
       adminMap.fitBounds([[Math.min.apply(null,lons),Math.min.apply(null,lats)],[Math.max.apply(null,lons),Math.max.apply(null,lats)]],{padding:70, duration:animate?400:0, maxZoom:19});
     }
+    function rebuildCornerIndices(){
+      /* päivittää kunkin markerin tallennetun indeksin pts-taulukkoon
+         (tarvitaan kun kulmia poistetaan välistä) */
+      markers.forEach(function(m,i){ m.__idx=i; });
+    }
     function addCorner(ll){
+      var idx=pts.length;
       pts.push([ll.lng,ll.lat]);
       var el=document.createElement('div'); el.className='draw-corner';
-      markers.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(ll).addTo(adminMap));
+      var mk=new maplibregl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
+      mk.__idx=idx;
+      /* Raahaus: päivitä vastaava piste ja piirrä polygoni reaaliajassa.
+         MapLibren draggable-marker estää itse kartan panoroinnin raahauksen ajaksi. */
+      mk.on('drag',function(){
+        var p=mk.getLngLat();
+        pts[mk.__idx]=[p.lng,p.lat];
+        if(adminMap && adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData(geo());
+      });
+      mk.on('dragend',function(){ update(); });
+      markers.push(mk);
       ensureSrc(); update();
       if(drawFollow) fitToPoints(true);
     }
@@ -2530,6 +2770,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(!pts.length) return;
       pts.pop();
       var m=markers.pop(); if(m) m.remove();
+      rebuildCornerIndices();
       update();
       if(drawFollow) fitToPoints(true);
     }
@@ -2703,11 +2944,14 @@ body.vresizing *{cursor:ns-resize !important}
       try{ phoneMap.touchZoomRotate.disableRotation(); }catch(e){}
       phoneMap.on('load',function(){
         phoneMap.resize();
-        Promise.all([tpLoadAreas(phoneMap), tpLoadHallit(phoneMap), tpLoadCharging(phoneMap)]).then(function(){ checkPhoneCenter(); }).catch(function(){});
+        tpEnableMiddleButtonPan(phoneMap);
+        Promise.all([tpLoadAreas(phoneMap), tpLoadHallit(phoneMap), tpLoadCharging(phoneMap)]).then(function(){ tpApplyFiltersToMap(phoneMap); checkPhoneCenter(); }).catch(function(){});
         syncPhoneMap();
         checkPhoneCenter();
       });
+      wirePhoneFilter();
       phoneMap.on('move',function(){
+        syncAdminMap();
         if(_phoneRAF) return;
         _phoneRAF=requestAnimationFrame(function(){ _phoneRAF=null; checkPhoneCenter(); });
       });
@@ -2741,10 +2985,141 @@ body.vresizing *{cursor:ns-resize !important}
       sh.classList.add('open');
     }
     function closePhoneSheet(){ var sh=document.getElementById('phone-sheet'); if(sh) sh.classList.remove('open'); }
+    var _syncing=false;
     function syncPhoneMap(){
-      if(!phoneMap || !adminMap) return;
+      if(_syncing || !phoneMap || !adminMap) return;
+      _syncing=true;
       phoneMap.jumpTo({center:adminMap.getCenter(), zoom:adminMap.getZoom(), bearing:adminMap.getBearing(), pitch:adminMap.getPitch()});
+      _syncing=false;
     }
+    function syncAdminMap(){
+      if(_syncing || !phoneMap || !adminMap) return;
+      _syncing=true;
+      adminMap.jumpTo({center:phoneMap.getCenter(), zoom:phoneMap.getZoom(), bearing:phoneMap.getBearing(), pitch:phoneMap.getPitch()});
+      _syncing=false;
+    }
+
+    /* ---------- Karttasuodattimet (jaettu iso kartta + phone-mode) ----------
+       Peilaa sovelluksen suodatusnäkymää: ilmaiset/maksulliset/kaikki,
+       max-pysäköintiaika ja latauspisteiden näkyvyys. Suodattimet asetetaan
+       MapLibre-tasoille MOLEMMISSA kartoissa (adminMap + phoneMap), joten
+       muutos näkyy heti sekä isolla kartalla että puhelinnäkymässä. */
+    var TP_FILTERS={ freeOn:false, freeMode:'all', maxtimeOn:false, maxtimeMin:0, evOn:true };
+    var TP_FREE_SOURCES=['community','hel_ilmainen_pitka','hel_ilmainen_lyhyt','hel_sallittu_kiellon_ulkopuolella'];
+
+    function tpAreaFilterExpr(){
+      /* Palauttaa MapLibre-filtterin master-poly-tasoille nykytilan mukaan,
+         tai null jos kaikki näytetään. */
+      var clauses=['all'];
+      // Ilmaiset/maksulliset-rajaus
+      if(!TP_FILTERS.freeOn){
+        // ilmaisia ei näytetä lainkaan -> vain maksulliset
+        clauses.push(['!', ['in', ['get','source'], ['literal', TP_FREE_SOURCES]]]);
+      } else {
+        if(TP_FILTERS.freeMode==='paid'){
+          clauses.push(['!', ['in', ['get','source'], ['literal', TP_FREE_SOURCES]]]);
+        } else if(TP_FILTERS.freeMode==='free'){
+          clauses.push(['in', ['get','source'], ['literal', TP_FREE_SOURCES]]);
+        }
+        // 'all' -> ei lisärajausta
+      }
+      // Max-aika: näytä alueet joissa max_hours >= valittu minimi.
+      // max_hours on tallennettu propertyssä; tyhjä/0 katsotaan rajaamattomaksi
+      // (ne piilotetaan kun minimi > 0, koska aikaa ei tiedetä).
+      if(TP_FILTERS.maxtimeOn && TP_FILTERS.maxtimeMin>0){
+        clauses.push(['>=', ['to-number', ['get','max_hours'], 0], TP_FILTERS.maxtimeMin]);
+      }
+      return clauses.length>1 ? clauses : null;
+    }
+
+    function tpApplyFiltersToMap(map){
+      if(!map || !map.getLayer) return;
+      var expr=tpAreaFilterExpr();
+      ['master-poly-fill','master-poly-line'].forEach(function(id){
+        if(map.getLayer(id)) map.setFilter(id, expr);
+      });
+      var evVis=TP_FILTERS.evOn?'visible':'none';
+      if(map.getLayer('charging-icons')) map.setLayoutProperty('charging-icons','visibility',evVis);
+    }
+
+    function tpApplyFilters(){
+      tpApplyFiltersToMap(adminMap);
+      tpApplyFiltersToMap(phoneMap);
+      if(typeof checkPhoneCenter==='function' && phoneMap) requestAnimationFrame(checkPhoneCenter);
+    }
+    /* tehdään saataville myös tpLoadAreas-uudelleenlatauksille */
+    window.__tpApplyFilters=tpApplyFilters;
+
+    function tpFreeInfoText(mode){
+      if(mode==='paid') return 'Näytetään maksulliset pysäköintialueet kartalla';
+      if(mode==='free') return 'Näytetään tällä hetkellä ilmaiset pysäköintialueet kartalla';
+      return 'Näytetään kaikki pysäköintialueet kartalla';
+    }
+    function tpSetFreeMode(mode){
+      TP_FILTERS.freeMode=mode;
+      var idx = mode==='paid'?0 : mode==='free'?2 : 1;
+      var thumb=document.getElementById('pf-seg-thumb');
+      if(thumb){
+        thumb.style.transform='translateX('+(idx*100)+'%)';
+        if(mode==='paid') thumb.style.background='#1565C0';
+        else if(mode==='free') thumb.style.background='#7F1F89';
+        else thumb.style.background='linear-gradient(to right,#1565C0 50%,#7F1F89 50%)';
+      }
+      var opts=document.querySelectorAll('#pf-seg-wrap .pf-seg-option');
+      opts.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode')===mode); });
+      var info=document.getElementById('pf-seg-info');
+      if(info) info.textContent=tpFreeInfoText(mode);
+      tpApplyFilters();
+    }
+
+    function wirePhoneFilter(){
+      var overlay=document.getElementById('phone-filter-overlay');
+      var filterBtn=document.getElementById('phone-filter-btn');
+      var closeBtn=document.getElementById('phone-filter-close');
+      var applyBtn=document.getElementById('pf-apply-btn');
+      if(!overlay || overlay.__wired) return;
+      overlay.__wired=true;
+
+      function openFilter(){ overlay.classList.add('open'); }
+      function closeFilter(){ overlay.classList.remove('open'); }
+      if(filterBtn) filterBtn.addEventListener('click', openFilter);
+      if(closeBtn) closeBtn.addEventListener('click', closeFilter);
+      if(applyBtn) applyBtn.addEventListener('click', closeFilter);
+
+      var freeToggle=document.getElementById('pf-free-toggle');
+      var segWrap=document.getElementById('pf-seg-wrap');
+      if(freeToggle) freeToggle.addEventListener('change',function(){
+        TP_FILTERS.freeOn=freeToggle.checked;
+        if(segWrap) segWrap.classList.toggle('open', freeToggle.checked);
+        if(freeToggle.checked) tpSetFreeMode(TP_FILTERS.freeMode||'all');
+        else tpApplyFilters();
+      });
+      var segOpts=document.querySelectorAll('#pf-seg-wrap .pf-seg-option');
+      segOpts.forEach(function(b){ b.addEventListener('click',function(){ tpSetFreeMode(b.getAttribute('data-mode')); }); });
+
+      var maxToggle=document.getElementById('pf-maxtime-toggle');
+      var maxWrap=document.getElementById('pf-maxtime-wrap');
+      var maxRange=document.getElementById('pf-maxtime-range');
+      var maxVal=document.getElementById('pf-maxtime-val');
+      function fmtMax(v){ v=parseInt(v,10); return v>=24 ? '24 h+' : v+' h'; }
+      if(maxToggle) maxToggle.addEventListener('change',function(){
+        TP_FILTERS.maxtimeOn=maxToggle.checked;
+        if(maxWrap) maxWrap.classList.toggle('open', maxToggle.checked);
+        tpApplyFilters();
+      });
+      if(maxRange) maxRange.addEventListener('input',function(){
+        TP_FILTERS.maxtimeMin=parseInt(maxRange.value,10);
+        if(maxVal) maxVal.textContent=fmtMax(maxRange.value);
+        tpApplyFilters();
+      });
+
+      var evToggle=document.getElementById('pf-ev-toggle');
+      if(evToggle) evToggle.addEventListener('change',function(){
+        TP_FILTERS.evOn=evToggle.checked;
+        tpApplyFilters();
+      });
+    }
+
     var phoneModeOn=false, phoneSyncBound=false;
     function togglePhoneMode(btn){
       var pane=document.getElementById('phone-pane'); if(!pane) return;
