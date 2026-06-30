@@ -1893,6 +1893,19 @@ body.vresizing *{cursor:ns-resize !important}
   var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
   var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(TP_SUPABASE_URL,TP_SUPABASE_KEY):null;
   function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
+  /* Laskee geometrian keskipisteen (kaikkien kärkipisteiden keskiarvo).
+     Käytetään kun klikattu alue keskitetään kartan keskelle. */
+  function tpGeomCenter(geom, fallback){
+    try{
+      var sx=0, sy=0, n=0;
+      (function collect(a){
+        if(typeof a[0]==='number'){ sx+=a[0]; sy+=a[1]; n++; return; }
+        for(var i=0;i<a.length;i++) collect(a[i]);
+      })(geom.coordinates);
+      if(!n) return fallback;
+      return [sx/n, sy/n];
+    }catch(e){ return fallback; }
+  }
   /* Keskinappi-panorointi: MapLibre ei tue hiiren rullapainikkeella raahaamista
      natiivisti, joten lisätään se canvasin tapahtumilla. Painike pohjassa raahaus
      siirtää karttaa panBy:llä, ja oletusselaintoiminto (autoscroll) estetään. */
@@ -2067,8 +2080,19 @@ body.vresizing *{cursor:ns-resize !important}
       if(lid==='halli-icons'){ t=p.name||'Pysäköintihalli'; s='Pysäköintihalli'; }
       else if(lid==='charging-icons'){ t=p.name||p.title||p.operator||'Latauspiste'; s='Latauspiste'; }
       else { t=p.parking_type||'Pysäköintialue'; var ex=[]; if(p.area_type)ex.push(p.area_type); if(p.max_hours)ex.push('Maksimi '+p.max_hours+' h'); s=ex.join(' \u00b7 ')||'Pysäköintialue'; }
+      /* Keskitä klikattu kohde kartan keskelle. Alueille käytetään koko
+         tallennettua geometriaa (tarkka keskipiste myös jos osa alueesta on
+         näkymän ulkopuolella); halleille/latauspisteille kohteen koordinaatit. */
+      var ctr;
+      if(lid==='master-poly-fill'){
+        var full=MASTER_AREA_FEATURES.find(function(x){return String(x.properties.id)===String(p.id);});
+        ctr=full ? tpGeomCenter(full.geometry,[e.lngLat.lng,e.lngLat.lat]) : tpGeomCenter(f.geometry,[e.lngLat.lng,e.lngLat.lat]);
+      } else {
+        ctr=(f.geometry && f.geometry.type==='Point') ? f.geometry.coordinates : [e.lngLat.lng,e.lngLat.lat];
+      }
+      adminMap.easeTo({center:ctr, duration:500});
       var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+p.id+'</span>' : '';
-      new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'260px'}).setLngLat(e.lngLat).setHTML('<div class="pop-t">'+t+'</div><div class="pop-s">'+s+idline+'</div>').addTo(adminMap);
+      new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'260px'}).setLngLat(ctr).setHTML('<div class="pop-t">'+t+'</div><div class="pop-s">'+s+idline+'</div>').addTo(adminMap);
     });
     adminMap.on('mousemove',function(e){
       if(adminMap.__drawing || adminMap.__editActive) return;
