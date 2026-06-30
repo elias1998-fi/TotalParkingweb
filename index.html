@@ -495,7 +495,7 @@ body.app-open{overflow:auto}
 .app-menu-btn span{width:18px; height:2px; background:var(--ink); border-radius:2px}
 .app-body{display:flex; flex:1; min-height:0}
 .app-side{
-  width:236px; flex:0 0 236px; background:var(--card); border-right:1px solid var(--line); padding:16px 12px;
+  width:var(--side-w,236px); flex:0 0 var(--side-w,236px); background:var(--card); border-right:1px solid var(--line); padding:16px 12px;
   display:flex; flex-direction:column; gap:3px; position:sticky; top:60px; height:calc(100vh - 60px); overflow:auto;
 }
 .app-side .grp{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:14px 12px 6px; font-weight:700}
@@ -509,6 +509,11 @@ body.app-open{overflow:auto}
 .nav-item.active svg{opacity:1}
 .nav-item .badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--park); color:var(--brand); border-radius:var(--r-pill); padding:1px 7px}
 .nav-item.active .badge{background:rgba(255,255,255,.22)}
+.side-resizer{flex:0 0 6px; align-self:stretch; cursor:col-resize; position:relative; background:transparent; z-index:5; touch-action:none}
+.side-resizer::after{content:""; position:absolute; left:50%; top:50%; width:4px; height:34px; transform:translate(-50%,-50%); border-radius:3px; background:var(--line); opacity:0; transition:opacity .15s, background .15s}
+.side-resizer:hover::after, body.resizing .side-resizer::after{opacity:1; background:var(--brand)}
+body.resizing{cursor:col-resize; user-select:none}
+body.resizing *{cursor:col-resize !important}
 .app-main{flex:1; min-width:0; padding:24px; overflow:auto}
 .panel{display:none}
 .panel.active{display:block; animation:fade .35s var(--ease)}
@@ -606,6 +611,23 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .map-areas{position:absolute; right:14px; top:14px; bottom:14px; width:264px; max-width:46%; z-index:6; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; overflow:hidden}
 .map-areas h4{padding:14px 16px 10px; font-size:14px; border-bottom:1px solid var(--line)}
 .map-areas .list{overflow:auto; padding:6px}
+.layers-pop{position:absolute; left:14px; top:60px; z-index:7; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-lg); padding:9px; min-width:212px; display:none}
+.layers-pop.open{display:block}
+.layers-pop h5{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:3px 7px 7px; font-weight:700}
+.layers-pop label{display:flex; align-items:center; gap:10px; padding:8px 7px; font-size:14px; color:var(--ink); cursor:pointer; border-radius:8px}
+.layers-pop label:hover{background:var(--paper)}
+.layers-pop input{width:16px; height:16px; accent-color:var(--brand); cursor:pointer; flex:0 0 auto}
+.draw-corner{width:13px; height:13px; border-radius:50%; background:#fff; border:2.5px solid #0C8A60; box-shadow:0 1px 3px rgba(0,0,0,.35); cursor:pointer}
+.map-drawbar{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:8; display:none; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-lg); padding:8px 10px 8px 15px; max-width:calc(100% - 28px)}
+.map-drawbar.open{display:flex}
+.map-drawbar .di{font-size:13px; color:var(--ink-soft)}
+.map-drawbar .di b{color:var(--brand)}
+.drawbtn{border:0; border-radius:9px; padding:8px 14px; font-weight:600; font-size:13.5px; cursor:pointer; font-family:inherit; white-space:nowrap}
+.drawbtn.ok{background:var(--brand); color:#fff}
+.drawbtn.ok:disabled{opacity:.45; cursor:not-allowed}
+.drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
+.map-hint{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:7; display:none; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-lg); padding:9px 15px; font-size:13px; line-height:1.45; color:var(--ink-soft); max-width:calc(100% - 28px); text-align:center}
+.map-hint.open{display:block}
 .area-row{padding:11px 12px; border-radius:11px; cursor:pointer; transition:background .15s}
 .area-row:hover{background:var(--paper)}
 .area-row .ar-t{display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px}
@@ -665,6 +687,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 }
 @media(max-width:859px){
   .app-side{position:fixed; left:0; top:60px; bottom:0; z-index:40; transform:translateX(-105%); transition:transform .3s var(--ease); box-shadow:var(--shadow-lg)}
+  .side-resizer{display:none}
   body.side-open .app.active .app-side{transform:translateX(0)}
   .app-menu-btn{display:inline-flex}
   .map-areas{position:relative; right:auto; top:auto; bottom:auto; width:100%; max-width:none; margin-top:14px; height:auto; max-height:300px}
@@ -1067,8 +1090,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
     <nav class="app-side" data-app="admin">
       <div class="grp">Yleiskatsaus</div>
       <button class="nav-item active" data-panel="a-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</button>
-      <button class="nav-item" data-panel="a-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Kartta &amp; alueet</button>
       <div class="grp">Hallinta</div>
+      <button class="nav-item" data-panel="a-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Kartta &amp; alueet</button>
       <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
       <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
@@ -1078,6 +1101,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <div class="grp">Työkalut</div>
       <button class="nav-item" data-panel="a-tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>Asetukset</button>
     </nav>
+    <div class="side-resizer" data-resizer title="Vedä leventääksesi tai kaventaaksesi"></div>
     <main class="app-main" data-app-main="admin"></main>
   </div>
 </section>
@@ -1108,6 +1132,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <button class="nav-item" data-panel="b-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Yrityskäyttäjät</button>
       <button class="nav-item" data-panel="b-cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Kustannuspaikat</button>
     </nav>
+    <div class="side-resizer" data-resizer title="Vedä leventääksesi tai kaventaaksesi"></div>
     <main class="app-main" data-app-main="biz"></main>
   </div>
 </section>
@@ -1135,6 +1160,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       <button class="nav-item" data-panel="s-areas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/></svg>Alueet kartalla</button>
       <button class="nav-item" data-panel="s-approve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Hyväksynnät<span class="badge">2</span></button>
     </nav>
+    <div class="side-resizer" data-resizer title="Vedä leventääksesi tai kaventaaksesi"></div>
     <main class="app-main" data-app-main="staff"></main>
   </div>
 </section>
@@ -1955,7 +1981,6 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
       +tool('danger','trash','Poista')
       +tool('','layers','Tasot')
       +'</div>'
-      +'<div class="map-areas"><h4>Alueet ('+areas.length+')</h4><div class="list">'+areas.map(areaRow).join('')+'</div></div>'
       +'</div>';
     html+='</div>';
 
@@ -2203,7 +2228,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
   function kpi(c,icn,delta,dir,val,lab){return '<div class="kpi"><div class="k-top"><span class="k-ic '+c+'">'+ic(icn)+'</span>'+(delta?'<span class="delta '+dir+'">'+delta+'</span>':'')+'</div><div class="k-val">'+val+'</div><div class="k-lab">'+lab+'</div></div>';}
   function feed(col,t,s,time){return '<div class="feed-row"><span class="feed-dot" style="background:'+col+'"></span><div><div class="ft">'+t+'</div><div class="fs">'+s+'</div></div><time>'+time+'</time></div>';}
-  function tool(cls,icn,label){return '<button class="tool-btn '+cls+'">'+ic(icn)+label+'</button>';}
+  function tool(cls,icn,label){return '<button class="tool-btn '+cls+'" data-tool="'+icn+'" type="button">'+ic(icn)+label+'</button>';}
   function iconBtn(icn){return '<button class="icon-btn">'+ic(icn)+'</button>';}
   function areaRow(a){
     var col=a[1]==='park'?'var(--park)':'var(--charge)';
@@ -2237,6 +2262,166 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 
   /* ---------- init ---------- */
   initHeroMap();
+
+  /* ---------- Sidebar resize (drag handle) ---------- */
+  (function(){
+    var MINW=180, MAXW=380;
+    function allMaps(){ return [heroMap, adminMap, staffMap].filter(Boolean); }
+    function resizeMaps(){ allMaps().forEach(function(m){ try{ m.resize(); }catch(e){} }); }
+    function startResize(e){
+      e.preventDefault();
+      var sx=(e.touches? e.touches[0].clientX : e.clientX);
+      var cur=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--side-w'),10) || 236;
+      document.body.classList.add('resizing');
+      var raf=null;
+      function move(ev){
+        var x=(ev.touches? ev.touches[0].clientX : ev.clientX);
+        var w=Math.max(MINW, Math.min(MAXW, cur + (x - sx)));
+        document.documentElement.style.setProperty('--side-w', w+'px');
+        if(!raf){ raf=requestAnimationFrame(function(){ raf=null; resizeMaps(); }); }
+      }
+      function end(){
+        document.body.classList.remove('resizing');
+        document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',end);
+        document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end);
+        resizeMaps();
+      }
+      document.addEventListener('mousemove',move); document.addEventListener('mouseup',end);
+      document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',end);
+    }
+    $all('.side-resizer').forEach(function(r){
+      r.addEventListener('mousedown', startResize);
+      r.addEventListener('touchstart', startResize, {passive:false});
+    });
+  })();
+
+  /* ---------- Master map tools (Tasot, Lisää alue, ...) ---------- */
+  (function(){
+    var LAYERS=[
+      {key:'areas',label:'Pysäköintialueet',ids:['master-poly-fill','master-poly-line']},
+      {key:'halls',label:'Pysäköintihallit',ids:['halli-icons']},
+      {key:'charge',label:'Latauspisteet',ids:['charging-icons']}
+    ];
+    function panelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-panel'); }
+    var hintT=null;
+    function hint(msg,auto){
+      var panel=panelEl(); if(!panel)return;
+      var h=document.getElementById('map-hint');
+      if(!h){ h=document.createElement('div'); h.id='map-hint'; h.className='map-hint'; panel.appendChild(h); }
+      if(hintT){ clearTimeout(hintT); hintT=null; }
+      if(!msg){ h.classList.remove('open'); return; }
+      h.textContent=msg; h.classList.add('open');
+      if(auto){ hintT=setTimeout(function(){ h.classList.remove('open'); }, 5000); }
+    }
+    /* layers popup */
+    var pop=null;
+    function buildPop(panel){
+      pop=document.createElement('div'); pop.className='layers-pop'; pop.id='layers-pop';
+      var h='<h5>Karttatasot</h5>';
+      LAYERS.forEach(function(L){ h+='<label><input type="checkbox" data-layer="'+L.key+'" checked>'+L.label+'</label>'; });
+      pop.innerHTML=h; panel.appendChild(pop);
+      $all('input[data-layer]',pop).forEach(function(cb){
+        cb.addEventListener('change',function(){
+          var L=LAYERS.filter(function(x){return x.key===cb.getAttribute('data-layer');})[0];
+          if(!L||!adminMap)return;
+          L.ids.forEach(function(id){ if(adminMap.getLayer(id)) adminMap.setLayoutProperty(id,'visibility',cb.checked?'visible':'none'); });
+        });
+      });
+    }
+    function toggleLayers(btn){
+      var panel=panelEl(); if(!panel)return;
+      if(!pop || !panel.contains(pop)) buildPop(panel);
+      var open=pop.classList.toggle('open');
+      btn.classList.toggle('active',open);
+    }
+    function closeLayers(){ if(pop)pop.classList.remove('open'); var b=document.querySelector('#app-admin [data-tool="layers"]'); if(b)b.classList.remove('active'); }
+    /* draw "Lisää alue" */
+    var drawOn=false, pts=[], markers=[], clickH=null;
+    function geo(){
+      if(pts.length>=3) return {type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[pts.concat([pts[0]])]}};
+      if(pts.length>=2) return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:pts}};
+      return {type:'FeatureCollection',features:[]};
+    }
+    function ensureSrc(){
+      if(!adminMap.getSource('draw-src')){
+        adminMap.addSource('draw-src',{type:'geojson',data:geo()});
+        adminMap.addLayer({id:'draw-fill',type:'fill',source:'draw-src',paint:{'fill-color':'#13B17C','fill-opacity':0.22}});
+        adminMap.addLayer({id:'draw-line',type:'line',source:'draw-src',paint:{'line-color':'#0C8A60','line-width':2.5}});
+      }
+    }
+    function update(){
+      if(adminMap && adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData(geo());
+      var c=document.getElementById('draw-count'); if(c)c.textContent=pts.length;
+      var d=document.getElementById('draw-done'); if(d)d.disabled=pts.length<3;
+    }
+    function addCorner(ll){
+      pts.push([ll.lng,ll.lat]);
+      var el=document.createElement('div'); el.className='draw-corner';
+      markers.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(ll).addTo(adminMap));
+      ensureSrc(); update();
+    }
+    function clearShape(){ pts=[]; markers.forEach(function(m){m.remove();}); markers=[]; if(adminMap&&adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData({type:'FeatureCollection',features:[]}); }
+    function makeBar(panel){
+      var b=document.getElementById('map-drawbar');
+      if(!b){ b=document.createElement('div'); b.id='map-drawbar'; b.className='map-drawbar'; panel.appendChild(b); }
+      b.innerHTML='<span class="di">Klikkaa karttaa lis\u00e4t\u00e4ksesi kulmia \u00b7 <b id="draw-count">0</b> kpl</span><button class="drawbtn ok" id="draw-done" type="button" disabled>Valmis</button><button class="drawbtn ghost" id="draw-cancel" type="button">Peruuta</button>';
+      b.classList.add('open');
+      document.getElementById('draw-done').addEventListener('click', finishDraw);
+      document.getElementById('draw-cancel').addEventListener('click', cancelDraw);
+    }
+    function startDraw(btn){
+      if(!adminMap){ hint('Karttaa ei ole viel\u00e4 ladattu.',true); return; }
+      var panel=panelEl(); if(!panel)return;
+      clearModes(); btn.classList.add('active');
+      drawOn=true; clearShape();
+      adminMap.getCanvas().style.cursor='crosshair';
+      clickH=function(e){ addCorner(e.lngLat); };
+      adminMap.on('click', clickH);
+      makeBar(panel); update();
+      hint('Piirr\u00e4 alue klikkaamalla karttaa. V\u00e4hint\u00e4\u00e4n 3 kulmaa, sitten Valmis.');
+    }
+    function endDraw(){
+      drawOn=false;
+      if(adminMap){ adminMap.getCanvas().style.cursor=''; if(clickH){ adminMap.off('click', clickH); clickH=null; } }
+      var b=document.getElementById('map-drawbar'); if(b)b.classList.remove('open');
+      var pb=document.querySelector('#app-admin [data-tool="plus"]'); if(pb)pb.classList.remove('active');
+    }
+    function finishDraw(){
+      if(pts.length<3) return;
+      var n=pts.length;
+      markers.forEach(function(m){m.remove();}); markers=[];
+      endDraw();
+      hint('Alue piirretty ('+n+' kulmaa). T\u00e4m\u00e4 on demo \u2014 alueen tallennus tietokantaan lis\u00e4t\u00e4\u00e4n seuraavassa vaiheessa.', true);
+    }
+    function cancelDraw(){ endDraw(); clearShape(); hint(null); }
+    /* mode buttons */
+    var MSG={
+      edit:'Muokkaustila aktiivinen \u2014 alueen valinta ja muokkaus liitet\u00e4\u00e4n seuraavassa vaiheessa.',
+      check:'Hyv\u00e4ksynt\u00e4tila aktiivinen \u2014 odottavien alueiden hyv\u00e4ksynt\u00e4 liitet\u00e4\u00e4n seuraavassa vaiheessa.',
+      trash:'Poistotila aktiivinen \u2014 alueen valinta ja poisto liitet\u00e4\u00e4n seuraavassa vaiheessa.'
+    };
+    function clearModes(){
+      $all('#app-admin .map-tools .tool-btn').forEach(function(b){ if(b.getAttribute('data-tool')!=='layers') b.classList.remove('active'); });
+      if(drawOn) endDraw();
+      hint(null);
+    }
+    function toggleMode(btn,t){
+      var was=btn.classList.contains('active');
+      clearModes(); clearShape();
+      if(!was){ btn.classList.add('active'); hint(MSG[t]||null); }
+    }
+    /* delegated clicks */
+    document.addEventListener('click',function(e){
+      var btn=e.target.closest('.tool-btn'); if(!btn) return;
+      if(!btn.closest('#app-admin')) return;
+      var t=btn.getAttribute('data-tool'); e.preventDefault();
+      if(t==='layers'){ toggleLayers(btn); return; }
+      closeLayers();
+      if(t==='plus'){ if(drawOn) cancelDraw(); else startDraw(btn); return; }
+      if(t==='edit'||t==='check'||t==='trash'){ toggleMode(btn,t); return; }
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawOn) cancelDraw(); });
+  })();
 })();
 </script>
 </body>
