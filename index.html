@@ -607,11 +607,29 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .phone-pane.open{display:flex}
 .phone-frame{position:relative; width:auto; height:100%; max-width:100%; aspect-ratio:393/852; border-radius:40px; overflow:hidden; background:#000; border:6px solid #111; box-shadow:0 10px 30px rgba(0,0,0,.28)}
 .phone-notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:110px; height:22px; background:#000; border-radius:0 0 14px 14px; z-index:5}
+.phone-center-pin{position:absolute; top:50%; left:50%; transform:translate(-50%, calc(-100% + 5px)); z-index:7; pointer-events:none; width:24px; height:24px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.phone-center-pin svg{width:24px; height:24px; display:block}
 .phone-toggle-btn{position:absolute; top:54px; right:14px; z-index:7; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; padding:0}
 .phone-toggle-btn svg{width:18px; height:18px}
 .phone-toggle-btn:hover{background:var(--brand-50)}
 .phone-toggle-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
-.phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .2s ease; z-index:6; display:flex; flex-direction:column}
+.phone-menu-pill{position:absolute; top:12px; left:12px; z-index:11; background:#fff; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.2); width:38px; height:38px; overflow:hidden; transition:height .3s cubic-bezier(.25,.46,.45,.94)}
+.phone-menu-pill.expanded{height:200px}
+.phone-pill-btn{width:38px; height:38px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; z-index:1; padding:0}
+.phone-pill-btn svg{width:15px; height:15px}
+.phone-pill-btn#phone-profile-btn svg{width:16px; height:16px}
+.phone-pill-btn#phone-menu-btn svg{width:13px; height:13px}
+.phone-pill-ball{position:absolute; left:0; top:0; width:38px; height:38px; background:#0C0243; border-radius:50%; pointer-events:none; z-index:0; opacity:0; transition:opacity .3s}
+.phone-menu-pill.expanded .phone-pill-ball{opacity:1}
+#phone-menu-btn.active #phone-bl-top{transform:translateY(5px) rotate(45deg); transform-origin:12px 6px}
+#phone-menu-btn.active #phone-bl-mid{opacity:0}
+#phone-menu-btn.active #phone-bl-bot{transform:translateY(-5px) rotate(-45deg); transform-origin:12px 18px}
+#phone-bl-top, #phone-bl-mid, #phone-bl-bot{transition:transform .3s cubic-bezier(.4,0,.2,1), opacity .3s}
+.phone-location-btn{position:absolute; top:12px; right:12px; z-index:11; width:38px; height:38px; background:#fff; border:none; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.2); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0}
+.phone-location-btn svg{width:16px; height:16px}
+.phone-btn-container{position:absolute; left:0; right:0; bottom:0; z-index:12; background:#fff; padding:9px 12px 14px}
+.phone-action-btn{width:100%; height:42px; border:none; border-radius:999px; font-size:13px; font-weight:bold; font-family:Arial,sans-serif; color:#fff; background:#0C0243; cursor:pointer}
+.phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .2s ease; z-index:9; display:flex; flex-direction:column}
 .phone-sheet.open{transform:translateY(calc(100% - 132px))}
 .phone-sheet-handle-area{width:100%; padding:7px 0 5px; display:flex; justify-content:center; flex-shrink:0}
 .phone-sheet-handle{width:32px; height:4px; background:#ddd; border-radius:2px}
@@ -2088,6 +2106,16 @@ body.vresizing *{cursor:ns-resize !important}
       +'<div class="phone-frame">'
       +'<div class="phone-notch"></div>'
       +'<div class="map-el" id="phone-map"></div>'
+      +'<div class="phone-center-pin" id="phone-center-pin"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#0C0243"/><text x="12" y="11.2" text-anchor="middle" font-size="7" font-family="Arial" font-weight="bold" fill="white">P</text></svg></div>'
+      +'<div class="phone-menu-pill" id="phone-menu-pill">'
+      +'<div class="phone-pill-ball" id="phone-pill-ball"></div>'
+      +'<button class="phone-pill-btn" id="phone-menu-btn" type="button" aria-label="Valikko"><svg viewBox="0 0 24 24" fill="none" stroke="#0C0243" stroke-width="3.5" stroke-linecap="round"><line id="phone-bl-top" x1="2" y1="6" x2="22" y2="6"/><line id="phone-bl-mid" x1="2" y1="12" x2="22" y2="12"/><line id="phone-bl-bot" x1="2" y1="18" x2="22" y2="18"/></svg></button>'
+      +'<button class="phone-pill-btn" id="phone-profile-btn" type="button" aria-label="Profiili"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4 4-7 9-7s9 3 9 7"/></svg></button>'
+      +'<button class="phone-pill-btn" id="phone-plus-btn" type="button" aria-label="Lisää"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      +'<button class="phone-pill-btn" id="phone-filter-btn" type="button" aria-label="Suodata"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="3.5" x2="8" y2="8.5" stroke-width="3"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="16" y1="9.5" x2="16" y2="14.5" stroke-width="3"/><line x1="4" y1="18" x2="20" y2="18"/><line x1="10" y1="15.5" x2="10" y2="20.5" stroke-width="3"/></svg></button>'
+      +'<button class="phone-pill-btn" id="phone-search-btn" type="button" aria-label="Haku"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>'
+      +'</div>'
+      +'<button class="phone-location-btn" id="phone-location-btn" type="button" aria-label="Oma sijainti"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L22 22 L12 18 L2 22 Z" fill="#0C0243" transform="rotate(45 12 12)"/></svg></button>'
       +'<div class="phone-sheet" id="phone-sheet">'
       +'<div class="phone-sheet-handle-area"><div class="phone-sheet-handle"></div></div>'
       +'<div class="phone-sheet-summary">'
@@ -2098,6 +2126,7 @@ body.vresizing *{cursor:ns-resize !important}
       +'<hr class="phone-sheet-divider" id="phone-sheet-divider">'
       +'<div class="phone-sheet-details" id="phone-sheet-details"></div>'
       +'</div>'
+      +'<div class="phone-btn-container"><button class="phone-action-btn" id="phone-action-btn" type="button">Siirrä kursori pysäköintialueelle</button></div>'
       +'</div>'
       +'</div>'
       +'<div class="map-vresizer" data-vresizer title="Vedä kartan korkeutta"></div>'
@@ -2610,32 +2639,97 @@ body.vresizing *{cursor:ns-resize !important}
         hint('Maksuvy\u00f6hykkeiden lataus ep\u00e4onnistui \u2014 tarkista ett\u00e4 payment_zones-taulu on luotu Supabaseen.', true);
       });
     }
-    /* ---------- Puhelin-tila (synkronoitu esikatselu) ---------- */
+    /* ---------- Puhelin-tila (synkronoitu esikatselu) ----------
+       Peilaa sovelluksen omaa keskipiste-P-merkki-mekaniikkaa
+       (checkCenterHighlight): merkki pysyy ruudun keskellä, ja
+       kartan liikkuessa tunnistetaan jatkuvasti mikä kohde on sen
+       alla (1px tarkkuus + 6.5px tip-offset, kuten sovelluksessasi). */
+    var PHONE_DISC_SOURCES=['community','hel_ilmainen_pitka','hel_ilmainen_lyhyt','hel_sallittu_kiellon_ulkopuolella'];
+    function phoneIsDiscArea(p){
+      if(!p) return false;
+      if(p.area_type==='kiekko'||p.area_type==='ilmainen') return true;
+      var src=(p.source||'').toLowerCase();
+      return src.indexOf('ilmainen')!==-1 || src.indexOf('kiekko')!==-1 || PHONE_DISC_SOURCES.indexOf(p.source)!==-1;
+    }
+    function setPhoneAction(text,active){
+      var b=document.getElementById('phone-action-btn'); if(!b) return;
+      b.textContent=text; b.classList.toggle('active',!!active);
+    }
+    var _phoneRAF=null, phoneHoveredId=null;
+    function checkPhoneCenter(){
+      if(!phoneMap) return;
+      if(phoneMap.getZoom()<12){ closePhoneSheet(); setPhoneAction('Lähennä karttaa',false); phoneHoveredId=null; return; }
+      var c=phoneMap.project(phoneMap.getCenter()); c.y+=6.5;
+      var box=[[c.x-1,c.y-1],[c.x+1,c.y+1]];
+      if(phoneMap.getLayer('charging-icons')){
+        var ch=phoneMap.queryRenderedFeatures(box,{layers:['charging-icons']});
+        if(ch.length){
+          var cp=ch[0].properties||{};
+          if(phoneHoveredId!==('c'+cp.id)){ phoneHoveredId='c'+cp.id; openPhoneSheet(cp.name||cp.title||cp.operator||'Latauspiste','Latauspiste',cp.operator||'Helsingin kaupunki'); }
+          setPhoneAction('Lataa täällä',true);
+          return;
+        }
+      }
+      if(phoneMap.getLayer('halli-icons')){
+        var hh=phoneMap.queryRenderedFeatures(box,{layers:['halli-icons']});
+        if(hh.length){
+          var hp=hh[0].properties||{};
+          if(phoneHoveredId!==('h'+hp.id)){ phoneHoveredId='h'+hp.id; openPhoneSheet(hp.name||'Pysäköintihalli','Pysäköintihalli','Helsingin kaupunki'); }
+          setPhoneAction('Pysäköi täällä',true);
+          return;
+        }
+      }
+      if(phoneMap.getLayer('master-poly-fill')){
+        var pf=phoneMap.queryRenderedFeatures(box,{layers:['master-poly-fill']});
+        if(pf.length){
+          var p=pf[0].properties||{};
+          if(phoneHoveredId!==('p'+p.id)){
+            phoneHoveredId='p'+p.id;
+            var areaName=(p.area_name && p.area_name!=='')? p.area_name : (p.parking_type||'Pysäköintialue');
+            var maxSuffix=p.max_hours? ('  |  Max. '+p.max_hours+'h') : '';
+            var header=areaName+(/Max\./.test(areaName)? '' : maxSuffix);
+            openPhoneSheet(header, p.parking_type||'Pysäköintialue', 'Helsingin kaupunki');
+          }
+          setPhoneAction(phoneIsDiscArea(p)? 'Aseta elektroninen pysäköintikiekko' : 'Pysäköi tähän', true);
+          return;
+        }
+      }
+      if(phoneHoveredId!==null){ phoneHoveredId=null; closePhoneSheet(); }
+      setPhoneAction('Siirrä kursori pysäköintialueelle', false);
+    }
     function buildPhoneMap(){
       if(phoneMap || !TP_MAP_STYLE || !adminMap) return;
-      phoneMap=new maplibregl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, transformRequest:tpTransformRequest, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false, interactive:false});
+      phoneMap=new maplibregl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, transformRequest:tpTransformRequest, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false});
       try{ phoneMap.touchZoomRotate.disableRotation(); }catch(e){}
       phoneMap.on('load',function(){
         phoneMap.resize();
-        tpLoadAreas(phoneMap); tpLoadHallit(phoneMap); tpLoadCharging(phoneMap);
+        Promise.all([tpLoadAreas(phoneMap), tpLoadHallit(phoneMap), tpLoadCharging(phoneMap)]).then(function(){ checkPhoneCenter(); }).catch(function(){});
         syncPhoneMap();
+        checkPhoneCenter();
       });
-      var PHONE_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
-      function phoneLayers(){ return PHONE_LAYERS.filter(function(id){return phoneMap.getLayer(id);}); }
-      phoneMap.on('click',function(e){
-        var ls=phoneLayers();
-        var fs=ls.length? phoneMap.queryRenderedFeatures(e.point,{layers:ls}) : [];
-        if(!fs.length){ closePhoneSheet(); return; }
-        var f=fs[0], p=f.properties||{}, lid=f.layer.id, header, type, operator='Helsingin kaupunki';
-        if(lid==='halli-icons'){ header=p.name||'Pysäköintihalli'; type='Pysäköintihalli'; }
-        else if(lid==='charging-icons'){ header=p.name||p.title||p.operator||'Latauspiste'; type='Latauspiste'; operator=p.operator||operator; }
-        else {
-          var areaName=(p.area_name && p.area_name!=='')? p.area_name : (p.parking_type||'Pysäköintialue');
-          var maxSuffix = p.max_hours ? ('  |  Max. '+p.max_hours+'h') : '';
-          header = areaName + (/Max\./.test(areaName)? '' : maxSuffix);
-          type = p.parking_type || 'Pysäköintialue';
-        }
-        openPhoneSheet(header,type,operator);
+      phoneMap.on('move',function(){
+        if(_phoneRAF) return;
+        _phoneRAF=requestAnimationFrame(function(){ _phoneRAF=null; checkPhoneCenter(); });
+      });
+      /* Pillerivalikko: burger avaa/sulkee samalla tavalla kuin sovelluksessa
+         (pilleri 38px -> 200px, X-morph, navy "ball"). Alavalikon napit
+         (profiili/lisää/suodata/haku) eivät vaadi toiminnallisuutta. */
+      var mPill=document.getElementById('phone-menu-pill'), mBtn=document.getElementById('phone-menu-btn');
+      var menuOpen=false;
+      function closePhoneMenu(){ menuOpen=false; if(mPill)mPill.classList.remove('expanded'); if(mBtn)mBtn.classList.remove('active'); }
+      if(mBtn) mBtn.addEventListener('click',function(){
+        menuOpen=!menuOpen;
+        if(mPill)mPill.classList.toggle('expanded',menuOpen);
+        mBtn.classList.toggle('active',menuOpen);
+      });
+      phoneMap.on('dragstart',function(){ if(menuOpen) closePhoneMenu(); });
+      /* Sijaintini: oikeasti toimiva, käyttää selaimen paikannusta */
+      var locBtn=document.getElementById('phone-location-btn');
+      if(locBtn) locBtn.addEventListener('click',function(){
+        if(!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(function(pos){
+          if(phoneMap) phoneMap.flyTo({center:[pos.coords.longitude,pos.coords.latitude], zoom:16, duration:600});
+        }, function(){}, {enableHighAccuracy:true, timeout:8000});
       });
     }
     function openPhoneSheet(header,type,operator){
@@ -2660,7 +2754,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(phoneModeOn){
         buildPhoneMap();
         if(!phoneSyncBound && adminMap){ phoneSyncBound=true; adminMap.on('move', syncPhoneMap); }
-        setTimeout(function(){ if(adminMap)adminMap.resize(); if(phoneMap){ phoneMap.resize(); syncPhoneMap(); } }, 60);
+        setTimeout(function(){ if(adminMap)adminMap.resize(); if(phoneMap){ phoneMap.resize(); syncPhoneMap(); checkPhoneCenter(); } }, 60);
       } else {
         closePhoneSheet();
         setTimeout(function(){ if(adminMap)adminMap.resize(); }, 60);
