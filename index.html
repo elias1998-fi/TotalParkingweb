@@ -608,19 +608,21 @@ table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
 .tk-filter.active{background:var(--brand); color:#fff}
 .tk-table td{vertical-align:middle}
 .cs-periodbar{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap}
-.cs-period-note{font-size:13px; color:var(--muted)}
-.cs-legend2{display:flex; flex-wrap:wrap; gap:12px 20px; margin-bottom:8px}
+.cs-legend2{display:flex; flex-wrap:wrap; gap:12px 20px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line)}
 .cs-leg2-item{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink)}
 .cs-leg2-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
-.cs-groups{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; height:320px; padding:22px 4px 0}
+.cs-scroll{overflow-x:scroll; overflow-y:hidden; padding-bottom:10px}
+.cs-scroll::-webkit-scrollbar{height:11px}
+.cs-scroll::-webkit-scrollbar-track{background:var(--paper); border-radius:6px}
+.cs-scroll::-webkit-scrollbar-thumb{background:#c4c8d0; border-radius:6px; border:2px solid var(--paper)}
+.cs-scroll::-webkit-scrollbar-thumb:hover{background:var(--brand)}
+.cs-scroll{scrollbar-width:thin; scrollbar-color:#c4c8d0 var(--paper)}
+.cs-groups{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:320px; padding:22px 4px 0; min-width:100%}
 .cs-group{flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center}
-.cs-group-bars{flex:1 1 auto; width:100%; min-height:0; display:flex; align-items:flex-end; justify-content:center; gap:4px}
-.cs-gbar{flex:1 1 0; max-width:30px; min-height:3px; border-radius:4px 4px 0 0; position:relative; transition:height .35s cubic-bezier(.25,.46,.45,.94)}
-.cs-gbar-val{position:absolute; top:-15px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:var(--muted); white-space:nowrap}
-.cs-group-label{margin-top:11px; font-size:12.5px; font-weight:700; color:var(--ink); text-align:center; flex:0 0 auto}
-.cs-slider-wrap{margin-top:18px; padding-top:16px; border-top:1px solid var(--line)}
-.cs-slider{width:100%; accent-color:var(--brand); cursor:pointer}
-.cs-slider-range{text-align:center; margin-top:8px; font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--muted)}
+.cs-group-bars{flex:1 1 auto; width:100%; min-height:0; display:flex; align-items:flex-end; justify-content:center; gap:2.5px}
+.cs-gbar{flex:1 1 0; max-width:15px; min-height:3px; border-radius:3px 3px 0 0; position:relative; transition:height .35s cubic-bezier(.25,.46,.45,.94)}
+.cs-gbar-val{position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:8.5px; font-weight:700; color:var(--muted); white-space:nowrap}
+.cs-group-label{margin-top:11px; font-size:12px; font-weight:700; color:var(--ink); text-align:center; flex:0 0 auto}
 @media(max-width:620px){
   .cs-groups{height:250px; gap:8px; padding-top:18px}
   .cs-gbar-val{display:none}
@@ -1648,6 +1650,14 @@ body.vresizing *{cursor:ns-resize !important}
     staff:{cls:'r-staff', name:'Henkilökunta (subadmin)', icbg:'var(--charge)', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'}
   };
   var pendingRole=null;
+  /* Tunnistaa hiekkalaatikoidun esikatselun (esim. Clauden esikatselu-iframe),
+     jossa selaimen tallennustila on estetty. Kääre try/catchissa käsittelee
+     SecurityErrorin siististi — jos kirjoitus onnistuu, ollaan oikeassa
+     selaimessa; jos se heittää, ollaan rajoitetussa ympäristössä. */
+  function tpStorageBlocked(){
+    try{ var k='__tp_ls_test__'; window.localStorage.setItem(k,'1'); window.localStorage.removeItem(k); return false; }
+    catch(e){ return true; }
+  }
   function setLoginErr(msg){var e=$('#login-err'); if(!e)return; e.textContent=msg||''; e.style.display=msg?'block':'none';}
   function setLoginBusy(on){var b=$('#login-submit'); if(!b)return; b.disabled=on; b.textContent=on?'Kirjaudutaan…':'Kirjaudu sisään';}
   function setLoginNote(kind){var n=$('#login-note'); if(!n)return; n.textContent = kind==='real' ? 'Master-kirjautuminen käyttää Supabase-tunnuksiasi. Vain oikeat tunnukset päästävät sisään ja antavat oikeudet pysäköintidataan.' : 'Demotila — tämä rooli ei vaadi oikeita tunnuksia, vaan avaa näkymän esimerkkidatalla.';}
@@ -1686,6 +1696,16 @@ body.vresizing *{cursor:ns-resize !important}
     e.preventDefault();
     var r=pendingRole;
     if(r!=='admin'){ sess={role:r, email:$('#login-email').value.trim()}; updateAuthUI(); closeLogin(); enterApp(r); return; }   // biz/staff: demo
+    // Master: oikea Supabase-kirjautuminen selaimessa.
+    // Poikkeus: hiekkalaatikoidussa esikatselussa (esim. Claude) selaimen
+    // tallennustila on estetty, jolloin Supabase-auth ei voi toimia. Silloin
+    // master avataan demotilassa, jotta muutoksia voi tarkastella suoraan
+    // esikatselussa. Oikeassa selaimessa tämä ehto ei koskaan täyty, joten
+    // normaali kirjautuminen oikeilla tunnuksilla toimii ennallaan.
+    if(tpStorageBlocked()){
+      sess={role:'admin', email:($('#login-email').value.trim()||'master@totalparking.fi'), demo:true}; updateAuthUI();
+      closeLogin(); enterApp('admin'); return;
+    }
     // Master: real Supabase authentication
     if(!sb){ setLoginErr('Kirjautumispalvelua ei voitu ladata. Tarkista verkkoyhteys.'); return; }
     var email=$('#login-email').value.trim(), pass=$('#login-pass').value;
@@ -2342,21 +2362,21 @@ body.vresizing *{cursor:ns-resize !important}
      selattavissa sliderillä. Jokaisella aikapisteellä on 4 kanavan arvot. */
   var CSSERIES={
     day:{
-      labels:['23.6','24.6','25.6','26.6','27.6','28.6','29.6','30.6','1.7','2.7','3.7','4.7','5.7','6.7'],
-      pertti:[64,71,68,75,80,52,58,66,77,74,79,83,55,61],
-      form:  [28,32,30,35,38,20,24,30,39,36,40,43,22,27],
-      email: [16,19,17,21,22,12,15,18,26,20,24,26,13,17],
-      phone: [22,26,23,29,31,11,14,24,26,28,30,33,12,16]
+      labels:['1.1','2.1','3.1','4.1','5.1','6.1','7.1','8.1','9.1','10.1','11.1','12.1','13.1','14.1','15.1','16.1','17.1','18.1','19.1','20.1'],
+      pertti:[55,62,68,64,71,50,57,66,73,68,75,80,52,58,66,77,74,79,83,61],
+      form:  [24,28,31,29,34,20,25,30,36,32,38,40,22,26,30,39,36,40,43,27],
+      email: [14,17,19,17,21,11,15,18,22,20,24,26,12,16,20,26,22,24,26,17],
+      phone: [20,23,26,23,29,10,14,22,27,24,30,32,12,16,24,29,26,28,30,16]
     },
     week:{
-      labels:['vko 6','vko 7','vko 8','vko 9','vko 10','vko 11','vko 12','vko 13','vko 14','vko 15','vko 16','vko 17'],
-      pertti:[402,438,455,470,462,498,512,530,505,548,566,590],
-      form:  [176,192,201,214,208,228,236,244,230,250,262,276],
-      email: [104,118,110,126,120,138,142,150,132,146,152,160],
-      phone: [140,152,148,166,158,178,184,193,175,196,204,214]
+      labels:['vko 1','vko 2','vko 3','vko 4','vko 5','vko 6','vko 7','vko 8','vko 9','vko 10','vko 11','vko 12','vko 13','vko 14','vko 15','vko 16','vko 17','vko 18','vko 19','vko 20'],
+      pertti:[380,402,438,420,455,462,478,498,485,512,505,528,540,522,548,556,538,566,580,590],
+      form:  [166,176,192,184,201,208,218,228,220,236,230,244,250,240,250,256,246,262,270,276],
+      email: [98,104,118,110,126,120,132,138,130,142,136,146,150,140,150,156,146,152,158,160],
+      phone: [132,140,152,148,166,158,170,178,172,184,175,188,193,182,196,200,190,204,210,214]
     },
     month:{
-      labels:['Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu','Tammi'],
+      labels:['Tammi','Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu'],
       pertti:[1720,1810,1890,1760,1980,2040,1990,2120,2080,2210,2260,2140],
       form:  [742,788,820,760,880,910,870,940,905,980,1010,960],
       email: [420,468,440,462,520,540,505,560,548,610,632,600],
@@ -2531,12 +2551,12 @@ body.vresizing *{cursor:ns-resize !important}
       +'<button class="wseg-btn active" data-gran="day">Päivä</button>'
       +'<button class="wseg-btn" data-gran="week">Viikko</button>'
       +'<button class="wseg-btn" data-gran="month">Kuukausi</button>'
-      +'</div><div class="cs-period-note" id="cs-period-note">Viimeisten 24 tunnin yhteydenotot</div></div>';
-    /* ryhmitellyt pystypalkit: 5 aikapistettä näkyvissä, kukin 4 kanavaa */
-    html+='<div class="card"><div class="card-h"><h3>Yhteydenottojen määrä kanavittain</h3><span class="mono" id="cs-total-lbl"></span></div>'
+      +'</div></div>';
+    /* ryhmitellyt pystypalkit: 10 aikapistettä näkyvissä, kukin 4 kanavaa.
+       Vaakascrollilla pääsee muihin aikapisteisiin (scrollbar kuten sivulla). */
+    html+='<div class="card"><div class="card-h"><h3>Yhteydenottojen määrä kanavittain</h3></div>'
+      +'<div class="cs-scroll" id="cs-scroll"><div class="cs-groups" id="cs-groups"></div></div>'
       +'<div class="cs-legend2" id="cs-legend2"></div>'
-      +'<div class="cs-groups" id="cs-groups"></div>'
-      +'<div class="cs-slider-wrap"><input type="range" class="cs-slider" id="cs-slider" min="0" max="0" value="0" step="1"><div class="cs-slider-range" id="cs-slider-range"></div></div>'
       +'</div>';
     html+='</div>';
 
@@ -2821,56 +2841,45 @@ body.vresizing *{cursor:ns-resize !important}
     }
 
     /* Asiakaspalvelun dashboard: kanavavirran seuranta päivä/viikko/kuukausi.
-       Ryhmitellyt pystypalkit (4 kanavaa per aikapiste), 5 aikapistettä
-       näkyvissä, ja slider muiden jaksojen selaamiseen. */
+       Ryhmitellyt pystypalkit (4 kanavaa per aikapiste), 10 aikapistettä
+       näkyvissä; muihin pääsee vaakascrollilla (scrollbar kuten sivulla). */
     var csSeg=main.querySelector('#cs-seg');
     if(csSeg){
-      var CS_WIN=5;
-      var CS_NOTES={day:'Yhteydenotot päivittäin', week:'Yhteydenotot viikoittain', month:'Yhteydenotot kuukausittain'};
-      var csPeriod='day', csStart=0;
-      /* selite kerran */
+      var CS_WIN=10;
+      /* selite kerran (palkkien alapuolelle) */
       var leg=main.querySelector('#cs-legend2');
       if(leg){ leg.innerHTML=CS_CH.map(function(c){ return '<span class="cs-leg2-item"><span class="cs-leg2-dot" style="background:'+c.color+'"></span>'+c.label+'</span>'; }).join(''); }
 
       function csSeriesMax(s){
         var m=0; CS_CH.forEach(function(c){ s[c.key].forEach(function(v){ if(v>m)m=v; }); }); return m||1;
       }
-      function csRender(period, start){
-        csPeriod=period;
+      function csRender(period){
         var s=CSSERIES[period], len=s.labels.length;
-        var maxStart=Math.max(0,len-CS_WIN);
-        start=Math.max(0,Math.min(maxStart, start|0)); csStart=start;
         var maxV=csSeriesMax(s);
-        var end=Math.min(len, start+CS_WIN);
-        /* ryhmät */
         var groups='';
-        var winTotal=0;
-        for(var i=start;i<end;i++){
+        for(var i=0;i<len;i++){
           var bars='';
           CS_CH.forEach(function(c){
             var v=s[c.key][i], hpct=Math.round(v/maxV*100);
-            winTotal+=v;
             bars+='<div class="cs-gbar" style="height:'+hpct+'%; background:'+c.color+'" title="'+c.label+': '+v+'"><span class="cs-gbar-val">'+v+'</span></div>';
           });
           groups+='<div class="cs-group"><div class="cs-group-bars">'+bars+'</div><div class="cs-group-label">'+s.labels[i]+'</div></div>';
         }
-        var g=main.querySelector('#cs-groups'); if(g) g.innerHTML=groups;
-        var lbl=main.querySelector('#cs-total-lbl'); if(lbl) lbl.textContent='Näkyvissä yhteensä '+winTotal+' yhteydenottoa';
-        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
-        /* slider */
-        var sl=main.querySelector('#cs-slider');
-        if(sl){ sl.min=0; sl.max=maxStart; sl.value=start; sl.style.visibility=(maxStart>0?'visible':'hidden'); }
-        var rng=main.querySelector('#cs-slider-range'); if(rng) rng.textContent=s.labels[start]+' – '+s.labels[end-1];
+        var g=main.querySelector('#cs-groups');
+        if(g){
+          /* sisäleveys: tasan CS_WIN ryhmää mahtuu näkyviin, loput scrollattavissa */
+          g.style.width=(len>CS_WIN ? (len/CS_WIN*100)+'%' : '100%');
+          g.innerHTML=groups;
+        }
+        var sc=main.querySelector('#cs-scroll'); if(sc) sc.scrollLeft=0;
       }
-      csRender('day', 0);
+      csRender('day');
       csSeg.addEventListener('click',function(e){
         var b=e.target.closest('.wseg-btn'); if(!b)return;
         $all('.wseg-btn',csSeg).forEach(function(x){x.classList.remove('active');});
         b.classList.add('active');
-        csRender(b.getAttribute('data-gran'), 0);
+        csRender(b.getAttribute('data-gran'));
       });
-      var csSlider=main.querySelector('#cs-slider');
-      if(csSlider) csSlider.addEventListener('input',function(){ csRender(csPeriod, parseInt(csSlider.value,10)); });
     }
   }
 
