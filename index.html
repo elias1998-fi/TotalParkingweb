@@ -734,6 +734,35 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .tbl-users::-webkit-scrollbar-thumb{background:#c4c8d0; border-radius:7px; border:3px solid var(--paper)}
 .tbl-users::-webkit-scrollbar-thumb:hover{background:var(--brand)}
 .tbl-users{scrollbar-width:thin; scrollbar-color:#c4c8d0 var(--paper)}
+/* haku-kenttä paneelin yläkulmassa */
+.usr-search{display:inline-flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-pill); padding:9px 15px; min-width:300px}
+.usr-search svg{width:16px; height:16px; color:var(--muted); flex:0 0 auto}
+.usr-search input{border:none; background:none; outline:none; font-size:14px; color:var(--ink); width:100%; font-family:inherit}
+.usr-search input::placeholder{color:var(--muted)}
+.usr-empty{padding:26px; text-align:center; color:var(--muted); font-size:14px; margin-top:10px}
+.u-row.hidden,.u-detail.hidden,.usr-empty.hidden{display:none}
+/* laajennus-chevron */
+.u-expand svg{transition:transform .2s ease}
+.u-expand.open{background:var(--brand-50); color:var(--brand); border-color:var(--brand-100)}
+.u-expand.open svg{transform:rotate(180deg)}
+/* laajennettu lisätietorivi (nollaa sticky-sarakkeen säännöt colspan-solulta) */
+.tbl-users .u-detail>td{position:static; right:auto; width:auto; min-width:0; box-shadow:none; padding:0; background:var(--paper); border-bottom:1px solid var(--line)}
+.tbl-users .u-detail:hover>td{background:var(--paper)}
+.u-detail-inner{position:sticky; left:0; padding:18px 22px; max-width:calc(100vw - 360px)}
+.wf-head{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:14px}
+.wf-list{position:relative; padding-left:6px}
+.wf-item{position:relative; display:flex; gap:14px; padding:0 0 16px 20px; border-left:2px solid var(--line)}
+.wf-item:last-child{padding-bottom:2px; border-left-color:transparent}
+.wf-dot{position:absolute; left:-7px; top:2px; width:12px; height:12px; border-radius:50%; background:var(--muted); box-shadow:0 0 0 3px var(--paper)}
+.wf-ok .wf-dot{background:var(--charge)}
+.wf-warn .wf-dot{background:var(--amber)}
+.wf-err .wf-dot{background:#E74C3C}
+.wf-mute .wf-dot{background:var(--muted)}
+.wf-body{display:flex; flex-direction:column; gap:1px}
+.wf-time{font-size:12px; color:var(--muted)}
+.wf-title{font-size:14px; font-weight:600; color:var(--ink)}
+.wf-err .wf-title{color:#C0392B}
+.wf-sub{font-size:13px; color:var(--ink-soft)}
 
 /* admin map panel */
 .map-panel{position:relative; display:flex; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
@@ -2619,10 +2648,13 @@ body.vresizing *{cursor:ns-resize !important}
 
     /* users */
     html+='<div class="panel" data-id="a-users">';
-    html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
-    html+='<div class="tbl-wrap tbl-users"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Viimeksi aktiivinen</th><th></th></tr></thead><tbody>';
-    users.forEach(function(u){
-      html+='<tr>'
+    html+=panelHead('Käyttäjät','Sovelluksen yksityisasiakkaat','<div class="usr-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="users-search" placeholder="Hae nimellä, ID:llä tai puhelimella…" autocomplete="off" spellcheck="false"></div>');
+    html+='<div class="tbl-wrap tbl-users"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Viimeksi aktiivinen</th><th></th></tr></thead><tbody id="users-body">';
+    /* vain yksityishenkilöt (yritykset näkyvät Yritykset-näkymässä) */
+    var uIndividuals=users.filter(function(u){ return u[2]==='Kuluttaja'; });
+    uIndividuals.forEach(function(u,i){
+      var searchKey=(u[0]+' '+u[1]+' '+u[6]+' '+u[7]+' '+u[8]).toLowerCase();
+      html+='<tr class="u-row" data-uidx="'+i+'" data-search="'+searchKey.replace(/"/g,'')+'">'
         +'<td>'+pill(u[3],u[4])+'</td>'
         +'<td class="mono strong">'+u[6]+'</td>'
         +'<td class="mono">'+u[1]+'</td>'
@@ -2631,10 +2663,12 @@ body.vresizing *{cursor:ns-resize !important}
         +'<td class="mono">'+u[8]+'</td>'
         +'<td class="mono">'+u[9]+'</td>'
         +'<td class="mono">'+u[5]+'</td>'
-        +'<td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td>'
+        +'<td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'<button class="icon-btn u-expand" data-uidx="'+i+'" aria-label="Näytä lisätiedot" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></span></td>'
         +'</tr>';
+      html+='<tr class="u-detail hidden" data-uidx="'+i+'"><td colspan="9"><div class="u-detail-inner">'+userWorkflow(u)+'</div></td></tr>';
     });
     html+='</tbody></table></div>';
+    html+='<div class="usr-empty hidden" id="users-empty">Ei hakua vastaavia asiakkaita.</div>';
     html+='</div>';
 
     /* payments */
@@ -3119,6 +3153,36 @@ body.vresizing *{cursor:ns-resize !important}
       });
     }
 
+    /* Käyttäjät: laajennettava rivi (chevron) + haku (nimi/ID/puhelin/email). */
+    var usersBody=main.querySelector('#users-body');
+    if(usersBody){
+      usersBody.addEventListener('click',function(e){
+        var btn=e.target.closest('.u-expand'); if(!btn)return;
+        var idx=btn.getAttribute('data-uidx');
+        var det=usersBody.querySelector('.u-detail[data-uidx="'+idx+'"]');
+        if(!det)return;
+        var open=det.classList.toggle('hidden')===false;
+        btn.classList.toggle('open',open);
+        btn.setAttribute('aria-expanded',open?'true':'false');
+      });
+      var uSearch=main.querySelector('#users-search');
+      var uEmpty=main.querySelector('#users-empty');
+      if(uSearch) uSearch.addEventListener('input',function(){
+        var q=(uSearch.value||'').trim().toLowerCase();
+        var shown=0;
+        $all('.u-row',usersBody).forEach(function(row){
+          var idx=row.getAttribute('data-uidx');
+          var match=!q || (row.getAttribute('data-search')||'').indexOf(q)>=0;
+          row.classList.toggle('hidden',!match);
+          if(match) shown++;
+          /* piilota myös laajennettu lisätietorivi jos rivi ei täsmää */
+          var det=usersBody.querySelector('.u-detail[data-uidx="'+idx+'"]');
+          if(det && !match){ det.classList.add('hidden'); var b=row.querySelector('.u-expand'); if(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); } }
+        });
+        if(uEmpty) uEmpty.classList.toggle('hidden', shown>0);
+      });
+    }
+
     /* Asiakaspalvelun dashboard: kanavavirran seuranta päivä/viikko/kuukausi.
        Ryhmitellyt pystypalkit (4 kanavaa per aikapiste), 10 aikapistettä
        näkyvissä; muihin pääsee vaakascrollilla (scrollbar kuten sivulla). */
@@ -3288,6 +3352,38 @@ body.vresizing *{cursor:ns-resize !important}
   function feed(col,t,s,time){return '<div class="feed-row"><span class="feed-dot" style="background:'+col+'"></span><div><div class="ft">'+t+'</div><div class="fs">'+s+'</div></div><time>'+time+'</time></div>';}
   function tool(cls,icn,label){return '<button class="tool-btn '+cls+'" data-tool="'+icn+'" type="button">'+ic(icn)+label+'</button>';}
   function iconBtn(icn){return '<button class="icon-btn">'+ic(icn)+'</button>';}
+  /* Asiakkaan työnkulku/tapahtumahistoria laajennettavaan riviin. Sisältö
+     riippuu tilistä: jäädytetty näyttää mihin jäädytys johti, kesken
+     vahvistusketjun, aktiivinen viimeisimmät tapahtumat. (demodataa) */
+  function userWorkflow(u){
+    var status=u[3], rows;
+    if(status==='mute'){ /* Jäädytetty */
+      rows=[
+        ['ok','2026-01-10 08:14','Pysäköinti aloitettu','Kamppi · Vyöhyke 1'],
+        ['err','2026-01-10 10:02','Pysäköinnin maksu epäonnistui','Tilillä ei katetta · kortti •••• 0087'],
+        ['warn','2026-01-10 10:05','Muistutusviesti lähetetty','Sähköposti + push-ilmoitus maksun päivittämisestä'],
+        ['err','2026-01-11 09:30','Automaattinen uudelleenveloitus epäonnistui','Toinen yritys — edelleen ei katetta'],
+        ['mute','2026-01-13 18:03','Tili jäädytetty automaattisesti','Avoin saldo 4,80 € · odottaa maksua']
+      ];
+    } else if(status==='warn'){ /* Kesken */
+      rows=[
+        ['ok',u[9],'Tili luotu','Rekisteröinti sovelluksessa'],
+        ['warn',u[9],'Vahvistussähköposti lähetetty','Osoitteeseen '+u[1]],
+        ['mute','—','Odottaa sähköpostin vahvistusta','Tili aktivoituu vahvistuksen jälkeen']
+      ];
+    } else { /* Aktiivinen */
+      rows=[
+        ['ok',u[9],'Tili luotu','Rekisteröinti sovelluksessa'],
+        ['ok','2026-01-08 12:20','Maksutapa lisätty','Apple Pay'],
+        ['ok',u[5],'Viimeisin pysäköinti','Maksu onnistui']
+      ];
+    }
+    var head='<div class="wf-head">Tilin tapahtumat'+(status==='mute'?' · jäädytyksen syy':'')+'</div>';
+    var items=rows.map(function(r){
+      return '<div class="wf-item wf-'+r[0]+'"><span class="wf-dot"></span><div class="wf-body"><div class="wf-time mono">'+r[1]+'</div><div class="wf-title">'+r[2]+'</div><div class="wf-sub">'+r[3]+'</div></div></div>';
+    }).join('');
+    return head+'<div class="wf-list">'+items+'</div>';
+  }
   function areaRow(a){
     var col=a[1]==='park'?'var(--park)':'var(--charge)';
     var st=a[3]==='ok'?pill('ok','Aktiivinen'):a[3]==='warn'?pill('warn','Odottaa'):pill('mute','Luonnos');
