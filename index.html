@@ -2399,25 +2399,60 @@ body.vresizing *{cursor:ns-resize !important}
     /* overview */
     html+='<div class="panel active" data-id="a-overview">';
     html+=panelHead('Dashboard','Yrityksen keskeiset mittarit · viimeiset 24 h');
+
+    /* --- Sovelluksen käyttö --- */
+    html+='<div class="seo-divider"><span>Sovelluksen käyttö</span></div>';
     html+='<div class="kpi-grid">'
       +kpi('b','people','+8,2 %','up','18 420','Aktiiviset käyttäjät')
       +kpi('p','park','+12 %','up','3 184','Pysäköintitapahtumat tänään')
-      +kpi('b','euro','+5,4 %','up','42 600 €','Toistuva liikevaihto (MRR)')
       +kpi('c','bolt','+19 %','up','612','Latausistunnot tänään')
+      +kpi('b','clock','−3 %','down','14 min','Keskim. pysäköinnin kesto')
       +'</div>';
     html+='<div class="cards-2">';
-    html+='<div class="card"><div class="card-h"><h3>Liikevaihto · 6 kk</h3><span class="link">k€</span></div><div class="chart-wrap">'+barChart([28,31,33,36,39,43],'#021E45')+'</div><div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
-    html+='<div class="card"><div class="card-h"><h3>Viimeisin toiminta</h3></div><div class="feed">'
-      +feed('var(--charge)','Latausistunto käynnistyi','Kallio CCS · Tampereen Sähkö','3 min')
-      +feed('var(--park)','Pysäköinti aloitettu','Kamppi P-halli · Aino K.','6 min')
-      +feed('var(--amber)','Uusi alue odottaa hyväksyntää','Hervanta keskus · Tampere','18 min')
-      +feed('var(--brand)','Uusi yrityskäyttäjä','Logiteam Oy','41 min')
-      +feed('var(--charge)','Maksu onnistui','18,90 € · Lasku','58 min')
-      +'</div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Pysäköintitapahtumat · 7 pv</h3><span class="link">kpl</span></div><div class="chart-wrap">'+barChart([2680,2840,3010,2760,3184,3320,2980],'#4A90D9')+'</div><div class="chart-x"><span>Ma</span><span>Ti</span><span>Ke</span><span>To</span><span>Pe</span><span>La</span><span>Su</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Käyttö kaupungeittain</h3></div>'
+      +srcRow('Helsinki',58,'')
+      +srcRow('Tampere',22,'beige')
+      +srcRow('Turku',12,'yellow')
+      +srcRow('Muut',8,'')
+      +'</div>';
     html+='</div>';
-    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tapahtuma</th><th>Aika</th><th>Käyttäjä</th><th>Summa</th><th>Tapa</th><th>Tila</th></tr></thead><tbody>';
-    tx.slice(0,4).forEach(function(r){html+='<tr><td class="mono strong">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="strong">'+r[3]+'</td><td>'+r[4]+'</td><td>'+pill(r[5],r[6])+'</td></tr>';});
-    html+='</tbody></table></div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Latausistunnot · 7 pv</h3><span class="link">kpl</span></div><div class="chart-wrap">'+barChart([520,548,505,560,612,640,590],'#13B17C')+'</div><div class="chart-x"><span>Ma</span><span>Ti</span><span>Ke</span><span>To</span><span>Pe</span><span>La</span><span>Su</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Käyttäjät</h3></div>'
+      +goalRow('people','Aktiiviset käyttäjät','Viimeiset 30 pv','18 420')
+      +goalRow('park','Uudet rekisteröinnit','Tässä kuussa','1 240')
+      +goalRow('bolt','Sovelluslataukset','iOS + web','3 860')
+      +goalRow('globe','Yrityskäyttäjät','Aktiiviset sopimukset','86')
+      +'</div>';
+    html+='</div>';
+
+    /* --- Talous --- */
+    html+='<div class="seo-divider"><span>Talous</span></div>';
+    html+='<div class="kpi-grid">'
+      +kpi('b','euro','+9,3 %','up','128 400 €','Liikevaihto · tässä kuussa')
+      +kpi('c','euro','+5,4 %','up','42 600 €','Toistuva liikevaihto (MRR)')
+      +kpi('p','card','+2,1 %','up','4,12 €','Keskim. tapahtuman arvo')
+      +kpi('b','people','−0,4 %','down','2,8 %','Asiakaspoistuma (churn)')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Liikevaihto · 6 kk</h3><span class="link">k€</span></div><div class="chart-wrap">'+barChart([98,104,112,118,121,128],'#021E45')+'</div><div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Toistuva liikevaihto (MRR) · 6 kk</h3><span class="link">k€</span></div><div class="chart-wrap">'+areaChart([33,35,37,39,41,42.6],'#13B17C')+'</div><div class="chart-x"><span>Tam</span><span>Hel</span><span>Maa</span><span>Huh</span><span>Tou</span><span>Kes</span></div></div>';
+    html+='</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Liikevaihdon jakauma</h3></div>'
+      +srcRow('Kertapysäköinti',54,'')
+      +srcRow('Yrityssopimukset (B2B)',28,'beige')
+      +srcRow('Latauspalvelu',13,'yellow')
+      +srcRow('Muut',5,'')
+      +'</div>';
+    html+='<div class="card"><div class="card-h"><h3>Maksutavat</h3></div>'
+      +srcRow('Apple Pay',46,'')
+      +srcRow('Kortti',34,'beige')
+      +srcRow('Lasku (B2B)',16,'yellow')
+      +srcRow('Muut',4,'')
+      +'</div>';
+    html+='</div>';
     html+='</div>';
 
     /* map */
