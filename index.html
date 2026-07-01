@@ -711,6 +711,24 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .icon-btn svg{width:16px; height:16px}
 .avatar{width:30px; height:30px; border-radius:50%; background:var(--brand); color:#fff; display:inline-grid; place-items:center; font-size:12px; font-weight:700; font-family:var(--font-display); flex:0 0 auto}
 .cell-user{display:flex; align-items:center; gap:10px}
+/* Käyttäjät-taulukko: vaakascrollattava, solut yhdellä rivillä, toimintonapit
+   kiinnitetty pysyvästi oikeaan reunaan (näkyvät scrollatessakin). */
+.tbl-wrap.tbl-users{overflow-x:scroll; padding-bottom:0}
+.tbl-users table.tbl{min-width:940px}
+.tbl-users .tbl th,.tbl-users .tbl td{white-space:nowrap}
+.tbl-users .cell-user{white-space:nowrap}
+/* viimeinen sarake (toiminnot) tarttuu oikeaan reunaan */
+.tbl-users .tbl th:last-child,.tbl-users .tbl td:last-child{position:sticky; right:0; z-index:1; width:96px; min-width:96px}
+.tbl-users .tbl th:last-child{background:var(--paper)}
+.tbl-users .tbl td:last-child{background:var(--card); box-shadow:-8px 0 10px -6px rgba(0,0,0,.10)}
+.tbl-users .tbl tr:hover td:last-child{background:var(--paper)}
+.tbl-users .tbl th:last-child{box-shadow:-8px 0 10px -6px rgba(0,0,0,.10)}
+/* tyylitelty vaakascrollbar (kuten sivua scrollatessa) */
+.tbl-users::-webkit-scrollbar{height:12px}
+.tbl-users::-webkit-scrollbar-track{background:var(--paper); border-radius:0 0 16px 16px}
+.tbl-users::-webkit-scrollbar-thumb{background:#c4c8d0; border-radius:7px; border:3px solid var(--paper)}
+.tbl-users::-webkit-scrollbar-thumb:hover{background:var(--brand)}
+.tbl-users{scrollbar-width:thin; scrollbar-color:#c4c8d0 var(--paper)}
 
 /* admin map panel */
 .map-panel{position:relative; display:flex; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
@@ -2565,7 +2583,7 @@ body.vresizing *{cursor:ns-resize !important}
     /* users */
     html+='<div class="panel" data-id="a-users">';
     html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
-    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
+    html+='<div class="tbl-wrap tbl-users"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
     users.forEach(function(u){
       html+='<tr>'
         +'<td>'+pill(u[3],u[4])+'</td>'
