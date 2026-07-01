@@ -517,6 +517,8 @@ body.app-open{overflow:auto}
 .nav-item.active svg{opacity:1}
 .nav-item .badge{margin-left:auto; font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--park); color:var(--brand); border-radius:var(--r-pill); padding:1px 7px}
 .nav-item.active .badge{background:rgba(255,255,255,.22)}
+.nav-item .nav-sub{margin-left:auto; font-family:var(--font-mono); font-size:9.5px; font-weight:700; letter-spacing:.05em; background:var(--brand-50); color:var(--brand); border-radius:var(--r-pill); padding:2px 6px}
+.nav-item.active .nav-sub{background:rgba(255,255,255,.22); color:#fff}
 .side-resizer{flex:0 0 6px; align-self:stretch; cursor:col-resize; position:relative; background:transparent; z-index:5; touch-action:none}
 .side-resizer::after{content:""; position:absolute; left:50%; top:50%; width:4px; height:34px; transform:translate(-50%,-50%); border-radius:3px; background:var(--line); opacity:0; transition:opacity .15s, background .15s}
 .side-resizer:hover::after, body.resizing .side-resizer::after{opacity:1; background:var(--brand)}
@@ -590,6 +592,21 @@ table.sb-table th{position:sticky; top:0; background:var(--paper); text-align:le
 table.sb-table td{padding:8px 12px; border-bottom:1px solid var(--line); white-space:nowrap; max-width:320px; overflow:hidden; text-overflow:ellipsis; font-family:var(--font-mono); color:var(--ink)}
 table.sb-table tr:hover td{background:var(--paper)}
 table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
+.pertti-note{margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); line-height:1.5}
+.pill-ok{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:var(--r-pill); background:var(--park-50,#e7f6ee); color:var(--park-700,#177a49)}
+.pill-warn{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:var(--r-pill); background:#FFF3D6; color:#9A6A00}
+.pill-open{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:var(--r-pill); background:var(--brand-50); color:var(--brand)}
+.pill-prog{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:var(--r-pill); background:#FFF3D6; color:#9A6A00}
+.pill-closed{display:inline-block; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:var(--r-pill); background:var(--paper); color:var(--muted)}
+.prio-high{color:#C0392B; font-weight:700}
+.prio-med{color:#9A6A00; font-weight:600}
+.prio-low{color:var(--muted)}
+.tk-toolbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+.tk-filters{display:inline-flex; gap:6px; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-pill); padding:4px; flex-wrap:wrap}
+.tk-filter{border:none; background:transparent; padding:7px 15px; border-radius:var(--r-pill); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer}
+.tk-filter:hover{color:var(--ink)}
+.tk-filter.active{background:var(--brand); color:#fff}
+.tk-table td{vertical-align:middle}
 .wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
 .wseg-btn.active{background:var(--brand); color:#fff}
 .src-row{margin-bottom:14px}
@@ -1240,6 +1257,9 @@ body.vresizing *{cursor:ns-resize !important}
       <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
       <button class="nav-item" data-panel="a-supabase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg>Supabase</button>
+      <div class="grp">Asiakaspalvelu</div>
+      <button class="nav-item" data-panel="a-pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>Pertti<span class="nav-sub">AI</span></button>
+      <button class="nav-item" data-panel="a-tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4Z"/><path d="M13 7v10"/></svg>Tiketit<span class="badge">5</span></button>
       <div class="grp">Verkkosivu</div>
       <button class="nav-item" data-panel="a-web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>Yleiskatsaus</button>
       <div class="grp">Työkalut</div>
@@ -2205,12 +2225,13 @@ body.vresizing *{cursor:ns-resize !important}
         popHTML='<div class="pop-t">'+tpEsc(t)+'</div><div class="pop-s">'+s+idline+'</div>';
       }
       var pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
-      /* Koko yhteenvetorivin (valkoinen boksi) klikkaus laajentaa/pienentää
-         lisätiedot samalla tavalla kuin >-nuoli. */
+      /* Koko valkoisen boksin klikkaus laajentaa/pienentää lisätiedot samalla
+         tavalla kuin >-nuoli. Klikkaus mistä tahansa kohdasta (myös taulukon
+         päältä laajennettuna) kutistaa takaisin. */
       var el=pop.getElement();
       if(el){
-        var top=el.querySelector('.pop-area-top');
-        if(top){ top.style.cursor='pointer'; top.addEventListener('click',function(){ el.querySelector('.pop-area').classList.toggle('open'); }); }
+        var area=el.querySelector('.pop-area');
+        if(area){ area.style.cursor='pointer'; area.addEventListener('click',function(){ area.classList.toggle('open'); }); }
       }
     });
     adminMap.on('mousemove',function(e){
@@ -2447,6 +2468,63 @@ body.vresizing *{cursor:ns-resize !important}
     html+='<div class="sb-table-wrap" id="sb-table-wrap"><div class="sb-empty">Ladataan…</div></div>';
     html+='</div>';
 
+    /* Pertti — AI-asiakaspalvelija (demonäkymä) */
+    html+='<div class="panel" data-id="a-pertti">';
+    html+=panelHead('Pertti','AI-asiakaspalvelija · keskustelut, aiheet ja onnistuminen');
+    html+='<div class="kpi-grid">'
+      +kpi('b','chat','+14 %','up','1 842','Keskustelua / 30 pv')
+      +kpi('c','bolt','−0,3 s','up','2,1 s','Keskim. vastausaika')
+      +kpi('p','check','+3 %','up','82 %','Ratkaistu ilman ihmistä')
+      +kpi('b','people','18 %','down','331','Ohjattu tiketiksi')
+      +'</div>';
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Yleisimmät aiheet</h3><span class="link">30 pv</span></div>'
+      +goalRow('','Pysäköinnin aloitus ja lopetus','Miten sovellus toimii','512')
+      +goalRow('','Maksut ja kuitit','Veloitukset, kuittien haku','388')
+      +goalRow('','Latauspisteet','Sijainnit ja hinnat','254')
+      +goalRow('','Pysäköintialueen säännöt','Max-aika, vyöhykkeet','201')
+      +goalRow('','Tilin hallinta','Kirjautuminen, tiedot','147')
+      +'</div>';
+    html+='<div class="card"><div class="card-h"><h3>Asiakastyytyväisyys</h3></div>'
+      +srcRow('Erittäin tyytyväinen',61,'')
+      +srcRow('Tyytyväinen',27,'beige')
+      +srcRow('Neutraali',8,'yellow')
+      +srcRow('Tyytymätön',4,'')
+      +'<div class="pertti-note">Arviot kerätään keskustelun päätteeksi (peukku ylös / alas). Ei henkilötietoja.</div>'
+      +'</div>';
+    html+='</div>';
+    html+='<div class="card"><div class="card-h"><h3>Viimeisimmät keskustelut</h3><span class="link">Näytä kaikki</span></div>'
+      +'<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Aika</th><th>Ensimmäinen viesti</th><th>Aihe</th><th>Lopputulos</th></tr></thead><tbody>'
+      +'<tr><td class="mono">08:42</td><td>Miten lopetan pysäköinnin?</td><td>Pysäköinnin aloitus/lopetus</td><td><span class="pill-ok">Ratkaistu</span></td></tr>'
+      +'<tr><td class="mono">08:31</td><td>En saanut kuittia sähköpostiin</td><td>Maksut ja kuitit</td><td><span class="pill-ok">Ratkaistu</span></td></tr>'
+      +'<tr><td class="mono">08:19</td><td>Onko Kampissa latauspistettä?</td><td>Latauspisteet</td><td><span class="pill-ok">Ratkaistu</span></td></tr>'
+      +'<tr><td class="mono">08:04</td><td>Veloititte kahdesti samasta</td><td>Maksut ja kuitit</td><td><span class="pill-warn">Ohjattu tiketiksi</span></td></tr>'
+      +'<tr><td class="mono">07:58</td><td>Sovellus ei näytä vapaita paikkoja</td><td>Tekninen ongelma</td><td><span class="pill-warn">Ohjattu tiketiksi</span></td></tr>'
+      +'</tbody></table></div>'
+      +'</div>';
+    html+='</div>';
+
+    /* Tiketit — asiakaspalvelun tikettijono (demonäkymä) */
+    html+='<div class="panel" data-id="a-tickets">';
+    html+=panelHead('Tiketit','Asiakaspalvelun tukipyynnöt ja niiden tila');
+    html+='<div class="kpi-grid">'
+      +kpi('b','flag','5 uutta','up','5','Avoimet tiketit')
+      +kpi('c','clock','−12 min','up','3 t 20 min','Keskim. vastausaika')
+      +kpi('p','check','+6 %','up','94 %','Ratkaistu ajallaan')
+      +kpi('b','people','','','2','Käsittelijää')
+      +'</div>';
+    html+='<div class="tk-toolbar">'
+      +'<div class="tk-filters" id="tk-filters">'
+      +'<button class="tk-filter active" data-status="all">Kaikki</button>'
+      +'<button class="tk-filter" data-status="open">Avoimet</button>'
+      +'<button class="tk-filter" data-status="progress">Käsittelyssä</button>'
+      +'<button class="tk-filter" data-status="closed">Ratkaistu</button>'
+      +'</div>'
+      +'</div>';
+    html+='<div class="tbl-wrap"><table class="tbl tk-table"><thead><tr><th>ID</th><th>Aihe</th><th>Asiakas</th><th>Prioriteetti</th><th>Tila</th><th>Päivitetty</th></tr></thead><tbody id="tk-body">'
+      +'</tbody></table></div>';
+    html+='</div>';
+
     /* website overview */
     html+='<div class="panel" data-id="a-web">';
     html+='<div class="panel-head web-head"><div class="ph-left"><h2>Verkkosivu</h2><p>totalparking.fi · kävijät, liikenne ja konversiot</p></div>'
@@ -2627,6 +2705,48 @@ body.vresizing *{cursor:ns-resize !important}
       var sbNavBtn=document.querySelector('#app-admin .nav-item[data-panel="a-supabase"]');
       if(sbNavBtn) sbNavBtn.addEventListener('click',function(){ if(!sbLoadedOnce){ sbLoadedOnce=true; sbLoad('parking_master'); } });
     }
+
+    /* Tiketit: demo-tikettijono suodattimineen (ei tietokantaa). */
+    var tkBody=main.querySelector('#tk-body');
+    if(tkBody){
+      var TICKETS=[
+        {id:'TP-1042', subj:'Veloitus kahdesti samasta pysäköinnistä', cust:'Marko Nieminen', prio:'high', status:'open', upd:'8 min sitten'},
+        {id:'TP-1041', subj:'Sovellus ei näytä vapaita paikkoja Kampissa', cust:'Laura Salmi', prio:'med', status:'open', upd:'26 min sitten'},
+        {id:'TP-1040', subj:'Kuittia ei tullut sähköpostiin', cust:'Antti Koskinen', prio:'low', status:'progress', upd:'1 t sitten'},
+        {id:'TP-1039', subj:'Latauspisteen hinta näkyy väärin', cust:'Sofia Virtanen', prio:'med', status:'open', upd:'2 t sitten'},
+        {id:'TP-1038', subj:'Miten poistan tallennetun maksukortin?', cust:'Juha Mäkelä', prio:'low', status:'progress', upd:'3 t sitten'},
+        {id:'TP-1037', subj:'Pysäköinti ei lopu vaikka painan lopeta', cust:'Emma Laine', prio:'high', status:'open', upd:'4 t sitten'},
+        {id:'TP-1036', subj:'Vyöhykkeen 2 hinta epäselvä', cust:'Ville Hämäläinen', prio:'low', status:'closed', upd:'eilen'},
+        {id:'TP-1035', subj:'Tilin sähköpostin vaihto', cust:'Anna Korhonen', prio:'low', status:'closed', upd:'eilen'},
+        {id:'TP-1034', subj:'Hyvitys virheellisestä veloituksesta', cust:'Mikko Järvinen', prio:'med', status:'closed', upd:'2 pv sitten'}
+      ];
+      var PRIO={high:['prio-high','Korkea'], med:['prio-med','Normaali'], low:['prio-low','Matala']};
+      var STAT={open:['pill-open','Avoin'], progress:['pill-prog','Käsittelyssä'], closed:['pill-closed','Ratkaistu']};
+      function tkEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function renderTickets(filter){
+        var rows=TICKETS.filter(function(t){ return filter==='all' || t.status===filter; });
+        if(!rows.length){ tkBody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">Ei tikettejä tässä tilassa.</td></tr>'; return; }
+        tkBody.innerHTML=rows.map(function(t){
+          var pr=PRIO[t.prio], st=STAT[t.status];
+          return '<tr>'
+            +'<td class="mono strong">'+t.id+'</td>'
+            +'<td>'+tkEsc(t.subj)+'</td>'
+            +'<td>'+tkEsc(t.cust)+'</td>'
+            +'<td class="'+pr[0]+'">'+pr[1]+'</td>'
+            +'<td><span class="'+st[0]+'">'+st[1]+'</span></td>'
+            +'<td class="mono" style="color:var(--muted)">'+tkEsc(t.upd)+'</td>'
+            +'</tr>';
+        }).join('');
+      }
+      renderTickets('all');
+      var tkFilters=main.querySelector('#tk-filters');
+      if(tkFilters) tkFilters.addEventListener('click',function(e){
+        var b=e.target.closest('.tk-filter'); if(!b)return;
+        $all('.tk-filter',tkFilters).forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        renderTickets(b.getAttribute('data-status'));
+      });
+    }
   }
 
   /* ---------- Render: BUSINESS ---------- */
@@ -2745,7 +2865,8 @@ body.vresizing *{cursor:ns-resize !important}
     download:'<path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/>',
     crosshair:'<circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     pin:'<path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.3"/>',
-    refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>'
+    refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>',
+    chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>'
   };
   function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
