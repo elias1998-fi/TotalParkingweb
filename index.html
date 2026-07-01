@@ -607,6 +607,23 @@ table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
 .tk-filter:hover{color:var(--ink)}
 .tk-filter.active{background:var(--brand); color:#fff}
 .tk-table td{vertical-align:middle}
+.cs-periodbar{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap}
+.cs-period-note{font-size:13px; color:var(--muted)}
+.cs-legend{display:flex; flex-wrap:wrap; gap:14px 20px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line)}
+.cs-leg-item{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink)}
+.cs-leg-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
+.cs-leg-val{margin-left:4px; font-family:var(--font-mono); font-weight:700; color:var(--muted)}
+.cs-insight{display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-bottom:1px solid var(--line); font-size:12.5px; color:var(--ink); line-height:1.5}
+.cs-insight:last-child{border-bottom:none}
+.cs-dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto; margin-top:4px}
+.cs-bd-row{margin-bottom:14px}
+.cs-bd-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px}
+.cs-bd-name{display:inline-flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink); font-weight:500}
+.cs-bd-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
+.cs-bd-figs{font-family:var(--font-mono); font-size:12.5px; color:var(--muted)}
+.cs-bd-figs b{color:var(--ink); font-weight:700}
+.cs-bd-bar{height:8px; background:var(--paper); border-radius:5px; overflow:hidden}
+.cs-bd-bar i{display:block; height:100%; border-radius:5px}
 .wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
 .wseg-btn.active{background:var(--brand); color:#fff}
 .src-row{margin-bottom:14px}
@@ -1258,6 +1275,7 @@ body.vresizing *{cursor:ns-resize !important}
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
       <button class="nav-item" data-panel="a-supabase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg>Supabase</button>
       <div class="grp">Asiakaspalvelu</div>
+      <button class="nav-item" data-panel="a-cs-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</button>
       <button class="nav-item" data-panel="a-pertti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>Pertti<span class="nav-sub">AI</span></button>
       <button class="nav-item" data-panel="a-tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4Z"/><path d="M13 7v10"/></svg>Tiketit<span class="badge">5</span></button>
       <div class="grp">Verkkosivu</div>
@@ -2309,6 +2327,52 @@ body.vresizing *{cursor:ns-resize !important}
     month:{v:[21200,24800,23600,28200,30100,31800,33200,34210], x:['Marras','Joulu','Tammi','Helmi','Maalis','Huhti','Touko','Kesä']}
   };
   function webX(arr){return arr.map(function(l){return '<span>'+l+'</span>';}).join('');}
+  /* Asiakaspalvelun yhteydenottokanavat: kunkin jakson (päivä/viikko/kuukausi)
+     aikasarja neljälle kanavalle. Käytetään pinottuun aluekaavioon ja
+     kanavittaiseen erittelyyn. Järjestys: Pertti, lomake, sähköposti, puhelin. */
+  var CS_CH=[
+    {key:'pertti', label:'Pertti (AI-assistentti)', color:'#021E45'},
+    {key:'form',   label:'Yhteydenottolomake',      color:'#4A90D9'},
+    {key:'email',  label:'Suora sähköposti',         color:'#13B17C'},
+    {key:'phone',  label:'Puhelinyhteys',            color:'#E8A33D'}
+  ];
+  var CSDATA={
+    day:{ x:['00','03','06','09','12','15','18','21'],
+      pertti:[3,2,6,14,18,16,11,7], form:[1,1,3,7,9,8,6,4], email:[0,1,2,5,6,5,4,3], phone:[0,0,1,6,8,7,3,1] },
+    week:{ x:['Ma','Ti','Ke','To','Pe','La','Su'],
+      pertti:[78,86,81,92,88,54,60], form:[34,38,36,42,40,22,26], email:[20,24,22,26,25,14,18], phone:[28,31,27,33,30,12,15] },
+    month:{ x:['vk22','vk23','vk24','vk25','vk26'],
+      pertti:[512,540,498,556,588], form:[210,238,201,242,254], email:[120,138,110,146,152], phone:[168,181,154,193,201] }
+  };
+  function csTotals(period){
+    var d=CSDATA[period], out={}, all=0;
+    CS_CH.forEach(function(c){ var s=d[c.key].reduce(function(a,b){return a+b;},0); out[c.key]=s; all+=s; });
+    out.__all=all; return out;
+  }
+  /* Pinottu aluekaavio: piirtää sarjat päällekkäin, jotta kokonaismäärän
+     lisäksi näkyy kunkin kanavan osuus jokaisessa aikapisteessä. */
+  function stackChart(period){
+    var d=CSDATA[period], keys=CS_CH.map(function(c){return c.key;}), n=d.x.length;
+    var w=520,h=170,pad=8;
+    var stacks=[]; var maxTotal=0;
+    for(var i=0;i<n;i++){ var cum=0, col=[]; keys.forEach(function(k){ cum+=d[k][i]; col.push(cum); }); stacks.push(col); if(cum>maxTotal)maxTotal=cum; }
+    maxTotal=maxTotal||1;
+    function X(i){ return pad+i*(w-2*pad)/(n-1); }
+    function Y(v){ return h-pad-(v/maxTotal)*(h-2*pad-6); }
+    var svg='<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none">';
+    /* piirretään ylhäältä alas, jotta alemmat kerrokset peittyvät oikein */
+    for(var s=keys.length-1;s>=0;s--){
+      var top='',bottomV=[];
+      for(var j=0;j<n;j++){ bottomV.push(s>0?stacks[j][s-1]:0); }
+      var path='M'+X(0).toFixed(1)+' '+Y(stacks[0][s]).toFixed(1);
+      for(var j2=1;j2<n;j2++){ path+=' L'+X(j2).toFixed(1)+' '+Y(stacks[j2][s]).toFixed(1); }
+      for(var j3=n-1;j3>=0;j3--){ path+=' L'+X(j3).toFixed(1)+' '+Y(bottomV[j3]).toFixed(1); }
+      path+=' Z';
+      svg+='<path d="'+path+'" fill="'+CS_CH[s].color+'" opacity="0.9"/>';
+    }
+    svg+='</svg>';
+    return svg;
+  }
   function srcRow(label,pct,cls){return '<div class="src-row"><div class="src-top"><span>'+label+'</span><span class="mono">'+pct+' %</span></div><div class="src-bar '+(cls||'')+'"><i style="width:'+pct+'%"></i></div></div>';}
   function goalRow(icn,t,s,v){return '<div class="goal-row">'+(icn?'<span class="g-ic">'+ic(icn)+'</span>':'')+'<div><div class="g-t">'+t+'</div><div class="g-s">'+s+'</div></div><span class="g-v">'+v+'</span></div>';}
   function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
@@ -2466,6 +2530,35 @@ body.vresizing *{cursor:ns-resize !important}
       +'</div>';
     html+='<div class="sb-meta" id="sb-meta">Valitse taulu ja lataa rivit.</div>';
     html+='<div class="sb-table-wrap" id="sb-table-wrap"><div class="sb-empty">Ladataan…</div></div>';
+    html+='</div>';
+
+
+    /* Asiakaspalvelun Dashboard — yhteydenottojen määrä kanavittain */
+    html+='<div class="panel" data-id="a-cs-dash">';
+    html+=panelHead('Asiakaspalvelun dashboard','Mitä kautta yhteydenotot saapuvat — kanavavirran seuranta');
+    /* jaksovalitsin */
+    html+='<div class="cs-periodbar"><div class="wseg" id="cs-seg">'
+      +'<button class="wseg-btn active" data-gran="day">Päivä</button>'
+      +'<button class="wseg-btn" data-gran="week">Viikko</button>'
+      +'<button class="wseg-btn" data-gran="month">Kuukausi</button>'
+      +'</div><div class="cs-period-note" id="cs-period-note">Viimeisten 24 tunnin yhteydenotot</div></div>';
+    /* kanavakohtaiset KPI-kortit */
+    html+='<div class="kpi-grid" id="cs-kpis"></div>';
+    /* pinottu kaavio + selite */
+    html+='<div class="card"><div class="card-h"><h3>Yhteydenottojen määrä kanavittain</h3><span class="mono" id="cs-total-lbl"></span></div>'
+      +'<div class="chart-wrap" id="cs-chart"></div>'
+      +'<div class="chart-x" id="cs-chart-x"></div>'
+      +'<div class="cs-legend" id="cs-legend"></div>'
+      +'</div>';
+    /* kanavaerittely (osuudet) */
+    html+='<div class="cards-2">';
+    html+='<div class="card"><div class="card-h"><h3>Kanavien osuus</h3><span class="link" id="cs-share-period">24 h</span></div><div id="cs-breakdown"></div></div>';
+    html+='<div class="card"><div class="card-h"><h3>Havaintoja</h3></div>'
+      +'<div class="cs-insight"><span class="cs-dot" style="background:#021E45"></span><div><b>Pertti hoitaa suurimman osan.</b> AI-assistentti vastaanottaa yli puolet yhteydenotoista — pidä sen tietopohja ajan tasalla.</div></div>'
+      +'<div class="cs-insight"><span class="cs-dot" style="background:#E8A33D"></span><div><b>Puhelinruuhka arkipäivisin.</b> Puheluita tulee eniten klo 9–15. Harkitse takaisinsoittojonoa tai ohjausta lomakkeelle.</div></div>'
+      +'<div class="cs-insight"><span class="cs-dot" style="background:#13B17C"></span><div><b>Sähköposti on hitain kanava.</b> Suoran sähköpostin vastausaika on pisin — automaattinen kuittaus ja ohjaus Pertille voi keventää kuormaa.</div></div>'
+      +'</div>';
+    html+='</div>';
     html+='</div>';
 
     /* Pertti — AI-asiakaspalvelija (demonäkymä) */
@@ -2747,6 +2840,64 @@ body.vresizing *{cursor:ns-resize !important}
         renderTickets(b.getAttribute('data-status'));
       });
     }
+
+    /* Asiakaspalvelun dashboard: kanavavirran seuranta päivä/viikko/kuukausi. */
+    var csSeg=main.querySelector('#cs-seg');
+    if(csSeg){
+      var CS_NOTES={day:'Viimeisten 24 tunnin yhteydenotot', week:'Viimeisen 7 päivän yhteydenotot', month:'Viimeisen 5 viikon yhteydenotot'};
+      var CS_SHORT={day:'24 h', week:'7 pv', month:'5 vk'};
+      var CS_DELTA={ /* demo-vertailu edelliseen jaksoon */
+        day:{pertti:'+8 %',form:'+3 %',email:'−2 %',phone:'+11 %'},
+        week:{pertti:'+5 %',form:'+4 %',email:'+1 %',phone:'+9 %'},
+        month:{pertti:'+12 %',form:'+6 %',email:'−1 %',phone:'+14 %'}
+      };
+      var CS_KCLASS={pertti:'b',form:'c',email:'p',phone:'b'};
+      var CS_KICON={pertti:'chat',form:'mail',email:'mail',phone:'phone'};
+      function csRender(period){
+        var totals=csTotals(period), delta=CS_DELTA[period];
+        /* KPI-kortit per kanava */
+        var kEl=main.querySelector('#cs-kpis');
+        if(kEl){
+          kEl.innerHTML=CS_CH.map(function(c){
+            var dv=delta[c.key]||''; var dir=(dv.indexOf('−')===0)?'down':'up';
+            return kpi(CS_KCLASS[c.key], CS_KICON[c.key], dv, dir, String(totals[c.key]), c.label);
+          }).join('');
+        }
+        /* kaavio */
+        var chEl=main.querySelector('#cs-chart'); if(chEl) chEl.innerHTML=stackChart(period);
+        var xEl=main.querySelector('#cs-chart-x'); if(xEl) xEl.innerHTML=webX(CSDATA[period].x);
+        var lbl=main.querySelector('#cs-total-lbl'); if(lbl) lbl.textContent='Yhteensä '+totals.__all+' yhteydenottoa';
+        /* selite */
+        var leg=main.querySelector('#cs-legend');
+        if(leg){
+          leg.innerHTML=CS_CH.map(function(c){
+            return '<span class="cs-leg-item"><span class="cs-leg-dot" style="background:'+c.color+'"></span>'+c.label+'<span class="cs-leg-val">'+totals[c.key]+'</span></span>';
+          }).join('');
+        }
+        /* kanavaerittely (osuudet) */
+        var bd=main.querySelector('#cs-breakdown');
+        if(bd){
+          var all=totals.__all||1;
+          bd.innerHTML=CS_CH.map(function(c){
+            var v=totals[c.key], pct=Math.round(v/all*100);
+            return '<div class="cs-bd-row">'
+              +'<div class="cs-bd-top"><span class="cs-bd-name"><span class="cs-bd-dot" style="background:'+c.color+'"></span>'+c.label+'</span>'
+              +'<span class="cs-bd-figs"><b>'+v+'</b> · '+pct+' %</span></div>'
+              +'<div class="cs-bd-bar"><i style="width:'+pct+'%; background:'+c.color+'"></i></div>'
+              +'</div>';
+          }).join('');
+        }
+        var sp=main.querySelector('#cs-share-period'); if(sp) sp.textContent=CS_SHORT[period];
+        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
+      }
+      csRender('day');
+      csSeg.addEventListener('click',function(e){
+        var b=e.target.closest('.wseg-btn'); if(!b)return;
+        $all('.wseg-btn',csSeg).forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        csRender(b.getAttribute('data-gran'));
+      });
+    }
   }
 
   /* ---------- Render: BUSINESS ---------- */
@@ -2866,7 +3017,8 @@ body.vresizing *{cursor:ns-resize !important}
     crosshair:'<circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     pin:'<path d="M12 22s7-7.5 7-12.5A7 7 0 0 0 5 9.5C5 14.5 12 22 12 22Z"/><circle cx="12" cy="9.5" r="2.3"/>',
     refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>',
-    chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>'
+    chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
+    mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'
   };
   function ic(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+(ICONS[name]||'')+'</svg>';}
   function panelHead(t,s,tools){return '<div class="panel-head"><div><h2>'+t+'</h2><div class="sub">'+s+'</div></div>'+(tools?'<div class="tools">'+tools+'</div>':'')+'</div>';}
