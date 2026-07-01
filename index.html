@@ -609,21 +609,19 @@ table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
 .tk-table td{vertical-align:middle}
 .cs-periodbar{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap}
 .cs-period-note{font-size:13px; color:var(--muted)}
-.cs-legend{display:flex; flex-wrap:wrap; gap:14px 20px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line)}
-.cs-leg-item{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink)}
-.cs-leg-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
-.cs-leg-val{margin-left:4px; font-family:var(--font-mono); font-weight:700; color:var(--muted)}
-.cs-insight{display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-bottom:1px solid var(--line); font-size:12.5px; color:var(--ink); line-height:1.5}
-.cs-insight:last-child{border-bottom:none}
-.cs-dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto; margin-top:4px}
-.cs-bd-row{margin-bottom:14px}
-.cs-bd-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px}
-.cs-bd-name{display:inline-flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink); font-weight:500}
-.cs-bd-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
-.cs-bd-figs{font-family:var(--font-mono); font-size:12.5px; color:var(--muted)}
-.cs-bd-figs b{color:var(--ink); font-weight:700}
-.cs-bd-bar{height:8px; background:var(--paper); border-radius:5px; overflow:hidden}
-.cs-bd-bar i{display:block; height:100%; border-radius:5px}
+.cs-vbars{display:flex; align-items:flex-end; justify-content:space-around; gap:18px; height:340px; padding:14px 6px 0}
+.cs-vbar{flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center}
+.cs-vbar-val{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); margin-bottom:8px; display:flex; flex-direction:column; align-items:center; line-height:1.1; flex:0 0 auto}
+.cs-vbar-pct{font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--muted); margin-top:2px}
+.cs-vbar-track{flex:1 1 auto; width:64%; max-width:120px; min-height:0; display:flex; align-items:flex-end; background:var(--paper); border-radius:10px 10px 0 0; overflow:hidden}
+.cs-vbar-fill{width:100%; border-radius:10px 10px 0 0; min-height:4px; transition:height .35s cubic-bezier(.25,.46,.45,.94)}
+.cs-vbar-name{margin-top:12px; font-size:12.5px; color:var(--ink); text-align:center; line-height:1.35; display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto}
+.cs-vbar-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
+@media(max-width:620px){
+  .cs-vbars{height:280px; gap:8px}
+  .cs-vbar-val{font-size:17px}
+  .cs-vbar-name{font-size:11px}
+}
 .wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
 .wseg-btn.active{background:var(--brand); color:#fff}
 .src-row{margin-bottom:14px}
@@ -2349,30 +2347,6 @@ body.vresizing *{cursor:ns-resize !important}
     CS_CH.forEach(function(c){ var s=d[c.key].reduce(function(a,b){return a+b;},0); out[c.key]=s; all+=s; });
     out.__all=all; return out;
   }
-  /* Pinottu aluekaavio: piirtää sarjat päällekkäin, jotta kokonaismäärän
-     lisäksi näkyy kunkin kanavan osuus jokaisessa aikapisteessä. */
-  function stackChart(period){
-    var d=CSDATA[period], keys=CS_CH.map(function(c){return c.key;}), n=d.x.length;
-    var w=520,h=170,pad=8;
-    var stacks=[]; var maxTotal=0;
-    for(var i=0;i<n;i++){ var cum=0, col=[]; keys.forEach(function(k){ cum+=d[k][i]; col.push(cum); }); stacks.push(col); if(cum>maxTotal)maxTotal=cum; }
-    maxTotal=maxTotal||1;
-    function X(i){ return pad+i*(w-2*pad)/(n-1); }
-    function Y(v){ return h-pad-(v/maxTotal)*(h-2*pad-6); }
-    var svg='<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none">';
-    /* piirretään ylhäältä alas, jotta alemmat kerrokset peittyvät oikein */
-    for(var s=keys.length-1;s>=0;s--){
-      var top='',bottomV=[];
-      for(var j=0;j<n;j++){ bottomV.push(s>0?stacks[j][s-1]:0); }
-      var path='M'+X(0).toFixed(1)+' '+Y(stacks[0][s]).toFixed(1);
-      for(var j2=1;j2<n;j2++){ path+=' L'+X(j2).toFixed(1)+' '+Y(stacks[j2][s]).toFixed(1); }
-      for(var j3=n-1;j3>=0;j3--){ path+=' L'+X(j3).toFixed(1)+' '+Y(bottomV[j3]).toFixed(1); }
-      path+=' Z';
-      svg+='<path d="'+path+'" fill="'+CS_CH[s].color+'" opacity="0.9"/>';
-    }
-    svg+='</svg>';
-    return svg;
-  }
   function srcRow(label,pct,cls){return '<div class="src-row"><div class="src-top"><span>'+label+'</span><span class="mono">'+pct+' %</span></div><div class="src-bar '+(cls||'')+'"><i style="width:'+pct+'%"></i></div></div>';}
   function goalRow(icn,t,s,v){return '<div class="goal-row">'+(icn?'<span class="g-ic">'+ic(icn)+'</span>':'')+'<div><div class="g-t">'+t+'</div><div class="g-s">'+s+'</div></div><span class="g-v">'+v+'</span></div>';}
   function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
@@ -2542,23 +2516,10 @@ body.vresizing *{cursor:ns-resize !important}
       +'<button class="wseg-btn" data-gran="week">Viikko</button>'
       +'<button class="wseg-btn" data-gran="month">Kuukausi</button>'
       +'</div><div class="cs-period-note" id="cs-period-note">Viimeisten 24 tunnin yhteydenotot</div></div>';
-    /* kanavakohtaiset KPI-kortit */
-    html+='<div class="kpi-grid" id="cs-kpis"></div>';
-    /* pinottu kaavio + selite */
+    /* pystypalkit kanavittain (sisältää entisen kanavaerittelyn) */
     html+='<div class="card"><div class="card-h"><h3>Yhteydenottojen määrä kanavittain</h3><span class="mono" id="cs-total-lbl"></span></div>'
-      +'<div class="chart-wrap" id="cs-chart"></div>'
-      +'<div class="chart-x" id="cs-chart-x"></div>'
-      +'<div class="cs-legend" id="cs-legend"></div>'
+      +'<div class="cs-vbars" id="cs-vbars"></div>'
       +'</div>';
-    /* kanavaerittely (osuudet) */
-    html+='<div class="cards-2">';
-    html+='<div class="card"><div class="card-h"><h3>Kanavien osuus</h3><span class="link" id="cs-share-period">24 h</span></div><div id="cs-breakdown"></div></div>';
-    html+='<div class="card"><div class="card-h"><h3>Havaintoja</h3></div>'
-      +'<div class="cs-insight"><span class="cs-dot" style="background:#021E45"></span><div><b>Pertti hoitaa suurimman osan.</b> AI-assistentti vastaanottaa yli puolet yhteydenotoista — pidä sen tietopohja ajan tasalla.</div></div>'
-      +'<div class="cs-insight"><span class="cs-dot" style="background:#E8A33D"></span><div><b>Puhelinruuhka arkipäivisin.</b> Puheluita tulee eniten klo 9–15. Harkitse takaisinsoittojonoa tai ohjausta lomakkeelle.</div></div>'
-      +'<div class="cs-insight"><span class="cs-dot" style="background:#13B17C"></span><div><b>Sähköposti on hitain kanava.</b> Suoran sähköpostin vastausaika on pisin — automaattinen kuittaus ja ohjaus Pertille voi keventää kuormaa.</div></div>'
-      +'</div>';
-    html+='</div>';
     html+='</div>';
 
     /* Pertti — AI-asiakaspalvelija (demonäkymä) */
@@ -2845,50 +2806,24 @@ body.vresizing *{cursor:ns-resize !important}
     var csSeg=main.querySelector('#cs-seg');
     if(csSeg){
       var CS_NOTES={day:'Viimeisten 24 tunnin yhteydenotot', week:'Viimeisen 7 päivän yhteydenotot', month:'Viimeisen 5 viikon yhteydenotot'};
-      var CS_SHORT={day:'24 h', week:'7 pv', month:'5 vk'};
-      var CS_DELTA={ /* demo-vertailu edelliseen jaksoon */
-        day:{pertti:'+8 %',form:'+3 %',email:'−2 %',phone:'+11 %'},
-        week:{pertti:'+5 %',form:'+4 %',email:'+1 %',phone:'+9 %'},
-        month:{pertti:'+12 %',form:'+6 %',email:'−1 %',phone:'+14 %'}
-      };
-      var CS_KCLASS={pertti:'b',form:'c',email:'p',phone:'b'};
-      var CS_KICON={pertti:'chat',form:'mail',email:'mail',phone:'phone'};
       function csRender(period){
-        var totals=csTotals(period), delta=CS_DELTA[period];
-        /* KPI-kortit per kanava */
-        var kEl=main.querySelector('#cs-kpis');
-        if(kEl){
-          kEl.innerHTML=CS_CH.map(function(c){
-            var dv=delta[c.key]||''; var dir=(dv.indexOf('−')===0)?'down':'up';
-            return kpi(CS_KCLASS[c.key], CS_KICON[c.key], dv, dir, String(totals[c.key]), c.label);
-          }).join('');
-        }
-        /* kaavio */
-        var chEl=main.querySelector('#cs-chart'); if(chEl) chEl.innerHTML=stackChart(period);
-        var xEl=main.querySelector('#cs-chart-x'); if(xEl) xEl.innerHTML=webX(CSDATA[period].x);
+        var totals=csTotals(period);
+        var all=totals.__all||1;
+        var maxV=0; CS_CH.forEach(function(c){ if(totals[c.key]>maxV) maxV=totals[c.key]; }); maxV=maxV||1;
         var lbl=main.querySelector('#cs-total-lbl'); if(lbl) lbl.textContent='Yhteensä '+totals.__all+' yhteydenottoa';
-        /* selite */
-        var leg=main.querySelector('#cs-legend');
-        if(leg){
-          leg.innerHTML=CS_CH.map(function(c){
-            return '<span class="cs-leg-item"><span class="cs-leg-dot" style="background:'+c.color+'"></span>'+c.label+'<span class="cs-leg-val">'+totals[c.key]+'</span></span>';
-          }).join('');
-        }
-        /* kanavaerittely (osuudet) */
-        var bd=main.querySelector('#cs-breakdown');
-        if(bd){
-          var all=totals.__all||1;
-          bd.innerHTML=CS_CH.map(function(c){
-            var v=totals[c.key], pct=Math.round(v/all*100);
-            return '<div class="cs-bd-row">'
-              +'<div class="cs-bd-top"><span class="cs-bd-name"><span class="cs-bd-dot" style="background:'+c.color+'"></span>'+c.label+'</span>'
-              +'<span class="cs-bd-figs"><b>'+v+'</b> · '+pct+' %</span></div>'
-              +'<div class="cs-bd-bar"><i style="width:'+pct+'%; background:'+c.color+'"></i></div>'
+        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
+        /* pystypalkit: korkeus suhteessa suurimpaan kanavaan, arvo ja osuus */
+        var vb=main.querySelector('#cs-vbars');
+        if(vb){
+          vb.innerHTML=CS_CH.map(function(c){
+            var v=totals[c.key], pct=Math.round(v/all*100), hpct=Math.round(v/maxV*100);
+            return '<div class="cs-vbar">'
+              +'<div class="cs-vbar-val">'+v+'<span class="cs-vbar-pct">'+pct+' %</span></div>'
+              +'<div class="cs-vbar-track"><div class="cs-vbar-fill" style="height:'+hpct+'%; background:'+c.color+'"></div></div>'
+              +'<div class="cs-vbar-name"><span class="cs-vbar-dot" style="background:'+c.color+'"></span>'+c.label+'</div>'
               +'</div>';
           }).join('');
         }
-        var sp=main.querySelector('#cs-share-period'); if(sp) sp.textContent=CS_SHORT[period];
-        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
       }
       csRender('day');
       csSeg.addEventListener('click',function(e){
