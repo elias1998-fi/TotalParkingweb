@@ -2352,13 +2352,14 @@ body.vresizing *{cursor:ns-resize !important}
   }
 
   /* ---------- Mock data ---------- */
+  /* [nimi, email, tyyppi, tila-luokka, tila-teksti, last_active, id, puhelin, stripe_customer_id, created_at] */
   var users=[
-    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2 min'],
-    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','14 min'],
-    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Vahvistus kesken','1 h'],
-    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','3 h'],
-    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','5 h'],
-    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Estetty','2 pv']
+    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2 min',1042,'+358 40 5512 340','cus_PQ8xR2aA1','2025-11-03 09:14'],
+    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','14 min',1041,'+358 44 8123 900','cus_PQ7mL9kK2','2025-11-02 16:28'],
+    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Vahvistus kesken','1 h',1040,'+358 50 3390 118','cus_PQ6nB4dD3','2026-01-12 11:02'],
+    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','3 h',1039,'+358 40 7781 552','cus_PQ5aV7cC4','2025-12-20 08:41'],
+    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','5 h',1038,'+358 3 5654 210','cus_PQ4kH1eE5','2025-10-30 14:55'],
+    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Estetty','2 pv',1037,'+358 45 2210 087','cus_PQ3jJ8fF6','2025-09-18 19:03']
   ];
   var tx=[
     ['#TP-90412','12:48','Aino Korhonen','4,80 €','Apple Pay','ok','Maksettu'],
@@ -2564,9 +2565,19 @@ body.vresizing *{cursor:ns-resize !important}
     /* users */
     html+='<div class="panel" data-id="a-users">';
     html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
-    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Käyttäjä</th><th>Sähköposti</th><th>Tyyppi</th><th>Tila</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
+    html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
     users.forEach(function(u){
-      html+='<tr><td><div class="cell-user"><span class="avatar">'+initials(u[0])+'</span><span class="strong">'+u[0]+'</span></div></td><td class="mono">'+u[1]+'</td><td>'+u[2]+'</td><td>'+pill(u[3],u[4])+'</td><td class="mono">'+u[5]+'</td><td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td></tr>';
+      html+='<tr>'
+        +'<td>'+pill(u[3],u[4])+'</td>'
+        +'<td class="mono strong">'+u[6]+'</td>'
+        +'<td class="mono">'+u[1]+'</td>'
+        +'<td><div class="cell-user"><span class="avatar">'+initials(u[0])+'</span><span class="strong">'+u[0]+'</span></div></td>'
+        +'<td class="mono">'+u[7]+'</td>'
+        +'<td class="mono">'+u[8]+'</td>'
+        +'<td class="mono">'+u[9]+'</td>'
+        +'<td class="mono">'+u[5]+'</td>'
+        +'<td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'</span></td>'
+        +'</tr>';
     });
     html+='</tbody></table></div>';
     html+='</div>';
