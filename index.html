@@ -723,7 +723,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .tbl-users .tbl th{padding-top:18px; padding-bottom:18px}
 .tbl-users .cell-user{white-space:nowrap}
 /* viimeinen sarake (toiminnot) tarttuu oikeaan reunaan */
-.tbl-users .tbl th:last-child,.tbl-users .tbl td:last-child{position:sticky; right:0; z-index:1; width:96px; min-width:96px}
+.tbl-users .tbl th:last-child,.tbl-users .tbl td:last-child{position:sticky; right:0; z-index:1; width:58px; min-width:58px}
 .tbl-users .tbl th:last-child{background:var(--paper)}
 .tbl-users .tbl td:last-child{background:var(--card); box-shadow:-8px 0 10px -6px rgba(0,0,0,.10)}
 .tbl-users .tbl tr:hover td:last-child{background:var(--paper)}
@@ -763,6 +763,43 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .wf-title{font-size:14px; font-weight:600; color:var(--ink)}
 .wf-err .wf-title{color:#C0392B}
 .wf-sub{font-size:13px; color:var(--ink-soft)}
+/* rivi klikattava (avaa/sulkee lisätiedot) */
+.tbl-users .u-row{cursor:pointer}
+.tbl-users .u-row:hover td{background:var(--paper)}
+.tbl-users .u-row:hover td:last-child{background:var(--paper)}
+/* kopioitava tietosolu + hoverilla ilmestyvä kopiointi-ikoni (n. 1 s viive) */
+.copyable{display:inline-flex; align-items:center; gap:5px}
+.copy-btn{display:inline-grid; place-items:center; width:22px; height:22px; padding:0; border:none; background:none; color:var(--muted); cursor:pointer; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .15s ease 0s}
+.copy-btn svg{width:14px; height:14px}
+.copyable:hover .copy-btn{opacity:1; pointer-events:auto; transition-delay:1s}
+.copy-btn:hover{background:var(--brand-50); color:var(--brand)}
+/* toast-ilmoitus */
+.tp-toast{position:fixed; left:50%; bottom:34px; transform:translateX(-50%) translateY(12px); background:var(--brand); color:#fff; font-size:14px; font-weight:600; padding:12px 20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.22); z-index:3000; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease}
+.tp-toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+/* laajennuksen toimintonapit */
+.u-detail-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; padding-top:16px; border-top:1px solid var(--line)}
+.u-detail-actions .btn{display:inline-flex; align-items:center; gap:7px}
+.u-detail-actions .btn svg{width:16px; height:16px}
+/* yhteydenottomodaali */
+.uc-modal{position:fixed; inset:0; z-index:2500; display:none}
+.uc-modal.open{display:block}
+.uc-backdrop{position:absolute; inset:0; background:rgba(10,20,40,.45); backdrop-filter:blur(2px)}
+.uc-card{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92vw,480px); max-height:88vh; overflow:auto; background:var(--card); border-radius:18px; box-shadow:0 24px 70px rgba(0,0,0,.3); padding:24px}
+.uc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px}
+.uc-head h3{margin:0; font-size:20px}
+.uc-close{border:none; background:none; font-size:26px; line-height:1; color:var(--muted); cursor:pointer; padding:0 4px}
+.uc-close:hover{color:var(--ink)}
+.uc-recip{font-size:14px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:11px 14px; margin-bottom:16px}
+.uc-recip b{color:var(--ink)}
+.uc-lab{display:block; font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:0 0 7px}
+.uc-channels{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap}
+.uc-ch{border:1px solid var(--line); background:var(--card); color:var(--ink-soft); border-radius:var(--r-pill); padding:8px 15px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit}
+.uc-ch:hover{border-color:var(--brand-100)}
+.uc-ch.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.uc-card input,.uc-card textarea{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; padding:11px 14px; font-size:14px; font-family:inherit; color:var(--ink); background:var(--card); margin-bottom:16px; outline:none}
+.uc-card input:focus,.uc-card textarea:focus{border-color:var(--brand)}
+.uc-card textarea{resize:vertical; min-height:96px}
+.uc-foot{display:flex; justify-content:flex-end; gap:10px; margin-bottom:0}
 
 /* admin map panel */
 .map-panel{position:relative; display:flex; border:1px solid var(--line); border-radius:18px; overflow:hidden; height:var(--map-h, calc(100vh - 184px)); min-height:340px; box-shadow:var(--shadow)}
@@ -2656,16 +2693,23 @@ body.vresizing *{cursor:ns-resize !important}
       var searchKey=(u[0]+' '+u[1]+' '+u[6]+' '+u[7]+' '+u[8]).toLowerCase();
       html+='<tr class="u-row" data-uidx="'+i+'" data-search="'+searchKey.replace(/"/g,'')+'">'
         +'<td>'+pill(u[3],u[4])+'</td>'
-        +'<td class="mono strong">'+u[6]+'</td>'
-        +'<td class="mono">'+u[1]+'</td>'
-        +'<td class="strong">'+u[0]+'</td>'
-        +'<td class="mono">'+u[7]+'</td>'
-        +'<td class="mono">'+u[8]+'</td>'
+        +'<td class="mono">'+copyCell(u[6])+'</td>'
+        +'<td class="mono">'+copyCell(u[1])+'</td>'
+        +'<td>'+u[0]+'</td>'
+        +'<td class="mono">'+copyCell(u[7])+'</td>'
+        +'<td class="mono">'+copyCell(u[8])+'</td>'
         +'<td class="mono">'+u[9]+'</td>'
         +'<td class="mono">'+u[5]+'</td>'
-        +'<td><span class="row-act">'+iconBtn('edit')+iconBtn('trash')+'<button class="icon-btn u-expand" data-uidx="'+i+'" aria-label="Näytä lisätiedot" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></span></td>'
+        +'<td><button class="icon-btn u-expand" data-uidx="'+i+'" aria-label="Näytä lisätiedot" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></td>'
         +'</tr>';
-      html+='<tr class="u-detail hidden" data-uidx="'+i+'"><td colspan="9"><div class="u-detail-inner">'+userWorkflow(u)+'</div></td></tr>';
+      html+='<tr class="u-detail hidden" data-uidx="'+i+'"><td colspan="9"><div class="u-detail-inner">'
+        +userWorkflow(u)
+        +'<div class="u-detail-actions">'
+          +'<button class="btn btn-ghost btn-sm u-edit">'+ic('edit')+'Muokkaa</button>'
+          +'<button class="btn btn-ghost btn-sm u-del">'+ic('trash')+'Poista</button>'
+          +'<button class="btn btn-primary btn-sm u-contact" data-name="'+u[0].replace(/"/g,'')+'" data-email="'+u[1].replace(/"/g,'')+'">'+ic('mail')+'Ota yhteyttä</button>'
+        +'</div>'
+        +'</div></td></tr>';
     });
     html+='</tbody></table></div>';
     html+='<div class="usr-empty hidden" id="users-empty">Ei hakua vastaavia asiakkaita.</div>';
@@ -3153,17 +3197,25 @@ body.vresizing *{cursor:ns-resize !important}
       });
     }
 
-    /* Käyttäjät: laajennettava rivi (chevron) + haku (nimi/ID/puhelin/email). */
+    /* Käyttäjät: rivin klikkaus avaa/sulkee lisätiedot; kopiointi-ikonit;
+       yhteydenotto; muokkaa/poista laajennuksessa; haku. */
     var usersBody=main.querySelector('#users-body');
     if(usersBody){
-      usersBody.addEventListener('click',function(e){
-        var btn=e.target.closest('.u-expand'); if(!btn)return;
-        var idx=btn.getAttribute('data-uidx');
+      function toggleUserRow(row){
+        var idx=row.getAttribute('data-uidx');
         var det=usersBody.querySelector('.u-detail[data-uidx="'+idx+'"]');
         if(!det)return;
         var open=det.classList.toggle('hidden')===false;
-        btn.classList.toggle('open',open);
-        btn.setAttribute('aria-expanded',open?'true':'false');
+        var chev=row.querySelector('.u-expand');
+        if(chev){ chev.classList.toggle('open',open); chev.setAttribute('aria-expanded',open?'true':'false'); }
+      }
+      usersBody.addEventListener('click',function(e){
+        var cp=e.target.closest('.copy-btn'); if(cp){ e.stopPropagation(); tpCopy(cp.getAttribute('data-copy')); return; }
+        var contact=e.target.closest('.u-contact'); if(contact){ openContactModal(contact.getAttribute('data-name'), contact.getAttribute('data-email')); return; }
+        if(e.target.closest('.u-edit')){ tpToast('Muokkaus — demo'); return; }
+        if(e.target.closest('.u-del')){ tpToast('Poisto — demo'); return; }
+        if(e.target.closest('.u-detail')) return; /* klikkaus lisätietojen sisällä ei sulje riviä */
+        var row=e.target.closest('.u-row'); if(row){ toggleUserRow(row); }
       });
       var uSearch=main.querySelector('#users-search');
       var uEmpty=main.querySelector('#users-empty');
@@ -3175,7 +3227,6 @@ body.vresizing *{cursor:ns-resize !important}
           var match=!q || (row.getAttribute('data-search')||'').indexOf(q)>=0;
           row.classList.toggle('hidden',!match);
           if(match) shown++;
-          /* piilota myös laajennettu lisätietorivi jos rivi ei täsmää */
           var det=usersBody.querySelector('.u-detail[data-uidx="'+idx+'"]');
           if(det && !match){ det.classList.add('hidden'); var b=row.querySelector('.u-expand'); if(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); } }
         });
@@ -3352,6 +3403,69 @@ body.vresizing *{cursor:ns-resize !important}
   function feed(col,t,s,time){return '<div class="feed-row"><span class="feed-dot" style="background:'+col+'"></span><div><div class="ft">'+t+'</div><div class="fs">'+s+'</div></div><time>'+time+'</time></div>';}
   function tool(cls,icn,label){return '<button class="tool-btn '+cls+'" data-tool="'+icn+'" type="button">'+ic(icn)+label+'</button>';}
   function iconBtn(icn){return '<button class="icon-btn">'+ic(icn)+'</button>';}
+  /* Kopioitava tietosolu: arvon viereen ilmestyy hoverilla (n. 1 s viiveellä)
+     kopiointi-ikoni. Klikkaus kopioi arvon leikepöydälle. */
+  var COPY_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  function copyCell(val){
+    var s=String(val);
+    return '<span class="copyable"><span class="cp-val">'+s+'</span><button class="copy-btn" type="button" tabindex="-1" data-copy="'+s.replace(/"/g,'&quot;')+'" aria-label="Kopioi leikepöydälle">'+COPY_ICON+'</button></span>';
+  }
+  /* Pieni ilmoitus (toast) esim. "Kopioitu leikepöydälle". */
+  function tpToast(msg){
+    var t=document.getElementById('tp-toast');
+    if(!t){ t=document.createElement('div'); t.id='tp-toast'; t.className='tp-toast'; document.body.appendChild(t); }
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._tm); t._tm=setTimeout(function(){ t.classList.remove('show'); }, 1700);
+  }
+  /* Kopioi teksti leikepöydälle. Käyttää Clipboard APIa, ja jos se on estetty
+     (esim. esikatselu), turvautuu vanhaan execCommand-tapaan. */
+  function tpCopy(text){
+    function done(){ tpToast('Kopioitu leikepöydälle'); }
+    function legacy(){
+      try{ var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }
+      catch(e){ tpToast('Kopiointi ei onnistunut'); }
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(legacy); }
+      else legacy();
+    }catch(e){ legacy(); }
+  }
+  /* Yhteydenottolomake (modaali). Rakennetaan kerran ja täytetään avattaessa. */
+  function openContactModal(name, email){
+    var m=document.getElementById('uc-modal');
+    if(!m){
+      m=document.createElement('div'); m.id='uc-modal'; m.className='uc-modal';
+      m.innerHTML='<div class="uc-backdrop"></div>'
+        +'<div class="uc-card" role="dialog" aria-modal="true">'
+          +'<div class="uc-head"><h3>Ota yhteyttä</h3><button class="uc-close" type="button" aria-label="Sulje">&times;</button></div>'
+          +'<div class="uc-recip">Vastaanottaja: <b class="uc-recip-val"></b></div>'
+          +'<label class="uc-lab">Kanava</label>'
+          +'<div class="uc-channels">'
+            +'<button type="button" class="uc-ch active" data-ch="email">Sähköposti</button>'
+            +'<button type="button" class="uc-ch" data-ch="sms">Tekstiviesti</button>'
+            +'<button type="button" class="uc-ch" data-ch="push">Push-ilmoitus</button>'
+          +'</div>'
+          +'<label class="uc-lab">Aihe</label>'
+          +'<input type="text" id="uc-subject" placeholder="Viestin aihe" autocomplete="off">'
+          +'<label class="uc-lab">Viesti</label>'
+          +'<textarea id="uc-message" rows="5" placeholder="Kirjoita viesti asiakkaalle…"></textarea>'
+          +'<div class="uc-foot"><button type="button" class="btn btn-ghost btn-sm uc-cancel">Peruuta</button><button type="button" class="btn btn-primary btn-sm uc-send">Lähetä viesti</button></div>'
+        +'</div>';
+      document.body.appendChild(m);
+      function close(){ m.classList.remove('open'); }
+      m.querySelector('.uc-backdrop').addEventListener('click',close);
+      m.querySelector('.uc-close').addEventListener('click',close);
+      m.querySelector('.uc-cancel').addEventListener('click',close);
+      m.querySelector('.uc-channels').addEventListener('click',function(e){ var b=e.target.closest('.uc-ch'); if(!b)return; m.querySelectorAll('.uc-ch').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); });
+      m.querySelector('.uc-send').addEventListener('click',function(){ close(); tpToast('Viesti lähetetty asiakkaalle'); });
+    }
+    m.querySelector('.uc-recip-val').textContent=name+' · '+email;
+    m.querySelector('#uc-subject').value='';
+    m.querySelector('#uc-message').value='';
+    m.querySelectorAll('.uc-ch').forEach(function(x,idx){ x.classList.toggle('active',idx===0); });
+    m.classList.add('open');
+    var sub=m.querySelector('#uc-subject'); if(sub) setTimeout(function(){ sub.focus(); },30);
+  }
   /* Asiakkaan työnkulku/tapahtumahistoria laajennettavaan riviin. Sisältö
      riippuu tilistä: jäädytetty näyttää mihin jäädytys johti, kesken
      vahvistusketjun, aktiivinen viimeisimmät tapahtumat. (demodataa) */
