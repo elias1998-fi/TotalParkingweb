@@ -2191,10 +2191,9 @@ body.vresizing *{cursor:ns-resize !important}
            omistaja), sekä harmaa >-nuoli joka laajentaa voimassaoloajat ja
            lisätiedot. */
         var info=tpBuildAreaInfo(p);
-        var sub=info.type + (info.owner? (' \u00b7 '+info.owner) : '');
         popHTML='<div class="pop-area">'
           +'<div class="pop-area-top">'
-          +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(sub)+'</div></div>'
+          +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(info.type)+'</div><div class="pop-s">'+tpEsc(info.owner)+'</div></div>'
           +'<button class="pop-expand" type="button" aria-label="Näytä lisätiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
           +'</div>'
           +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
@@ -2206,11 +2205,12 @@ body.vresizing *{cursor:ns-resize !important}
         popHTML='<div class="pop-t">'+tpEsc(t)+'</div><div class="pop-s">'+s+idline+'</div>';
       }
       var pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
-      /* laajennus-nuolen toiminta */
+      /* Koko yhteenvetorivin (valkoinen boksi) klikkaus laajentaa/pienentää
+         lisätiedot samalla tavalla kuin >-nuoli. */
       var el=pop.getElement();
       if(el){
-        var btn=el.querySelector('.pop-expand');
-        if(btn) btn.addEventListener('click',function(){ el.querySelector('.pop-area').classList.toggle('open'); });
+        var top=el.querySelector('.pop-area-top');
+        if(top){ top.style.cursor='pointer'; top.addEventListener('click',function(){ el.querySelector('.pop-area').classList.toggle('open'); }); }
       }
     });
     adminMap.on('mousemove',function(e){
@@ -2867,15 +2867,25 @@ body.vresizing *{cursor:ns-resize !important}
       if(pts.length>=2) return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:pts}};
       return {type:'FeatureCollection',features:[]};
     }
-    function ensureSrc(){
-      if(!adminMap.getSource('draw-src')){
-        adminMap.addSource('draw-src',{type:'geojson',data:geo()});
-        adminMap.addLayer({id:'draw-fill',type:'fill',source:'draw-src',paint:{'fill-color':'#13B17C','fill-opacity':0.22}});
-        adminMap.addLayer({id:'draw-line',type:'line',source:'draw-src',paint:{'line-color':'#0C8A60','line-width':2.5}});
-      }
+    function tpDrawMaps(){ return [adminMap, phoneMap].filter(Boolean); }
+    function ensureDrawLayers(map){
+      if(!map || map.getSource('draw-src')) return;
+      map.addSource('draw-src',{type:'geojson',data:geo()});
+      map.addLayer({id:'draw-fill',type:'fill',source:'draw-src',paint:{'fill-color':'#13B17C','fill-opacity':0.22}});
+      map.addLayer({id:'draw-line',type:'line',source:'draw-src',paint:{'line-color':'#0C8A60','line-width':2.5}});
+    }
+    function ensureSrc(){ tpDrawMaps().forEach(ensureDrawLayers); }
+    function setDrawData(gj){
+      tpDrawMaps().forEach(function(m){ if(m.getSource('draw-src')) m.getSource('draw-src').setData(gj); });
+    }
+    /* Kun phone-kartta rakennetaan kesken piirron, tuo siihen sama polygoni. */
+    function syncDrawToPhone(){
+      if(!phoneMap || !drawOn) return;
+      ensureDrawLayers(phoneMap);
+      if(phoneMap.getSource('draw-src')) phoneMap.getSource('draw-src').setData(geo());
     }
     function update(){
-      if(adminMap && adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData(geo());
+      setDrawData(geo());
       var c=document.getElementById('draw-count'); if(c)c.textContent=pts.length;
       var d=document.getElementById('draw-done'); if(d)d.disabled=pts.length<3;
       var mb=document.getElementById('add-minus-btn'); if(mb)mb.disabled=pts.length===0;
@@ -2897,12 +2907,13 @@ body.vresizing *{cursor:ns-resize !important}
       var el=document.createElement('div'); el.className='draw-corner';
       var mk=new maplibregl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
       mk.__idx=idx;
-      /* Raahaus: päivitä vastaava piste ja piirrä polygoni reaaliajassa.
-         MapLibren draggable-marker estää itse kartan panoroinnin raahauksen ajaksi. */
+      /* Raahaus: päivitä vastaava piste ja piirrä polygoni reaaliajassa
+         molemmilla kartoilla. MapLibren draggable-marker estää itse kartan
+         panoroinnin raahauksen ajaksi. */
       mk.on('drag',function(){
         var p=mk.getLngLat();
         pts[mk.__idx]=[p.lng,p.lat];
-        if(adminMap && adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData(geo());
+        setDrawData(geo());
       });
       mk.on('dragend',function(){ update(); });
       markers.push(mk);
@@ -2917,7 +2928,7 @@ body.vresizing *{cursor:ns-resize !important}
       update();
       if(drawFollow) fitToPoints(true);
     }
-    function clearShape(){ pts=[]; markers.forEach(function(m){m.remove();}); markers=[]; if(adminMap&&adminMap.getSource('draw-src')) adminMap.getSource('draw-src').setData({type:'FeatureCollection',features:[]}); }
+    function clearShape(){ pts=[]; markers.forEach(function(m){m.remove();}); markers=[]; setDrawData({type:'FeatureCollection',features:[]}); }
     function makeBar(panel){
       var b=document.getElementById('map-drawbar');
       if(!b){ b=document.createElement('div'); b.id='map-drawbar'; b.className='map-drawbar'; panel.appendChild(b); }
@@ -3002,26 +3013,37 @@ body.vresizing *{cursor:ns-resize !important}
       if(!was){ btn.classList.add('active'); enterEditMode(); }
     }
     var zonesState='unloaded'; /* unloaded | loading | loaded */
+    var zonesVisible=false;
+    function setZonesVisibility(vis){
+      zonesVisible=vis;
+      var v=vis?'visible':'none';
+      [adminMap, phoneMap].forEach(function(m){ if(m && m.getLayer('payment-zones-line')) m.setLayoutProperty('payment-zones-line','visibility',v); });
+    }
     function toggleZones(btn){
       if(zonesState==='loading') return;
       var on=btn.classList.toggle('active');
-      if(!on){ if(adminMap && adminMap.getLayer('payment-zones-line')) adminMap.setLayoutProperty('payment-zones-line','visibility','none'); return; }
-      if(zonesState==='loaded'){
-        if(adminMap && adminMap.getLayer('payment-zones-line')) adminMap.setLayoutProperty('payment-zones-line','visibility','visible');
-        return;
-      }
+      if(!on){ setZonesVisibility(false); return; }
+      if(zonesState==='loaded'){ setZonesVisibility(true); return; }
       if(!adminMap){ btn.classList.remove('active'); hint('Karttaa ei ole viel\u00e4 ladattu.',true); return; }
       zonesState='loading';
       hint('Ladataan maksuvy\u00f6hykkeit\u00e4\u2026');
-      tpLoadPaymentZones(adminMap).then(function(n){
+      var jobs=[tpLoadPaymentZones(adminMap)];
+      if(phoneMap) jobs.push(tpLoadPaymentZones(phoneMap).catch(function(){return 0;}));
+      Promise.all(jobs).then(function(res){
+        var n=res[0];
         zonesState='loaded';
-        if(adminMap.getLayer('payment-zones-line')) adminMap.setLayoutProperty('payment-zones-line','visibility','visible');
+        setZonesVisibility(true);
         hint(n? (n+' maksuvy\u00f6hykett\u00e4 ladattu.') : 'Maksuvy\u00f6hykkeit\u00e4 ei l\u00f6ytynyt \u2014 onko payment_zones-taulu viel\u00e4 tyhj\u00e4?', true);
       }).catch(function(){
         zonesState='unloaded';
         btn.classList.remove('active');
         hint('Maksuvy\u00f6hykkeiden lataus ep\u00e4onnistui \u2014 tarkista ett\u00e4 payment_zones-taulu on luotu Supabaseen.', true);
       });
+    }
+    /* Kun phone-kartta rakennetaan, tuo siihen vyöhykkeet jos ne ovat päällä. */
+    function syncZonesToPhone(){
+      if(!phoneMap || zonesState!=='loaded') return;
+      tpLoadPaymentZones(phoneMap).then(function(){ if(phoneMap.getLayer('payment-zones-line')) phoneMap.setLayoutProperty('payment-zones-line','visibility', zonesVisible?'visible':'none'); }).catch(function(){});
     }
     /* ---------- Puhelin-tila (synkronoitu esikatselu) ----------
        Peilaa sovelluksen omaa keskipiste-P-merkki-mekaniikkaa
@@ -3089,6 +3111,8 @@ body.vresizing *{cursor:ns-resize !important}
         Promise.all([tpLoadAreas(phoneMap), tpLoadHallit(phoneMap), tpLoadCharging(phoneMap)]).then(function(){ tpApplyFiltersToMap(phoneMap); checkPhoneCenter(); }).catch(function(){});
         syncPhoneMap();
         checkPhoneCenter();
+        syncZonesToPhone();
+        syncDrawToPhone();
       });
       wirePhoneFilter();
       wirePhoneSheetGestures();
@@ -3158,20 +3182,21 @@ body.vresizing *{cursor:ns-resize !important}
         }
         e.preventDefault();
         if(e.deltaY<0){ if(sh.classList.contains('peek')) setPhoneSheetState('expanded'); }
-        else { if(sh.classList.contains('expanded')) setPhoneSheetState('peek'); else if(sh.classList.contains('peek')) setPhoneSheetState('closed'); }
+        else { if(sh.classList.contains('expanded')) setPhoneSheetState('peek'); /* peek-tasolta ei pienennetä piiloon eleellä */ }
       },{passive:false});
       /* raahaus yläreunasta (kahva-alue) */
       var handle=sh.querySelector('.phone-sheet-handle-area');
-      var dragging=false, startY=0, startTop=0, frameH=0;
+      var dragging=false, startY=0, startTop=0, frameH=0, peekTop=0;
       function curTranslate(){
         var m=window.getComputedStyle(sh).transform;
         if(m && m!=='none'){ var vals=m.match(/matrix.*\((.+)\)/); if(vals){ var parts=vals[1].split(', '); return parseFloat(parts[5])||0; } }
         return 0;
       }
       function onDown(e){
-        if(!phoneSheetIsOpen() && !sh.classList.contains('peek')) { /* salli avaus myös kiinni-tilasta tarttumalla */ }
+        if(!phoneSheetIsOpen()) return; /* raahaus vain kun sheet on esillä */
         dragging=true;
         frameH=frame?frame.getBoundingClientRect().height:600;
+        peekTop=frameH-156; /* peek-tason yläreunan sijainti (CSS: 100% - 156px) */
         startY=(e.touches?e.touches[0].clientY:e.clientY);
         startTop=curTranslate();
         sh.classList.add('dragging');
@@ -3181,22 +3206,33 @@ body.vresizing *{cursor:ns-resize !important}
         if(!dragging) return;
         var y=(e.touches?e.touches[0].clientY:e.clientY);
         var dy=y-startY;
-        var nt=Math.max(frameH*0.18, Math.min(frameH-26, startTop+dy));
+        /* alaraja = peek-taso (ei mene piiloon), yläraja = 18% kehyksestä */
+        var nt=Math.max(frameH*0.18, Math.min(peekTop, startTop+dy));
         sh.style.transform='translateY('+nt+'px)';
       }
       function onUp(){
         if(!dragging) return;
         dragging=false; sh.classList.remove('dragging');
         var nt=curTranslate();
-        var ratio=frameH? nt/frameH : 1;
-        /* valitse lähin tila raahauksen loppukohdan perusteella */
-        if(ratio<0.34) setPhoneSheetState('expanded');
-        else if(ratio<0.72) setPhoneSheetState('peek');
-        else setPhoneSheetState('closed');
+        /* napsahda lähimpään: laajennettu jos yli puolivälin peekistä ylöspäin, muuten peek */
+        var mid=peekTop*0.5;
+        if(nt<mid) setPhoneSheetState('expanded');
+        else setPhoneSheetState('peek');
       }
       if(handle){
         handle.addEventListener('mousedown',onDown);
         handle.addEventListener('touchstart',onDown,{passive:false});
+      }
+      /* Klikkaus yhteenveto-alueeseen laajentaa/pienentää (kuten popupin boksi).
+         Ohitetaan jos käyttäjä juuri raahasi. */
+      var summary=sh.querySelector('.phone-sheet-summary');
+      if(summary){
+        summary.style.cursor='pointer';
+        summary.addEventListener('click',function(){
+          if(sh.classList.contains('dragging')) return;
+          if(sh.classList.contains('expanded')) setPhoneSheetState('peek');
+          else setPhoneSheetState('expanded');
+        });
       }
       window.addEventListener('mousemove',onMove,{passive:false});
       window.addEventListener('touchmove',onMove,{passive:false});
@@ -3518,6 +3554,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(!res.ok) throw new Error('HTTP '+res.status);
       clearEdSelection();
       await tpLoadAreas(adminMap);
+      if(phoneMap) await tpLoadAreas(phoneMap);
       edHint('\u2713 '+ids.length+' aluetta yhdistetty.', true);
     }catch(err){
       edHint('Virhe yhdist\u00e4misess\u00e4: '+((err&&err.message)||err), true);
