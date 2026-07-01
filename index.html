@@ -584,33 +584,24 @@ body.resizing *{cursor:col-resize !important}
   --sbx-mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,'Roboto Mono',monospace;
   display:flex; border:1px solid var(--sbx-line); border-radius:10px; overflow:hidden; background:var(--sbx-bg); height:min(66vh,620px); font-family:var(--sbx-sans)}
 .sbx-side{width:230px; flex:0 0 auto; border-right:1px solid var(--sbx-line); display:flex; flex-direction:column; padding:10px; gap:8px; background:var(--sbx-bg); overflow-y:auto}
-.sbx-schema{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--sbx-fg); border:1px solid var(--sbx-line); border-radius:7px; padding:7px 10px; cursor:default}
-.sbx-schema b{font-weight:600}
-.sbx-schema svg{width:14px; height:14px; margin-left:auto; color:var(--sbx-mut)}
-.sbx-newtable{display:flex; align-items:center; gap:7px; border:1px solid var(--sbx-line); background:var(--sbx-bg); border-radius:7px; padding:7px 10px; font-family:var(--sbx-sans); font-size:13px; color:var(--sbx-fg); cursor:pointer}
-.sbx-newtable svg{width:14px; height:14px; color:var(--sbx-mut)}
+.sbx-newtable{display:flex; align-items:center; gap:7px; border:1px solid var(--sbx-line); background:var(--sbx-bg); border-radius:7px; padding:7px 10px; font-family:var(--sbx-sans); font-size:13px; color:var(--sbx-fg); cursor:pointer; width:100%}
+.sbx-newtable svg{width:14px; height:14px; color:var(--sbx-green)}
 .sbx-newtable:hover{background:var(--sbx-head)}
-.sbx-search{display:flex; align-items:center; gap:7px; border:1px solid var(--sbx-line); border-radius:7px; padding:7px 10px; font-size:13px; color:var(--sbx-mut); cursor:text}
-.sbx-search svg{width:14px; height:14px}
-.sbx-tables{display:flex; flex-direction:column; gap:1px; margin-top:2px}
-.sbx-tbl{display:flex; align-items:center; gap:8px; border:none; background:transparent; border-radius:6px; padding:6px 9px; font-family:var(--sbx-sans); font-size:13px; color:var(--sbx-fg); cursor:pointer; text-align:left; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sbx-tables{display:flex; flex-direction:column; gap:1px; margin-top:8px}
+.sbx-trow{display:flex; align-items:center; border-radius:6px; overflow:hidden}
+.sbx-trow:hover{background:var(--sbx-head)}
+.sbx-trow.active{background:#f0f0f0}
+.sbx-tbl{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px; border:none; background:transparent; padding:6px 4px 6px 9px; font-family:var(--sbx-sans); font-size:13px; color:var(--sbx-fg); cursor:pointer; text-align:left; white-space:nowrap; overflow:hidden}
+.sbx-tbl span{overflow:hidden; text-overflow:ellipsis}
 .sbx-tbl svg{width:15px; height:15px; color:var(--sbx-mut); flex:0 0 auto}
-.sbx-tbl:hover{background:var(--sbx-head)}
-.sbx-tbl.active{background:#f0f0f0; color:var(--sbx-fg); font-weight:500}
-.sbx-tbl.active svg{color:var(--sbx-green)}
+.sbx-trow.active .sbx-tbl{font-weight:500}
+.sbx-trow.active .sbx-tbl svg{color:var(--sbx-green)}
+.sbx-del{flex:0 0 auto; border:none; background:transparent; color:var(--sbx-mut); cursor:pointer; padding:5px 8px; opacity:0; display:grid; place-items:center}
+.sbx-del svg{width:14px; height:14px}
+.sbx-trow:hover .sbx-del{opacity:1}
+.sbx-del:hover{color:#dc2626}
+.sbx-nameinput{width:100%; border:1px solid var(--sbx-green); border-radius:5px; padding:5px 8px; font-family:var(--sbx-sans); font-size:13px; color:var(--sbx-fg); outline:none; box-sizing:border-box}
 .sbx-main{flex:1 1 auto; min-width:0; display:flex; flex-direction:column}
-.sbx-toolbar{display:flex; align-items:center; gap:12px; padding:8px 12px; border-bottom:1px solid var(--sbx-line); background:var(--sbx-bg); flex-wrap:nowrap}
-.sbx-filter{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--sbx-mut); overflow:hidden}
-.sbx-filter svg{width:14px; height:14px; flex:0 0 auto}
-.sbx-filter span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.sbx-tools{display:flex; align-items:center; gap:7px; flex:0 0 auto}
-.sbx-chip{display:inline-flex; align-items:center; gap:5px; border:1px solid var(--sbx-line); border-radius:6px; padding:5px 9px; font-size:12.5px; color:var(--sbx-fg); background:var(--sbx-bg); white-space:nowrap}
-.sbx-chip svg{width:13px; height:13px; color:var(--sbx-mut)}
-.sbx-chip b{font-weight:600}
-.sbx-ico{padding:5px 7px; color:var(--sbx-mut)}
-.sbx-badge{display:inline-grid; place-items:center; min-width:15px; height:15px; border-radius:50%; background:#e5e5e5; color:var(--sbx-fg); font-size:10px; font-weight:700; padding:0 3px}
-.sbx-insert{display:inline-flex; align-items:center; gap:5px; background:var(--sbx-green); color:#052e16; border-radius:6px; padding:5px 11px; font-size:12.5px; font-weight:600; white-space:nowrap; cursor:pointer}
-.sbx-insert svg{width:13px; height:13px}
 .sbx-grid-wrap{flex:1 1 auto; overflow:auto; background:var(--sbx-bg)}
 table.sbx-grid{border-collapse:separate; border-spacing:0; font-size:13px; min-width:100%}
 table.sbx-grid th,table.sbx-grid td{border-right:1px solid var(--sbx-line); border-bottom:1px solid var(--sbx-line); padding:0 12px; height:36px; white-space:nowrap; text-align:left; box-sizing:border-box}
@@ -618,8 +609,14 @@ table.sbx-grid thead th{position:sticky; top:0; background:var(--sbx-head); z-in
 .sbx-th{display:flex; align-items:center; gap:7px}
 .sbx-th-key{width:12px; height:12px; color:var(--sbx-mut); flex:0 0 auto}
 .sbx-th-name{font-weight:500}
+.sbx-th-name.sbx-editable{cursor:text; border-bottom:1px dashed transparent}
+.sbx-th-name.sbx-editable:hover{border-bottom-color:var(--sbx-mut)}
 .sbx-th-type{color:var(--sbx-mut); font-weight:400}
 .sbx-th-caret{margin-left:auto; width:13px; height:13px; color:var(--sbx-mut); flex:0 0 auto}
+.sbx-addcol{cursor:pointer; color:var(--sbx-mut); width:46px; min-width:46px; text-align:center !important}
+.sbx-addcol:hover{background:#f0f0f0; color:var(--sbx-green)}
+.sbx-addcol-inp{width:120px; border:1px solid var(--sbx-green); border-radius:5px; padding:4px 7px; font-family:var(--sbx-sans); font-size:12.5px; outline:none}
+.sbx-colinput{width:110px; border:1px solid var(--sbx-green); border-radius:5px; padding:3px 6px; font-family:var(--sbx-sans); font-size:12.5px; font-weight:500; outline:none; box-sizing:border-box}
 table.sbx-grid td{font-family:var(--sbx-mono); color:var(--sbx-fg); max-width:340px; overflow:hidden; text-overflow:ellipsis}
 table.sbx-grid tbody tr:hover td{background:#fafafa}
 .sbx-check{width:42px; min-width:42px; text-align:center !important; padding:0 !important}
@@ -2603,23 +2600,10 @@ body.vresizing *{cursor:ns-resize !important}
     html+=panelHead('Supabase','Tietokannan esikatselu suoraan hallintapaneelista');
     html+='<div class="sbx">'
       +'<div class="sbx-side">'
-        +'<div class="sbx-schema">schema <b>public</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>'
-        +'<button class="sbx-newtable" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New table</button>'
-        +'<div class="sbx-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Search tables...</div>'
+        +'<button class="sbx-newtable" id="sbx-newtable" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New table</button>'
         +'<div class="sbx-tables" id="sbx-tables"></div>'
       +'</div>'
       +'<div class="sbx-main">'
-        +'<div class="sbx-toolbar">'
-          +'<div class="sbx-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span id="sbx-filter-txt">Filter by id, created_at, status... or ask AI</span></div>'
-          +'<div class="sbx-tools">'
-            +'<span class="sbx-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M7 12h10M11 18h2"/></svg>Sort</span>'
-            +'<span class="sbx-chip"><span class="sbx-badge">1</span>RLS policy</span>'
-            +'<span class="sbx-chip">Role <b>postgres</b></span>'
-            +'<span class="sbx-chip sbx-ico">⋮</span>'
-            +'<span class="sbx-chip sbx-ico">'+ic('refresh')+'</span>'
-            +'<span class="sbx-insert">'+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Insert</span>'
-          +'</div>'
-        +'</div>'
         +'<div class="sbx-grid-wrap" id="sbx-grid-wrap"></div>'
       +'</div>'
     +'</div>';
@@ -2816,22 +2800,37 @@ body.vresizing *{cursor:ns-resize !important}
       });
     }
 
-    /* Supabase-taulukkoselain: näyttää taulut Supabase Studion tapaan
-       (vasemman listan ja datagridin kautta). Rivit haetaan OIKEASTA
-       tietokannasta REST-rajapinnan kautta, rajattuna 10 riviin per taulu.
-       Sarakkeet ja tyypit johdetaan palautuneesta datasta.
-       Huom: hiekkalaatikoidussa esikatselussa verkkohaut voivat olla estettyjä,
-       jolloin näkyy virheilmoitus — oikeassa selaimessa data latautuu. */
+    /* Supabase-taulukkoselain. Kaksi taulutyyppiä:
+       - "real": oikea Supabase-taulu, rivit haetaan REST-rajapinnasta (10 kpl).
+       - "local": itse luotu taulu, jonka rakennetta voi muokata (lisää/nimeä
+         sarakkeita). Muutokset ovat vain selaimessa — niitä EI tallenneta
+         Supabaseen. Taulujen lisäys/poisto listasta on myös paikallista. */
     var sbxTables=main.querySelector('#sbx-tables');
     if(sbxTables){
       var SBX_KEY='<svg class="sbx-th-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.5 12.5 8-8M17 4l3 3M14 7l3 3"/></svg>';
       var SBX_CARET='<svg class="sbx-th-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-      /* taulut listaan (liiketoiminnan taulut; PostGIS-järjestelmätaulut jätetty pois) */
-      var SBX_ORDER=['parking_master','parking_master_ilmaiset','payment_zones','parking_prices','customers','payment_methods','parking_submissions2','parkkihubi'];
+      var SBX_TBLICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>';
+      var SBX_TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+
+      /* lista tauluista järjestyksessä. real = oikea, local = itse luotu */
+      var sbxTablesList=[
+        {name:'parking_master',kind:'real'},
+        {name:'parking_master_ilmaiset',kind:'real'},
+        {name:'payment_zones',kind:'real'},
+        {name:'parking_prices',kind:'real'},
+        {name:'customers',kind:'real'},
+        {name:'payment_methods',kind:'real'},
+        {name:'parking_submissions2',kind:'real'},
+        {name:'parkkihubi',kind:'real'}
+      ];
+      var sbxLocal={};   /* name -> {cols:[{name,type}], rows:[]} */
+      var sbxCache={};   /* real-taulujen haetut rivit */
       var sbxCur='parking_master';
-      var sbxCache={}; /* haetut rivit muistiin, ettei haeta joka klikkauksella uudelleen */
+      var sbxNewCount=0;
 
       function sbxEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function sbxAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+      function sbxKindOf(name){ for(var i=0;i<sbxTablesList.length;i++){ if(sbxTablesList[i].name===name) return sbxTablesList[i].kind; } return null; }
       function sbxInferType(v){
         if(v===null||v===undefined) return 'text';
         if(typeof v==='boolean') return 'bool';
@@ -2851,63 +2850,161 @@ body.vresizing *{cursor:ns-resize !important}
         if(type==='jsonb'||type==='geometry') return '<span class="sbx-geom">'+sbxEsc(s)+'</span>';
         return sbxEsc(s);
       }
+
+      /* ---------- taululistan renderöinti ---------- */
       function sbxRenderList(){
-        sbxTables.innerHTML=SBX_ORDER.map(function(t){
-          return '<button class="sbx-tbl'+(t===sbxCur?' active':'')+'" data-table="'+t+'" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>'+t+'</button>';
+        sbxTables.innerHTML=sbxTablesList.map(function(t){
+          return '<div class="sbx-trow'+(t.name===sbxCur?' active':'')+'" data-table="'+sbxAttr(t.name)+'">'
+            +'<button class="sbx-tbl" type="button" data-open="'+sbxAttr(t.name)+'">'+SBX_TBLICON+'<span>'+sbxEsc(t.name)+'</span></button>'
+            +'<button class="sbx-del" type="button" data-del="'+sbxAttr(t.name)+'" title="Poista taulu listasta">'+SBX_TRASH+'</button>'
+            +'</div>';
         }).join('');
       }
-      function sbxSetFilter(cols){
-        var ft=main.querySelector('#sbx-filter-txt');
-        if(ft){ var first3=(cols||[]).slice(0,3).join(', '); ft.textContent='Filter by '+(first3||'id, created_at, status')+'... or ask AI'; }
-      }
-      function sbxRenderRows(t, rows){
-        var wrap=main.querySelector('#sbx-grid-wrap'); if(!wrap) return;
-        if(!rows || !rows.length){ wrap.innerHTML='<div class="sbx-msg">Ei rivejä. Taulu voi olla tyhjä tai ilman julkista lukuoikeutta (RLS).</div>'; sbxSetFilter([]); return; }
-        /* sarakkeet: kaikkien rivien avaimet ensiesiintymisjärjestyksessä */
-        var cols=[];
-        rows.forEach(function(r){ Object.keys(r).forEach(function(k){ if(cols.indexOf(k)<0) cols.push(k); }); });
-        var types={};
-        cols.forEach(function(c){ var v=null; for(var i=0;i<rows.length;i++){ if(rows[i][c]!=null){ v=rows[i][c]; break; } } types[c]=sbxInferType(v); });
+
+      /* ---------- gridin renderöinti ---------- */
+      function sbxGridWrap(){ return main.querySelector('#sbx-grid-wrap'); }
+      function sbxBuildGrid(cols, types, rows, editable){
+        var wrap=sbxGridWrap(); if(!wrap) return;
         var h='<table class="sbx-grid"><thead><tr><th class="sbx-check"><input type="checkbox" aria-label="Valitse kaikki"></th>';
-        cols.forEach(function(c){
+        cols.forEach(function(c,ci){
           var isKey=(c==='id');
-          h+='<th><div class="sbx-th">'+(isKey?SBX_KEY:'')+'<span class="sbx-th-name">'+sbxEsc(c)+'</span><span class="sbx-th-type">'+types[c]+'</span>'+SBX_CARET+'</div></th>';
+          var nameCls='sbx-th-name'+(editable?' sbx-editable':'');
+          var nameAttr=editable?(' data-col="'+ci+'" title="Klikkaa nimetäksesi uudelleen"'):'';
+          h+='<th><div class="sbx-th">'+(isKey?SBX_KEY:'')+'<span class="'+nameCls+'"'+nameAttr+'>'+sbxEsc(c)+'</span><span class="sbx-th-type">'+types[c]+'</span>'+SBX_CARET+'</div></th>';
         });
+        if(editable) h+='<th class="sbx-addcol" id="sbx-addcol" title="Lisää sarake">+</th>';
         h+='</tr></thead><tbody>';
-        rows.forEach(function(r){
-          h+='<tr><td class="sbx-check"><input type="checkbox" aria-label="Valitse rivi"></td>';
-          cols.forEach(function(c){ h+='<td>'+sbxFmtCell(r[c], types[c])+'</td>'; });
-          h+='</tr>';
-        });
+        if(!rows.length){
+          var span=cols.length+1+(editable?1:0);
+          h+='<tr><td colspan="'+span+'" style="text-align:center; color:#9a9a9a; font-family:var(--sbx-sans); height:70px">Ei rivejä'+(editable?' — lisää sarakkeita +-painikkeella':'')+'</td></tr>';
+        } else {
+          rows.forEach(function(r){
+            h+='<tr><td class="sbx-check"><input type="checkbox" aria-label="Valitse rivi"></td>';
+            cols.forEach(function(c){ h+='<td>'+sbxFmtCell(r[c], types[c])+'</td>'; });
+            if(editable) h+='<td></td>';
+            h+='</tr>';
+          });
+        }
         h+='</tbody></table>';
         wrap.innerHTML=h;
-        sbxSetFilter(cols);
+      }
+      function sbxRenderReal(t, rows){
+        if(!rows || !rows.length){ sbxGridWrap().innerHTML='<div class="sbx-msg">Ei rivejä. Taulu voi olla tyhjä tai ilman julkista lukuoikeutta (RLS).</div>'; return; }
+        var cols=[]; rows.forEach(function(r){ Object.keys(r).forEach(function(k){ if(cols.indexOf(k)<0) cols.push(k); }); });
+        var types={}; cols.forEach(function(c){ var v=null; for(var i=0;i<rows.length;i++){ if(rows[i][c]!=null){ v=rows[i][c]; break; } } types[c]=sbxInferType(v); });
+        sbxBuildGrid(cols, types, rows, false);
+      }
+      function sbxRenderLocal(t){
+        var def=sbxLocal[t]; if(!def) return;
+        var cols=def.cols.map(function(c){return c.name;});
+        var types={}; def.cols.forEach(function(c){ types[c.name]=c.type||'text'; });
+        sbxBuildGrid(cols, types, def.rows||[], true);
       }
       function sbxRenderGrid(t){
         sbxCur=t;
-        var wrap=main.querySelector('#sbx-grid-wrap'); if(!wrap) return;
-        if(sbxCache[t]){ sbxRenderRows(t, sbxCache[t]); return; }
+        var kind=sbxKindOf(t);
+        if(kind==='local'){ sbxRenderLocal(t); return; }
+        var wrap=sbxGridWrap(); if(!wrap) return;
+        if(sbxCache[t]){ sbxRenderReal(t, sbxCache[t]); return; }
         wrap.innerHTML='<div class="sbx-msg">Ladataan…</div>';
         var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
         fetch(TP_SUPABASE_URL+'/rest/v1/'+t+'?select=*&limit=10',{headers:headers}).then(function(res){
           if(!res.ok) throw new Error('HTTP '+res.status);
           return res.json();
         }).then(function(rows){
-          if(t!==sbxCur) return; /* taulu vaihtui haun aikana */
-          sbxCache[t]=rows;
-          sbxRenderRows(t, rows);
+          if(t!==sbxCur) return;
+          sbxCache[t]=rows; sbxRenderReal(t, rows);
         }).catch(function(err){
           if(t!==sbxCur) return;
-          wrap.innerHTML='<div class="sbx-msg">Taulua <b>'+sbxEsc(t)+'</b> ei voitu ladata ('+sbxEsc((err&&err.message)||err)+').<br>Tarkista että taulu on olemassa ja sillä on julkinen lukuoikeus (RLS). Esikatselussa verkkohaut voivat olla estettyjä.</div>';
+          wrap.innerHTML='<div class="sbx-msg">Taulua <b>'+sbxEsc(t)+'</b> ei voitu ladata ('+sbxEsc((err&&err.message)||err)+').<br>Tarkista lukuoikeus (RLS). Esikatselussa verkkohaut voivat olla estettyjä.</div>';
         });
       }
-      sbxRenderList();
+      function sbxSelect(t){
+        $all('.sbx-trow',sbxTables).forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-table')===t); });
+        sbxRenderGrid(t);
+      }
+
+      /* ---------- taulun poisto ---------- */
+      function sbxDeleteTable(name){
+        var i=sbxTablesList.findIndex(function(t){return t.name===name;});
+        if(i<0) return;
+        sbxTablesList.splice(i,1);
+        delete sbxLocal[name]; delete sbxCache[name];
+        sbxRenderList();
+        if(sbxCur===name){
+          if(sbxTablesList.length){ sbxSelect(sbxTablesList[0].name); }
+          else { sbxCur=null; var w=sbxGridWrap(); if(w) w.innerHTML='<div class="sbx-msg">Ei tauluja. Luo uusi taulu “New table” -painikkeella.</div>'; }
+        }
+      }
+
+      /* ---------- uuden taulun luonti (inline-nimikenttä) ---------- */
+      function sbxStartNewTable(){
+        /* estä useampi samanaikainen luontikenttä */
+        if(sbxTables.querySelector('.sbx-newrow')) return;
+        var row=document.createElement('div'); row.className='sbx-trow sbx-newrow';
+        row.innerHTML='<input class="sbx-nameinput" type="text" placeholder="taulun_nimi" spellcheck="false">';
+        sbxTables.insertBefore(row, sbxTables.firstChild);
+        var inp=row.querySelector('input'); inp.focus();
+        function commit(){
+          var name=(inp.value||'').trim().replace(/\s+/g,'_');
+          if(!name){ row.remove(); return; }
+          if(sbxKindOf(name)!==null){ inp.style.borderColor='#dc2626'; return; } /* nimi varattu */
+          sbxTablesList.push({name:name,kind:'local'});
+          sbxLocal[name]={cols:[{name:'id',type:'int8'},{name:'created_at',type:'timestamptz'}], rows:[]};
+          sbxNewCount++;
+          sbxRenderList();
+          sbxSelect(name);
+        }
+        inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ commit(); } else if(e.key==='Escape'){ row.remove(); } });
+        inp.addEventListener('blur',function(){ setTimeout(function(){ if(document.body.contains(row)) commit(); },120); });
+      }
+
+      /* ---------- sarakkeen lisäys (inline) ---------- */
+      function sbxStartAddCol(th){
+        if(th.querySelector('input')) return;
+        var def=sbxLocal[sbxCur]; if(!def) return;
+        th.innerHTML='<input class="sbx-addcol-inp" type="text" placeholder="sarake" spellcheck="false">';
+        var inp=th.querySelector('input'); inp.focus();
+        function commit(){
+          var name=(inp.value||'').trim().replace(/\s+/g,'_');
+          if(name && !def.cols.some(function(c){return c.name===name;})){ def.cols.push({name:name,type:'text'}); }
+          sbxRenderLocal(sbxCur);
+        }
+        inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ commit(); } else if(e.key==='Escape'){ sbxRenderLocal(sbxCur); } });
+        inp.addEventListener('blur',function(){ setTimeout(function(){ if(document.body.contains(inp)) commit(); },120); });
+      }
+
+      /* ---------- sarakkeen uudelleennimeäminen (inline) ---------- */
+      function sbxStartRename(span){
+        var def=sbxLocal[sbxCur]; if(!def) return;
+        var ci=parseInt(span.getAttribute('data-col'),10);
+        var cur=def.cols[ci]; if(!cur) return;
+        var old=cur.name;
+        span.innerHTML='<input class="sbx-colinput" type="text" spellcheck="false" value="'+sbxAttr(old)+'">';
+        var inp=span.querySelector('input'); inp.focus(); inp.select();
+        function commit(){
+          var name=(inp.value||'').trim().replace(/\s+/g,'_');
+          if(name && (name===old || !def.cols.some(function(c){return c.name===name;}))){ def.cols[ci].name=name; }
+          sbxRenderLocal(sbxCur);
+        }
+        inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ commit(); } else if(e.key==='Escape'){ sbxRenderLocal(sbxCur); } e.stopPropagation(); });
+        inp.addEventListener('blur',function(){ setTimeout(function(){ if(document.body.contains(inp)) commit(); },120); });
+        inp.addEventListener('click',function(e){ e.stopPropagation(); });
+      }
+
+      /* ---------- tapahtumat ---------- */
       sbxTables.addEventListener('click',function(e){
-        var b=e.target.closest('.sbx-tbl'); if(!b)return;
-        $all('.sbx-tbl',sbxTables).forEach(function(x){x.classList.remove('active');});
-        b.classList.add('active');
-        sbxRenderGrid(b.getAttribute('data-table'));
+        var del=e.target.closest('.sbx-del'); if(del){ sbxDeleteTable(del.getAttribute('data-del')); return; }
+        var open=e.target.closest('.sbx-tbl'); if(open){ sbxSelect(open.getAttribute('data-open')); }
       });
+      sbxGridWrap().addEventListener('click',function(e){
+        var add=e.target.closest('#sbx-addcol'); if(add){ sbxStartAddCol(add); return; }
+        var nm=e.target.closest('.sbx-th-name.sbx-editable'); if(nm){ sbxStartRename(nm); }
+      });
+      var sbxNewBtn=main.querySelector('#sbx-newtable');
+      if(sbxNewBtn) sbxNewBtn.addEventListener('click', sbxStartNewTable);
+
+      sbxRenderList();
       /* lazy: hae ensimmäinen taulu vasta kun Supabase-näkymä avataan */
       var sbxLoaded=false;
       var sbxNav=document.querySelector('#app-admin .nav-item[data-panel="a-supabase"]');
