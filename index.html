@@ -609,18 +609,22 @@ table.sb-table td.sb-geom{color:var(--muted); font-style:italic}
 .tk-table td{vertical-align:middle}
 .cs-periodbar{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap}
 .cs-period-note{font-size:13px; color:var(--muted)}
-.cs-vbars{display:flex; align-items:flex-end; justify-content:space-around; gap:18px; height:340px; padding:14px 6px 0}
-.cs-vbar{flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center}
-.cs-vbar-val{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); margin-bottom:8px; display:flex; flex-direction:column; align-items:center; line-height:1.1; flex:0 0 auto}
-.cs-vbar-pct{font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--muted); margin-top:2px}
-.cs-vbar-track{flex:1 1 auto; width:64%; max-width:120px; min-height:0; display:flex; align-items:flex-end; background:var(--paper); border-radius:10px 10px 0 0; overflow:hidden}
-.cs-vbar-fill{width:100%; border-radius:10px 10px 0 0; min-height:4px; transition:height .35s cubic-bezier(.25,.46,.45,.94)}
-.cs-vbar-name{margin-top:12px; font-size:12.5px; color:var(--ink); text-align:center; line-height:1.35; display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto}
-.cs-vbar-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
+.cs-legend2{display:flex; flex-wrap:wrap; gap:12px 20px; margin-bottom:8px}
+.cs-leg2-item{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink)}
+.cs-leg2-dot{width:11px; height:11px; border-radius:3px; flex:0 0 auto}
+.cs-groups{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; height:320px; padding:22px 4px 0}
+.cs-group{flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center}
+.cs-group-bars{flex:1 1 auto; width:100%; min-height:0; display:flex; align-items:flex-end; justify-content:center; gap:4px}
+.cs-gbar{flex:1 1 0; max-width:30px; min-height:3px; border-radius:4px 4px 0 0; position:relative; transition:height .35s cubic-bezier(.25,.46,.45,.94)}
+.cs-gbar-val{position:absolute; top:-15px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:var(--muted); white-space:nowrap}
+.cs-group-label{margin-top:11px; font-size:12.5px; font-weight:700; color:var(--ink); text-align:center; flex:0 0 auto}
+.cs-slider-wrap{margin-top:18px; padding-top:16px; border-top:1px solid var(--line)}
+.cs-slider{width:100%; accent-color:var(--brand); cursor:pointer}
+.cs-slider-range{text-align:center; margin-top:8px; font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--muted)}
 @media(max-width:620px){
-  .cs-vbars{height:280px; gap:8px}
-  .cs-vbar-val{font-size:17px}
-  .cs-vbar-name{font-size:11px}
+  .cs-groups{height:250px; gap:8px; padding-top:18px}
+  .cs-gbar-val{display:none}
+  .cs-group-label{font-size:10.5px}
 }
 .wseg-btn{font-family:inherit; font-size:12.5px; font-weight:600; color:var(--muted); background:transparent; border:0; cursor:pointer; padding:5px 12px; border-radius:var(--r-pill); transition:background .15s, color .15s}
 .wseg-btn.active{background:var(--brand); color:#fff}
@@ -2334,19 +2338,31 @@ body.vresizing *{cursor:ns-resize !important}
     {key:'email',  label:'Suora sähköposti',         color:'#13B17C'},
     {key:'phone',  label:'Puhelinyhteys',            color:'#E8A33D'}
   ];
-  var CSDATA={
-    day:{ x:['00','03','06','09','12','15','18','21'],
-      pertti:[3,2,6,14,18,16,11,7], form:[1,1,3,7,9,8,6,4], email:[0,1,2,5,6,5,4,3], phone:[0,0,1,6,8,7,3,1] },
-    week:{ x:['Ma','Ti','Ke','To','Pe','La','Su'],
-      pertti:[78,86,81,92,88,54,60], form:[34,38,36,42,40,22,26], email:[20,24,22,26,25,14,18], phone:[28,31,27,33,30,12,15] },
-    month:{ x:['vk22','vk23','vk24','vk25','vk26'],
-      pertti:[512,540,498,556,588], form:[210,238,201,242,254], email:[120,138,110,146,152], phone:[168,181,154,193,201] }
+  /* Aikasarja kullekin jaksolle. 5 aikapistettä näkyvissä kerrallaan, muut
+     selattavissa sliderillä. Jokaisella aikapisteellä on 4 kanavan arvot. */
+  var CSSERIES={
+    day:{
+      labels:['23.6','24.6','25.6','26.6','27.6','28.6','29.6','30.6','1.7','2.7','3.7','4.7','5.7','6.7'],
+      pertti:[64,71,68,75,80,52,58,66,77,74,79,83,55,61],
+      form:  [28,32,30,35,38,20,24,30,39,36,40,43,22,27],
+      email: [16,19,17,21,22,12,15,18,26,20,24,26,13,17],
+      phone: [22,26,23,29,31,11,14,24,26,28,30,33,12,16]
+    },
+    week:{
+      labels:['vko 6','vko 7','vko 8','vko 9','vko 10','vko 11','vko 12','vko 13','vko 14','vko 15','vko 16','vko 17'],
+      pertti:[402,438,455,470,462,498,512,530,505,548,566,590],
+      form:  [176,192,201,214,208,228,236,244,230,250,262,276],
+      email: [104,118,110,126,120,138,142,150,132,146,152,160],
+      phone: [140,152,148,166,158,178,184,193,175,196,204,214]
+    },
+    month:{
+      labels:['Helmi','Maalis','Huhti','Touko','Kesä','Heinä','Elo','Syys','Loka','Marras','Joulu','Tammi'],
+      pertti:[1720,1810,1890,1760,1980,2040,1990,2120,2080,2210,2260,2140],
+      form:  [742,788,820,760,880,910,870,940,905,980,1010,960],
+      email: [420,468,440,462,520,540,505,560,548,610,632,600],
+      phone: [610,648,620,668,720,742,705,760,748,810,832,790]
+    }
   };
-  function csTotals(period){
-    var d=CSDATA[period], out={}, all=0;
-    CS_CH.forEach(function(c){ var s=d[c.key].reduce(function(a,b){return a+b;},0); out[c.key]=s; all+=s; });
-    out.__all=all; return out;
-  }
   function srcRow(label,pct,cls){return '<div class="src-row"><div class="src-top"><span>'+label+'</span><span class="mono">'+pct+' %</span></div><div class="src-bar '+(cls||'')+'"><i style="width:'+pct+'%"></i></div></div>';}
   function goalRow(icn,t,s,v){return '<div class="goal-row">'+(icn?'<span class="g-ic">'+ic(icn)+'</span>':'')+'<div><div class="g-t">'+t+'</div><div class="g-s">'+s+'</div></div><span class="g-v">'+v+'</span></div>';}
   function pill(cls,txt){return '<span class="pill '+cls+'"><span class="d"></span>'+txt+'</span>';}
@@ -2516,9 +2532,11 @@ body.vresizing *{cursor:ns-resize !important}
       +'<button class="wseg-btn" data-gran="week">Viikko</button>'
       +'<button class="wseg-btn" data-gran="month">Kuukausi</button>'
       +'</div><div class="cs-period-note" id="cs-period-note">Viimeisten 24 tunnin yhteydenotot</div></div>';
-    /* pystypalkit kanavittain (sisältää entisen kanavaerittelyn) */
+    /* ryhmitellyt pystypalkit: 5 aikapistettä näkyvissä, kukin 4 kanavaa */
     html+='<div class="card"><div class="card-h"><h3>Yhteydenottojen määrä kanavittain</h3><span class="mono" id="cs-total-lbl"></span></div>'
-      +'<div class="cs-vbars" id="cs-vbars"></div>'
+      +'<div class="cs-legend2" id="cs-legend2"></div>'
+      +'<div class="cs-groups" id="cs-groups"></div>'
+      +'<div class="cs-slider-wrap"><input type="range" class="cs-slider" id="cs-slider" min="0" max="0" value="0" step="1"><div class="cs-slider-range" id="cs-slider-range"></div></div>'
       +'</div>';
     html+='</div>';
 
@@ -2802,36 +2820,57 @@ body.vresizing *{cursor:ns-resize !important}
       });
     }
 
-    /* Asiakaspalvelun dashboard: kanavavirran seuranta päivä/viikko/kuukausi. */
+    /* Asiakaspalvelun dashboard: kanavavirran seuranta päivä/viikko/kuukausi.
+       Ryhmitellyt pystypalkit (4 kanavaa per aikapiste), 5 aikapistettä
+       näkyvissä, ja slider muiden jaksojen selaamiseen. */
     var csSeg=main.querySelector('#cs-seg');
     if(csSeg){
-      var CS_NOTES={day:'Viimeisten 24 tunnin yhteydenotot', week:'Viimeisen 7 päivän yhteydenotot', month:'Viimeisen 5 viikon yhteydenotot'};
-      function csRender(period){
-        var totals=csTotals(period);
-        var all=totals.__all||1;
-        var maxV=0; CS_CH.forEach(function(c){ if(totals[c.key]>maxV) maxV=totals[c.key]; }); maxV=maxV||1;
-        var lbl=main.querySelector('#cs-total-lbl'); if(lbl) lbl.textContent='Yhteensä '+totals.__all+' yhteydenottoa';
-        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
-        /* pystypalkit: korkeus suhteessa suurimpaan kanavaan, arvo ja osuus */
-        var vb=main.querySelector('#cs-vbars');
-        if(vb){
-          vb.innerHTML=CS_CH.map(function(c){
-            var v=totals[c.key], pct=Math.round(v/all*100), hpct=Math.round(v/maxV*100);
-            return '<div class="cs-vbar">'
-              +'<div class="cs-vbar-val">'+v+'<span class="cs-vbar-pct">'+pct+' %</span></div>'
-              +'<div class="cs-vbar-track"><div class="cs-vbar-fill" style="height:'+hpct+'%; background:'+c.color+'"></div></div>'
-              +'<div class="cs-vbar-name"><span class="cs-vbar-dot" style="background:'+c.color+'"></span>'+c.label+'</div>'
-              +'</div>';
-          }).join('');
-        }
+      var CS_WIN=5;
+      var CS_NOTES={day:'Yhteydenotot päivittäin', week:'Yhteydenotot viikoittain', month:'Yhteydenotot kuukausittain'};
+      var csPeriod='day', csStart=0;
+      /* selite kerran */
+      var leg=main.querySelector('#cs-legend2');
+      if(leg){ leg.innerHTML=CS_CH.map(function(c){ return '<span class="cs-leg2-item"><span class="cs-leg2-dot" style="background:'+c.color+'"></span>'+c.label+'</span>'; }).join(''); }
+
+      function csSeriesMax(s){
+        var m=0; CS_CH.forEach(function(c){ s[c.key].forEach(function(v){ if(v>m)m=v; }); }); return m||1;
       }
-      csRender('day');
+      function csRender(period, start){
+        csPeriod=period;
+        var s=CSSERIES[period], len=s.labels.length;
+        var maxStart=Math.max(0,len-CS_WIN);
+        start=Math.max(0,Math.min(maxStart, start|0)); csStart=start;
+        var maxV=csSeriesMax(s);
+        var end=Math.min(len, start+CS_WIN);
+        /* ryhmät */
+        var groups='';
+        var winTotal=0;
+        for(var i=start;i<end;i++){
+          var bars='';
+          CS_CH.forEach(function(c){
+            var v=s[c.key][i], hpct=Math.round(v/maxV*100);
+            winTotal+=v;
+            bars+='<div class="cs-gbar" style="height:'+hpct+'%; background:'+c.color+'" title="'+c.label+': '+v+'"><span class="cs-gbar-val">'+v+'</span></div>';
+          });
+          groups+='<div class="cs-group"><div class="cs-group-bars">'+bars+'</div><div class="cs-group-label">'+s.labels[i]+'</div></div>';
+        }
+        var g=main.querySelector('#cs-groups'); if(g) g.innerHTML=groups;
+        var lbl=main.querySelector('#cs-total-lbl'); if(lbl) lbl.textContent='Näkyvissä yhteensä '+winTotal+' yhteydenottoa';
+        var pn=main.querySelector('#cs-period-note'); if(pn) pn.textContent=CS_NOTES[period];
+        /* slider */
+        var sl=main.querySelector('#cs-slider');
+        if(sl){ sl.min=0; sl.max=maxStart; sl.value=start; sl.style.visibility=(maxStart>0?'visible':'hidden'); }
+        var rng=main.querySelector('#cs-slider-range'); if(rng) rng.textContent=s.labels[start]+' – '+s.labels[end-1];
+      }
+      csRender('day', 0);
       csSeg.addEventListener('click',function(e){
         var b=e.target.closest('.wseg-btn'); if(!b)return;
         $all('.wseg-btn',csSeg).forEach(function(x){x.classList.remove('active');});
         b.classList.add('active');
-        csRender(b.getAttribute('data-gran'));
+        csRender(b.getAttribute('data-gran'), 0);
       });
+      var csSlider=main.querySelector('#cs-slider');
+      if(csSlider) csSlider.addEventListener('input',function(){ csRender(csPeriod, parseInt(csSlider.value,10)); });
     }
   }
 
