@@ -328,6 +328,14 @@ body.logged-in #drawer-login{display:none}
 .maplibregl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
 .pop-t{font-family:var(--font-display); font-weight:600; font-size:15px; margin-bottom:3px}
 .pop-s{font-size:13px; color:var(--muted)}
+.pop-area-top{display:flex; align-items:flex-start; gap:8px}
+.pop-area-txt{flex:1; min-width:0}
+.pop-expand{flex:0 0 auto; width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:#f4f4f6; color:#666; cursor:pointer; display:grid; place-items:center; padding:0; transition:transform .2s, background .15s}
+.pop-expand svg{width:15px; height:15px}
+.pop-expand:hover{background:#e9e9ee}
+.pop-area.open .pop-expand{transform:rotate(90deg)}
+.pop-area-details{display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee}
+.pop-area.open .pop-area-details{display:block}
 .pop-s .mono{color:var(--brand)}
 
 /* ---------- Section base ---------- */
@@ -693,16 +701,26 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pf-range-ticks{display:flex; justify-content:space-between; font-size:10.5px; color:#999; margin-top:4px}
 .phone-filter-foot{flex-shrink:0; padding:12px 16px 16px; border-top:1px solid #eee}
 .pf-apply-btn{width:100%; height:46px; border:none; border-radius:12px; background:#0C0243; color:#fff; font-size:15px; font-weight:bold; font-family:Arial,sans-serif; cursor:pointer}
-.phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .2s ease; z-index:9; display:flex; flex-direction:column}
-.phone-sheet.open{transform:translateY(calc(100% - 132px))}
-.phone-sheet-handle-area{width:100%; padding:7px 0 5px; display:flex; justify-content:center; flex-shrink:0}
+.phone-sheet{position:absolute; left:0; right:0; bottom:0; height:100%; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -2px 20px rgba(0,0,0,.25); transform:translateY(calc(100% - 26px)); transition:transform .22s cubic-bezier(.25,.46,.45,.94); z-index:9; display:flex; flex-direction:column; touch-action:none}
+.phone-sheet.peek{transform:translateY(calc(100% - 156px))}
+.phone-sheet.expanded{transform:translateY(18%)}
+.phone-sheet.dragging{transition:none}
+.phone-sheet-handle-area{width:100%; padding:9px 0 6px; display:flex; justify-content:center; flex-shrink:0; cursor:grab}
+.phone-sheet-handle-area:active{cursor:grabbing}
 .phone-sheet-handle{width:32px; height:4px; background:#ddd; border-radius:2px}
 .phone-sheet-summary{padding:9px 15px 6px; font-family:Arial,sans-serif; flex-shrink:0}
 .phone-sheet-header{font-size:12.5px; font-weight:bold; color:#222; margin-bottom:2px; line-height:1.3}
 .phone-sheet-type{font-size:11.5px; color:#555}
 .phone-sheet-operator{font-size:11.5px; color:#555; margin-top:1px}
-.phone-sheet-divider{border:none; border-top:1px solid #eee; margin:4px 15px 0; display:none; flex-shrink:0}
-.phone-sheet-details{padding:0 15px 14px; font-family:Arial,sans-serif; font-size:11.5px; color:#555; overflow-y:auto}
+.phone-sheet-divider{border:none; border-top:1px solid #eee; margin:6px 15px 0; display:none; flex-shrink:0}
+.phone-sheet-details{padding:10px 15px 16px; font-family:Arial,sans-serif; font-size:12px; color:#555; overflow-y:auto; flex:1}
+.tp-valid-tbl{width:100%; border-collapse:collapse; margin-bottom:12px}
+.tp-valid-tbl th{font-size:10.5px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:.4px; padding:0 0 6px; text-align:left}
+.tp-valid-tbl td{color:#444; padding:4px 0; font-size:13px}
+.tp-valid-tbl td:first-child{color:#666}
+.tp-valid-tbl td:not(:first-child){font-weight:500; color:#222}
+.tp-info-label{font-size:10.5px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:.4px; margin:10px 0 3px}
+.tp-info-value{font-size:13px; color:#333; line-height:1.45}
 .map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
 .tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
 .tool-btn svg{width:16px; height:16px}
@@ -1906,6 +1924,67 @@ body.vresizing *{cursor:ns-resize !important}
       return [sx/n, sy/n];
     }catch(e){ return fallback; }
   }
+
+  /* Rakentaa alueen näytettävät tiedot yhdestä paikasta, jotta sekä
+     phone-mode-sheet että ison kartan popup näyttävät samat tiedot.
+     Palauttaa: { header, type, owner, detailsHTML }.
+     - header:  esim. "Helsinki, Vyöhyke 1 | Max. 24h"
+     - type:    esim. "Kadunvarsipysäköinti"
+     - owner:   esim. "Helsingin kaupunki"
+     - detailsHTML: voimassaoloaikataulukko (Ma–Pe / La / Su, tunnit + hinta)
+                    ja lisätietokenttä, laajennettua näkymää varten. */
+  var TP_ZONE_PRICES={}; /* täytetään payment_zones-latauksessa: 'kaupunki|zone' -> '4 €/h' */
+  function tpEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function tpFmtRange(a,b){
+    var has=function(v){return v!==null&&v!==undefined&&v!=='';};
+    return (has(a)&&has(b)) ? (a+'\u2013'+b) : '';
+  }
+  function tpBuildAreaInfo(p){
+    p=p||{};
+    var city=p.location_city||'Helsinki';
+    var zoneNo=(p.zone_number!==''&&p.zone_number!=null)?p.zone_number:'';
+    var areaName=(p.area_name && p.area_name!=='')? p.area_name
+                 : (zoneNo!==''? (city+', Vy\u00f6hyke '+zoneNo) : (p.parking_type||'Pys\u00e4k\u00f6intialue'));
+    var maxH = p.max_hours ? ('Max. '+p.max_hours+'h') : '';
+    var header = areaName + (maxH && !/Max\./i.test(areaName) ? (' | '+maxH) : '');
+    var type = p.parking_type || 'Pys\u00e4k\u00f6intialue';
+    var owner = (p.owner_parking_area && p.owner_parking_area!=='') ? p.owner_parking_area : 'Helsingin kaupunki';
+
+    /* hinta: yhdistä payment_zones-taulusta kaupungin + vyöhykkeen mukaan */
+    var isFree = tpIsFreeSource(p.source);
+    var priceText='';
+    if(isFree) priceText='Ilmainen';
+    else {
+      var key=(city||'').toLowerCase().trim()+'|'+zoneNo;
+      priceText = TP_ZONE_PRICES[key] || 'Maksullinen';
+    }
+    var priceFor=function(hours){ return hours ? (priceText||'\u2014') : '\u2014'; };
+
+    var vMaPe=tpFmtRange(p.valid_mape_from,p.valid_mape_to);
+    var vLa=tpFmtRange(p.valid_la_from,p.valid_la_to);
+    var vSu=tpFmtRange(p.valid_su_from,p.valid_su_to);
+
+    var d='';
+    if(vMaPe||vLa||vSu){
+      d+='<table class="tp-valid-tbl"><thead><tr><th>P\u00e4iv\u00e4t</th><th>Tunnit</th><th>Hinta</th></tr></thead><tbody>';
+      d+='<tr><td>Ma\u2013Pe</td><td>'+tpEsc(vMaPe||'\u2014')+'</td><td>'+tpEsc(priceFor(vMaPe))+'</td></tr>';
+      d+='<tr><td>La</td><td>'+tpEsc(vLa||'\u2014')+'</td><td>'+tpEsc(priceFor(vLa))+'</td></tr>';
+      d+='<tr><td>Su</td><td>'+tpEsc(vSu||'\u2014')+'</td><td>'+tpEsc(priceFor(vSu))+'</td></tr>';
+      d+='</tbody></table>';
+    } else if(priceText){
+      d+='<div class="tp-info-label">Hinta</div><div class="tp-info-value">'+tpEsc(priceText)+'</div>';
+    }
+    var extra=(p.info_additional&&p.info_additional!=='')? p.info_additional : '';
+    d+='<div class="tp-info-label">Lis\u00e4tiedot</div><div class="tp-info-value">'+(extra?tpEsc(extra):'\u2014')+'</div>';
+
+    return { header:header, type:type, owner:owner, detailsHTML:d };
+  }
+  function tpIsFreeSource(src){
+    if(!src) return false;
+    var s=String(src).toLowerCase();
+    return s.indexOf('ilmainen')!==-1 || s.indexOf('kiekko')!==-1 || s==='community';
+  }
+
   /* Keskinappi-panorointi: MapLibre ei tue hiiren rullapainikkeella raahaamista
      natiivisti, joten lisätään se canvasin tapahtumilla. Painike pohjassa raahaus
      siirtää karttaa panBy:llä, ja oletusselaintoiminto (autoscroll) estetään. */
@@ -1992,6 +2071,23 @@ body.vresizing *{cursor:ns-resize !important}
       console.log('Admin-kartta: alueita',features.length);
     }catch(e){console.error('Alueiden lataus epäonnistui',e);}
   }
+  var _zonePricesLoaded=false;
+  async function tpLoadZonePrices(){
+    if(_zonePricesLoaded) return;
+    try{
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/payment_zones?select=zone_number,hourly_price_eur',{headers:headers});
+      if(!res.ok) return;
+      var rows=await res.json();
+      rows.forEach(function(r){
+        if(r.hourly_price_eur==null) return;
+        var price=String(r.hourly_price_eur).replace('.',',')+' \u20ac/h';
+        /* kaikki alueet ovat Helsingissä -> avain kaupunki|vyöhyke */
+        TP_ZONE_PRICES['helsinki|'+r.zone_number]=price;
+      });
+      _zonePricesLoaded=true;
+    }catch(e){ /* hinnat eivät ole pakollisia */ }
+  }
   async function tpLoadPaymentZones(map){
     try{
       var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
@@ -2068,7 +2164,7 @@ body.vresizing *{cursor:ns-resize !important}
     adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
     adminMap.addControl(new maplibregl.FullscreenControl(),'top-right');
-    adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpEnableMiddleButtonPan(adminMap); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
+    adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpEnableMiddleButtonPan(adminMap); tpLoadZonePrices(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
     adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
     var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
     function infoLayers(){ return INFO_LAYERS.filter(function(id){return adminMap.getLayer(id);}); }
@@ -2076,10 +2172,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(adminMap.__drawing || adminMap.__editActive) return;
       var ls=infoLayers(); if(!ls.length) return;
       var fs=adminMap.queryRenderedFeatures(e.point,{layers:ls}); if(!fs.length) return;
-      var f=fs[0], p=f.properties||{}, lid=f.layer.id, t, s;
-      if(lid==='halli-icons'){ t=p.name||'Pysäköintihalli'; s='Pysäköintihalli'; }
-      else if(lid==='charging-icons'){ t=p.name||p.title||p.operator||'Latauspiste'; s='Latauspiste'; }
-      else { t=p.parking_type||'Pysäköintialue'; var ex=[]; if(p.area_type)ex.push(p.area_type); if(p.max_hours)ex.push('Maksimi '+p.max_hours+' h'); s=ex.join(' \u00b7 ')||'Pysäköintialue'; }
+      var f=fs[0], p=f.properties||{}, lid=f.layer.id;
       /* Keskitä klikattu kohde kartan keskelle. Alueille käytetään koko
          tallennettua geometriaa (tarkka keskipiste myös jos osa alueesta on
          näkymän ulkopuolella); halleille/latauspisteille kohteen koordinaatit. */
@@ -2091,8 +2184,34 @@ body.vresizing *{cursor:ns-resize !important}
         ctr=(f.geometry && f.geometry.type==='Point') ? f.geometry.coordinates : [e.lngLat.lng,e.lngLat.lat];
       }
       adminMap.easeTo({center:ctr, duration:500});
-      var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+p.id+'</span>' : '';
-      new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'260px'}).setLngLat(ctr).setHTML('<div class="pop-t">'+t+'</div><div class="pop-s">'+s+idline+'</div>').addTo(adminMap);
+
+      var popHTML;
+      if(lid==='master-poly-fill'){
+        /* Sama tietosisältö kuin phone-sheetissä: otsikko + rivi (tyyppi ·
+           omistaja), sekä harmaa >-nuoli joka laajentaa voimassaoloajat ja
+           lisätiedot. */
+        var info=tpBuildAreaInfo(p);
+        var sub=info.type + (info.owner? (' \u00b7 '+info.owner) : '');
+        popHTML='<div class="pop-area">'
+          +'<div class="pop-area-top">'
+          +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(sub)+'</div></div>'
+          +'<button class="pop-expand" type="button" aria-label="Näytä lisätiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
+          +'</div>'
+          +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
+          +'</div>';
+      } else {
+        var t = lid==='halli-icons' ? (p.name||'Pysäköintihalli') : (p.name||p.title||p.operator||'Latauspiste');
+        var s = lid==='halli-icons' ? 'Pysäköintihalli' : ('Latauspiste'+(p.operator?(' \u00b7 '+p.operator):''));
+        var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+tpEsc(p.id)+'</span>' : '';
+        popHTML='<div class="pop-t">'+tpEsc(t)+'</div><div class="pop-s">'+s+idline+'</div>';
+      }
+      var pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+      /* laajennus-nuolen toiminta */
+      var el=pop.getElement();
+      if(el){
+        var btn=el.querySelector('.pop-expand');
+        if(btn) btn.addEventListener('click',function(){ el.querySelector('.pop-area').classList.toggle('open'); });
+      }
     });
     adminMap.on('mousemove',function(e){
       if(adminMap.__drawing || adminMap.__editActive) return;
@@ -2930,7 +3049,7 @@ body.vresizing *{cursor:ns-resize !important}
         var ch=phoneMap.queryRenderedFeatures(box,{layers:['charging-icons']});
         if(ch.length){
           var cp=ch[0].properties||{};
-          if(phoneHoveredId!==('c'+cp.id)){ phoneHoveredId='c'+cp.id; openPhoneSheet(cp.name||cp.title||cp.operator||'Latauspiste','Latauspiste',cp.operator||'Helsingin kaupunki'); }
+          if(phoneHoveredId!==('c'+cp.id)){ phoneHoveredId='c'+cp.id; openPhoneSheet(cp.name||cp.title||cp.operator||'Latauspiste','Latauspiste',cp.operator||'Helsingin kaupunki',''); }
           setPhoneAction('Lataa täällä',true);
           return;
         }
@@ -2939,7 +3058,7 @@ body.vresizing *{cursor:ns-resize !important}
         var hh=phoneMap.queryRenderedFeatures(box,{layers:['halli-icons']});
         if(hh.length){
           var hp=hh[0].properties||{};
-          if(phoneHoveredId!==('h'+hp.id)){ phoneHoveredId='h'+hp.id; openPhoneSheet(hp.name||'Pysäköintihalli','Pysäköintihalli','Helsingin kaupunki'); }
+          if(phoneHoveredId!==('h'+hp.id)){ phoneHoveredId='h'+hp.id; openPhoneSheet(hp.name||'Pysäköintihalli','Pysäköintihalli','Helsingin kaupunki',''); }
           setPhoneAction('Pysäköi täällä',true);
           return;
         }
@@ -2950,10 +3069,8 @@ body.vresizing *{cursor:ns-resize !important}
           var p=pf[0].properties||{};
           if(phoneHoveredId!==('p'+p.id)){
             phoneHoveredId='p'+p.id;
-            var areaName=(p.area_name && p.area_name!=='')? p.area_name : (p.parking_type||'Pysäköintialue');
-            var maxSuffix=p.max_hours? ('  |  Max. '+p.max_hours+'h') : '';
-            var header=areaName+(/Max\./.test(areaName)? '' : maxSuffix);
-            openPhoneSheet(header, p.parking_type||'Pysäköintialue', 'Helsingin kaupunki');
+            var info=tpBuildAreaInfo(p);
+            openPhoneSheet(info.header, info.type, info.owner, info.detailsHTML);
           }
           setPhoneAction(phoneIsDiscArea(p)? 'Aseta elektroninen pysäköintikiekko' : 'Pysäköi tähän', true);
           return;
@@ -2974,6 +3091,7 @@ body.vresizing *{cursor:ns-resize !important}
         checkPhoneCenter();
       });
       wirePhoneFilter();
+      wirePhoneSheetGestures();
       phoneMap.on('move',function(){
         syncAdminMap();
         if(_phoneRAF) return;
@@ -3000,15 +3118,91 @@ body.vresizing *{cursor:ns-resize !important}
         }, function(){}, {enableHighAccuracy:true, timeout:8000});
       });
     }
-    function openPhoneSheet(header,type,operator){
+    function openPhoneSheet(header,type,operator,detailsHTML){
       var sh=document.getElementById('phone-sheet'); if(!sh) return;
       var hEl=document.getElementById('phone-sheet-header'); if(hEl) hEl.textContent=header;
       var tEl=document.getElementById('phone-sheet-type'); if(tEl) tEl.textContent=type;
       var oEl=document.getElementById('phone-sheet-operator'); if(oEl) oEl.textContent=operator;
       var dEl=document.getElementById('phone-sheet-divider'); if(dEl) dEl.style.display='block';
-      sh.classList.add('open');
+      var detEl=document.getElementById('phone-sheet-details'); if(detEl) detEl.innerHTML=detailsHTML||'';
+      /* jos ei olla laajennettuna, näytä peek-tila (otsikko+tyyppi+omistaja) */
+      if(!sh.classList.contains('expanded')) setPhoneSheetState('peek');
     }
-    function closePhoneSheet(){ var sh=document.getElementById('phone-sheet'); if(sh) sh.classList.remove('open'); }
+    function closePhoneSheet(){ setPhoneSheetState('closed'); }
+    function setPhoneSheetState(state){
+      var sh=document.getElementById('phone-sheet'); if(!sh) return;
+      sh.classList.remove('peek','expanded','dragging');
+      sh.style.transform='';
+      if(state==='peek') sh.classList.add('peek');
+      else if(state==='expanded') sh.classList.add('expanded');
+      /* 'closed' = ei luokkaa -> vain kahva näkyvissä */
+    }
+    function phoneSheetIsOpen(){
+      var sh=document.getElementById('phone-sheet');
+      return sh && (sh.classList.contains('peek')||sh.classList.contains('expanded'));
+    }
+    /* Sheetin nostaminen: (1) rulla ylös sheetin päällä, (2) tartu yläreunaan
+       ja raahaa. Kolme tilaa: closed -> peek -> expanded. */
+    function wirePhoneSheetGestures(){
+      var sh=document.getElementById('phone-sheet'); if(!sh || sh.__gest) return;
+      sh.__gest=true;
+      var frame=sh.closest('.phone-frame');
+      /* rulla */
+      sh.addEventListener('wheel',function(e){
+        if(!phoneSheetIsOpen()) return;
+        var det=document.getElementById('phone-sheet-details');
+        /* jos sisältö on jo laajennettuna ja vieritetään sen sisällä, salli normaali scroll */
+        if(sh.classList.contains('expanded') && det && det.scrollHeight>det.clientHeight){
+          var atTop=det.scrollTop<=0;
+          if(!(atTop && e.deltaY<0)) return; /* anna sisällön vierityä */
+        }
+        e.preventDefault();
+        if(e.deltaY<0){ if(sh.classList.contains('peek')) setPhoneSheetState('expanded'); }
+        else { if(sh.classList.contains('expanded')) setPhoneSheetState('peek'); else if(sh.classList.contains('peek')) setPhoneSheetState('closed'); }
+      },{passive:false});
+      /* raahaus yläreunasta (kahva-alue) */
+      var handle=sh.querySelector('.phone-sheet-handle-area');
+      var dragging=false, startY=0, startTop=0, frameH=0;
+      function curTranslate(){
+        var m=window.getComputedStyle(sh).transform;
+        if(m && m!=='none'){ var vals=m.match(/matrix.*\((.+)\)/); if(vals){ var parts=vals[1].split(', '); return parseFloat(parts[5])||0; } }
+        return 0;
+      }
+      function onDown(e){
+        if(!phoneSheetIsOpen() && !sh.classList.contains('peek')) { /* salli avaus myös kiinni-tilasta tarttumalla */ }
+        dragging=true;
+        frameH=frame?frame.getBoundingClientRect().height:600;
+        startY=(e.touches?e.touches[0].clientY:e.clientY);
+        startTop=curTranslate();
+        sh.classList.add('dragging');
+        e.preventDefault();
+      }
+      function onMove(e){
+        if(!dragging) return;
+        var y=(e.touches?e.touches[0].clientY:e.clientY);
+        var dy=y-startY;
+        var nt=Math.max(frameH*0.18, Math.min(frameH-26, startTop+dy));
+        sh.style.transform='translateY('+nt+'px)';
+      }
+      function onUp(){
+        if(!dragging) return;
+        dragging=false; sh.classList.remove('dragging');
+        var nt=curTranslate();
+        var ratio=frameH? nt/frameH : 1;
+        /* valitse lähin tila raahauksen loppukohdan perusteella */
+        if(ratio<0.34) setPhoneSheetState('expanded');
+        else if(ratio<0.72) setPhoneSheetState('peek');
+        else setPhoneSheetState('closed');
+      }
+      if(handle){
+        handle.addEventListener('mousedown',onDown);
+        handle.addEventListener('touchstart',onDown,{passive:false});
+      }
+      window.addEventListener('mousemove',onMove,{passive:false});
+      window.addEventListener('touchmove',onMove,{passive:false});
+      window.addEventListener('mouseup',onUp);
+      window.addEventListener('touchend',onUp);
+    }
     var _syncing=false;
     function syncPhoneMap(){
       if(_syncing || !phoneMap || !adminMap) return;
