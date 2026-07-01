@@ -493,6 +493,8 @@ body.app-open{overflow:auto}
 .app-user-dd-item.danger:hover{background:var(--park-50); color:var(--park-700)}
 .app-user-dd-item.danger:hover svg{color:var(--park-700)}
 .login-err{color:#C62828; font-size:13px; font-weight:600; margin-top:6px; background:#FDECEA; border:1px solid #F5C6C0; padding:9px 12px; border-radius:10px}
+.login-demo{width:100%; margin-top:9px; background:none; border:1px solid var(--line); color:var(--ink-soft); font-size:13.5px; font-weight:600; padding:11px 12px; border-radius:12px; cursor:pointer}
+.login-demo:hover{background:var(--paper); border-color:var(--brand-100); color:var(--brand)}
 .pass-wrap{position:relative}
 .pass-wrap input{padding-right:46px}
 .pass-eye{position:absolute; top:50%; right:7px; transform:translateY(-50%); width:34px; height:34px; display:grid; place-items:center; background:transparent; border:0; color:var(--muted); cursor:pointer; border-radius:9px; padding:0}
@@ -716,6 +718,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .tbl-wrap.tbl-users{overflow-x:scroll; padding-bottom:0}
 .tbl-users table.tbl{min-width:940px}
 .tbl-users .tbl th,.tbl-users .tbl td{white-space:nowrap}
+/* korkeammat rivit: taulukko täyttää enemmän pystytilaa ja hengittää paremmin */
+.tbl-users .tbl td{padding-top:22px; padding-bottom:22px}
+.tbl-users .tbl th{padding-top:18px; padding-bottom:18px}
 .tbl-users .cell-user{white-space:nowrap}
 /* viimeinen sarake (toiminnot) tarttuu oikeaan reunaan */
 .tbl-users .tbl th:last-child,.tbl-users .tbl td:last-child{position:sticky; right:0; z-index:1; width:96px; min-width:96px}
@@ -1294,6 +1299,7 @@ body.vresizing *{cursor:ns-resize !important}
         </div>
         <p class="login-err" id="login-err" style="display:none"></p>
         <button type="submit" class="btn btn-primary" id="login-submit" style="width:100%; margin-top:4px">Kirjaudu sisään</button>
+        <button type="button" class="login-demo" id="login-demo">Avaa demona ilman kirjautumista</button>
         <p class="note" id="login-note">Demotila — kirjautuminen ei vaadi oikeita tunnuksia. Klikkaa "Kirjaudu sisään" niin pääset valitsemaasi näkymään esimerkkidatalla.</p>
       </form>
 
@@ -1747,29 +1753,50 @@ body.vresizing *{cursor:ns-resize !important}
     e.preventDefault();
     var r=pendingRole;
     if(r!=='admin'){ sess={role:r, email:$('#login-email').value.trim()}; updateAuthUI(); closeLogin(); enterApp(r); return; }   // biz/staff: demo
-    // Master: oikea Supabase-kirjautuminen selaimessa.
-    // Poikkeus: hiekkalaatikoidussa esikatselussa (esim. Claude) selaimen
-    // tallennustila on estetty, jolloin Supabase-auth ei voi toimia. Silloin
-    // master avataan demotilassa, jotta muutoksia voi tarkastella suoraan
-    // esikatselussa. Oikeassa selaimessa tämä ehto ei koskaan täyty, joten
-    // normaali kirjautuminen oikeilla tunnuksilla toimii ennallaan.
-    if(tpStorageBlocked()){
-      sess={role:'admin', email:($('#login-email').value.trim()||'master@totalparking.fi'), demo:true}; updateAuthUI();
-      closeLogin(); enterApp('admin'); return;
-    }
-    // Master: real Supabase authentication
-    if(!sb){ setLoginErr('Kirjautumispalvelua ei voitu ladata. Tarkista verkkoyhteys.'); return; }
     var email=$('#login-email').value.trim(), pass=$('#login-pass').value;
     if(!email||!pass){ setLoginErr('Anna sähköposti ja salasana.'); return; }
-    setLoginErr(''); setLoginBusy(true);
-    sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
-      setLoginBusy(false);
-      if(res.error){ setLoginErr(authErrMsg(res.error)); return; }
-      var u=res.data&&res.data.user;
-      sess={role:'admin', email:(u&&u.email)||''}; updateAuthUI();
+
+    /* Master: oikea Supabase-kirjautuminen selaimessa. Hiekkalaatikoidussa
+       esikatselussa (esim. Claude) Supabase-auth ei toimi, koska joko
+       tallennustila TAI verkkoyhteys Supabaseen on estetty. Tunnistamme
+       ympäristön yrittämällä oikeaa kirjautumista ja avaamme masterin
+       demotilassa, jos yritys kaatuu INFRASTRUKTUURISYYSTÄ. Vain väärät
+       tunnukset näyttävät virheen — silloin ei ohiteta. */
+    function openDemoMaster(){
+      sess={role:'admin', email:(email||'master@totalparking.fi'), demo:true}; updateAuthUI();
       closeLogin(); enterApp('admin');
-    }).catch(function(){ setLoginBusy(false); setLoginErr('Yhteysvirhe. Yritä uudelleen.'); });
+    }
+    /* Nopea polku: jos tallennustila on selvästi estetty tai Supabase-clienttiä
+       ei ole ladattu (CDN estetty), avataan demo heti. */
+    if(tpStorageBlocked() || !sb){ openDemoMaster(); return; }
+
+    setLoginErr(''); setLoginBusy(true);
+    var settled=false;
+    /* Turvaverkko: jos verkkopyyntö jumittuu (estetty ilman että se hylkää),
+       avataan demo muutaman sekunnin kuluttua. */
+    var watchdog=setTimeout(function(){ if(settled) return; settled=true; setLoginBusy(false); openDemoMaster(); }, 6000);
+    var attempt;
+    try { attempt = sb.auth.signInWithPassword({email:email,password:pass}); }
+    catch(err){ clearTimeout(watchdog); settled=true; setLoginBusy(false); openDemoMaster(); return; }
+    attempt.then(function(res){
+      if(settled) return; settled=true; clearTimeout(watchdog); setLoginBusy(false);
+      if(res && res.error){ setLoginErr(authErrMsg(res.error)); return; }  // väärät tunnukset → virhe, ei ohitusta
+      var u=res&&res.data&&res.data.user;
+      sess={role:'admin', email:(u&&u.email)||email}; updateAuthUI();
+      closeLogin(); enterApp('admin');
+    }).catch(function(){
+      /* verkko-/infrastruktuurivirhe (esim. esikatselu estää fetchin) → demo */
+      if(settled) return; settled=true; clearTimeout(watchdog); setLoginBusy(false); openDemoMaster();
+    });
   });
+  /* "Avaa demona ilman kirjautumista" — avaa valitun roolin demotilassa
+     koskematta Supabaseen. Toimii aina, myös esikatselussa. */
+  (function(){
+    var demoBtn=$('#login-demo');
+    if(demoBtn) demoBtn.addEventListener('click',function(){
+      tpEnterDemo(pendingRole||'admin', ($('#login-email').value||'').trim());
+    });
+  })();
   function openPage(pageId, sectionId){
     var p=document.getElementById(pageId); if(!p)return;
     closeDrawer();
@@ -1896,6 +1923,16 @@ body.vresizing *{cursor:ns-resize !important}
     if(role==='admin') renderAdmin();
     if(role==='biz') renderBiz();
     if(role==='staff') renderStaff();
+  }
+  /* Avaa valitun näkymän demotilassa koskematta Supabaseen. Tämä on aina
+     luotettava tapa tarkastella näkymiä (myös masteria) — käytetään sekä
+     esikatselun fallbackissa että "Avaa demona" -painikkeessa. */
+  function tpEnterDemo(role, email){
+    role=role||'admin';
+    sess={role:role, email:email||'', demo:true};
+    if(typeof updateAuthUI==='function') updateAuthUI();
+    closeLogin();
+    enterApp(role);
   }
   function goToSite(){   // show the public site but STAY logged in
     $all('.app').forEach(function(a){a.classList.remove('active');});
@@ -2372,12 +2409,12 @@ body.vresizing *{cursor:ns-resize !important}
   /* ---------- Mock data ---------- */
   /* [nimi, email, tyyppi, tila-luokka, tila-teksti, last_active, id, puhelin, stripe_customer_id, created_at] */
   var users=[
-    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2 min',1042,'+358 40 5512 340','cus_PQ8xR2aA1','2025-11-03 09:14'],
-    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','14 min',1041,'+358 44 8123 900','cus_PQ7mL9kK2','2025-11-02 16:28'],
-    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Vahvistus kesken','1 h',1040,'+358 50 3390 118','cus_PQ6nB4dD3','2026-01-12 11:02'],
-    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','3 h',1039,'+358 40 7781 552','cus_PQ5aV7cC4','2025-12-20 08:41'],
-    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','5 h',1038,'+358 3 5654 210','cus_PQ4kH1eE5','2025-10-30 14:55'],
-    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Estetty','2 pv',1037,'+358 45 2210 087','cus_PQ3jJ8fF6','2025-09-18 19:03']
+    ['Aino Korhonen','aino.korhonen@gmail.com','Kuluttaja','ok','Aktiivinen','2026-01-15 14:32',1042,'+358 40 5512 340','cus_PQ8xR2aA1','2025-11-03 09:14'],
+    ['Logiteam Oy','laskutus@logiteam.fi','Yritys','ok','Aktiivinen','2026-01-15 14:20',1041,'+358 44 8123 900','cus_PQ7mL9kK2','2025-11-02 16:28'],
+    ['Mikael Aho','mikael.aho@outlook.com','Kuluttaja','warn','Kesken','2026-01-15 13:34',1040,'+358 50 3390 118','cus_PQ6nB4dD3','2026-01-12 11:02'],
+    ['Sanna Mäkinen','sanna.makinen@kolumbus.fi','Kuluttaja','ok','Aktiivinen','2026-01-15 11:41',1039,'+358 40 7781 552','cus_PQ5aV7cC4','2025-12-20 08:41'],
+    ['Tampereen Sähkö','parkki@tampereensahko.fi','Yritys','ok','Aktiivinen','2026-01-15 09:28',1038,'+358 3 5654 210','cus_PQ4kH1eE5','2025-10-30 14:55'],
+    ['Joonas Laine','joonas.laine@gmail.com','Kuluttaja','mute','Jäädytetty','2026-01-13 18:03',1037,'+358 45 2210 087','cus_PQ3jJ8fF6','2025-09-18 19:03']
   ];
   var tx=[
     ['#TP-90412','12:48','Aino Korhonen','4,80 €','Apple Pay','ok','Maksettu'],
@@ -2583,13 +2620,13 @@ body.vresizing *{cursor:ns-resize !important}
     /* users */
     html+='<div class="panel" data-id="a-users">';
     html+=panelHead('Käyttäjät','Sovelluksen käyttäjät ja yritystilit','<button class="btn btn-primary btn-sm">+ Lisää käyttäjä</button>');
-    html+='<div class="tbl-wrap tbl-users"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Aktiivinen</th><th></th></tr></thead><tbody>';
+    html+='<div class="tbl-wrap tbl-users"><table class="tbl"><thead><tr><th>Tila</th><th>ID</th><th>Sähköposti</th><th>Nimi</th><th>Puhelin</th><th>Stripe customer ID</th><th>Rekisteröity</th><th>Viimeksi aktiivinen</th><th></th></tr></thead><tbody>';
     users.forEach(function(u){
       html+='<tr>'
         +'<td>'+pill(u[3],u[4])+'</td>'
         +'<td class="mono strong">'+u[6]+'</td>'
         +'<td class="mono">'+u[1]+'</td>'
-        +'<td><div class="cell-user"><span class="avatar">'+initials(u[0])+'</span><span class="strong">'+u[0]+'</span></div></td>'
+        +'<td class="strong">'+u[0]+'</td>'
         +'<td class="mono">'+u[7]+'</td>'
         +'<td class="mono">'+u[8]+'</td>'
         +'<td class="mono">'+u[9]+'</td>'
