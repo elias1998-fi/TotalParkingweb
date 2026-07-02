@@ -903,6 +903,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.ok{background:var(--brand); color:#fff}
 .drawbtn.ok:disabled{opacity:.45; cursor:not-allowed}
 .drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
+.drawbtn.alt{background:#FFF3D6; color:#8A5A00; border:1px solid #F1D08A}
+.drawbtn.alt:hover{background:#FFEBB8}
 .map-side-rail{position:absolute; right:14px; top:100px; z-index:7; display:none; flex-direction:column; gap:8px; align-items:flex-end}
 .map-side-rail.open{display:flex}
 .addrail-btn{display:flex; align-items:center; gap:7px; height:38px; padding:0 13px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); color:var(--ink); font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit}
@@ -4338,7 +4340,7 @@ body.vresizing *{cursor:ns-resize !important}
     upper.pop(); lower.pop();
     return lower.concat(upper);
   }
-  function edMergeGeom(){
+  function edMergeGeomHull(){
     var feats=Array.from(edSelected).map(findEdFeature).filter(Boolean);
     var pts=[];
     feats.forEach(function(f){
@@ -4348,6 +4350,91 @@ body.vresizing *{cursor:ns-resize !important}
     });
     var hull=edConvexHull(pts);
     return {type:'Polygon',coordinates:[hull.concat([hull[0]])]};
+  }
+
+  /* Tietä myötäilevä yhdistys: rakentaa keskilinjan valittujen kaistojen läpi
+     (kunkin kaistan pääakselin päätepisteet järjestettynä tien suuntaan) ja
+     puskuroi sen tasaisella leveydellä → kaartuva korridoori, joka seuraa tietä
+     eikä paisu kuperaksi. Toimii parhaiten kadunvarsikaistoille jotka eivät
+     taitu takaisin itseensä. Laskenta tehdään paikallisessa tasokoordinaatistossa. */
+  function edMergeGeomCorridor(){
+    var feats=Array.from(edSelected).map(findEdFeature).filter(Boolean);
+    if(feats.length<2) return null;
+    var strips=[], allV=[];
+    feats.forEach(function(f){
+      var g=f.geometry;
+      var rings = g.type==='MultiPolygon' ? g.coordinates.map(function(p){return p[0];}) : [g.coordinates[0]];
+      var vs=[];
+      rings.forEach(function(r){ r.forEach(function(pt){ vs.push([pt[0],pt[1]]); allV.push([pt[0],pt[1]]); }); });
+      if(vs.length) strips.push(vs);
+    });
+    if(!allV.length) return null;
+    var lat0=0; allV.forEach(function(p){ lat0+=p[1]; }); lat0/=allV.length;
+    var k=Math.cos(lat0*Math.PI/180)||1;
+    function XY(p){ return [p[0]*k, p[1]]; }
+    function LL(p){ return [p[0]/k, p[1]]; }
+    function centroidOf(vs){ var sx=0,sy=0; vs.forEach(function(p){ sx+=p[0]; sy+=p[1]; }); return [sx/vs.length, sy/vs.length]; }
+    function pcaDir(vs,c){ var sxx=0,syy=0,sxy=0; vs.forEach(function(p){ var dx=p[0]-c[0], dy=p[1]-c[1]; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy; }); var ang=0.5*Math.atan2(2*sxy, sxx-syy); return [Math.cos(ang), Math.sin(ang)]; }
+    /* kunkin kaistan pääakselin päätepisteet (XY) */
+    var endpoints=[];
+    strips.forEach(function(vs){
+      var vxy=vs.map(XY), c=centroidOf(vxy), dir=pcaDir(vxy,c), tmin=1e18, tmax=-1e18;
+      vxy.forEach(function(p){ var t=(p[0]-c[0])*dir[0]+(p[1]-c[1])*dir[1]; if(t<tmin)tmin=t; if(t>tmax)tmax=t; });
+      endpoints.push([c[0]+dir[0]*tmin, c[1]+dir[1]*tmin]);
+      endpoints.push([c[0]+dir[0]*tmax, c[1]+dir[1]*tmax]);
+    });
+    if(endpoints.length<2) return null;
+    /* järjestä päätepisteet tien suuntaan (projektio kokonaispääakselille) */
+    var cAll=centroidOf(endpoints), dAll=pcaDir(endpoints,cAll);
+    endpoints.sort(function(a,b){ return ((a[0]-cAll[0])*dAll[0]+(a[1]-cAll[1])*dAll[1])-((b[0]-cAll[0])*dAll[0]+(b[1]-cAll[1])*dAll[1]); });
+    /* poista lähes päällekkäiset peräkkäiset pisteet */
+    var center=[];
+    endpoints.forEach(function(p){ if(!center.length){ center.push(p); return; } var l=center[center.length-1], dx=p[0]-l[0], dy=p[1]-l[1]; if(dx*dx+dy*dy>1e-14) center.push(p); });
+    if(center.length<2) return null;
+    /* puolileveys: suurin kohtisuora etäisyys mistä tahansa kaistan kärjestä keskilinjaan */
+    function distToSeg(p,a,b){ var vx=b[0]-a[0], vy=b[1]-a[1], wx=p[0]-a[0], wy=p[1]-a[1], L2=vx*vx+vy*vy, t=L2>0?(wx*vx+wy*vy)/L2:0; t=Math.max(0,Math.min(1,t)); var cx=a[0]+t*vx, cy=a[1]+t*vy, dx=p[0]-cx, dy=p[1]-cy; return Math.sqrt(dx*dx+dy*dy); }
+    function distToLine(p){ var m=1e18; for(var i=0;i<center.length-1;i++){ var d=distToSeg(p,center[i],center[i+1]); if(d<m)m=d; } return m; }
+    var hw=0; allV.forEach(function(p){ var d=distToLine(XY(p)); if(d>hw)hw=d; });
+    if(hw<=0) return null;
+    hw*=1.03;
+    /* puskuroi keskilinja ±hw (jiiriliitokset, rajoitettu piikkien varalta) */
+    function norm(v){ var L=Math.sqrt(v[0]*v[0]+v[1]*v[1])||1; return [v[0]/L, v[1]/L]; }
+    var left=[], right=[];
+    for(var i=0;i<center.length;i++){
+      var normal;
+      if(i===0){ var da=norm([center[1][0]-center[0][0], center[1][1]-center[0][1]]); normal=[-da[1], da[0]]; }
+      else if(i===center.length-1){ var db=norm([center[i][0]-center[i-1][0], center[i][1]-center[i-1][1]]); normal=[-db[1], db[0]]; }
+      else {
+        var d1=norm([center[i][0]-center[i-1][0], center[i][1]-center[i-1][1]]);
+        var d2=norm([center[i+1][0]-center[i][0], center[i+1][1]-center[i][1]]);
+        var n1=[-d1[1],d1[0]], n2=[-d2[1],d2[0]], mn=norm([n1[0]+n2[0], n1[1]+n2[1]]);
+        var cos=mn[0]*n1[0]+mn[1]*n1[1], scale=cos>0.25?1/cos:1/0.25;
+        normal=[mn[0]*scale, mn[1]*scale];
+      }
+      left.push([center[i][0]+normal[0]*hw, center[i][1]+normal[1]*hw]);
+      right.push([center[i][0]-normal[0]*hw, center[i][1]-normal[1]*hw]);
+    }
+    var ringXY=left.concat(right.reverse()); ringXY.push(ringXY[0]);
+    if(ringXY.length<4) return null;
+    return {type:'Polygon', coordinates:[ringXY.map(LL)]};
+  }
+
+  /* Yhdistämistavat: 0 = kupera peitto (oletus), 1 = tietä myötäilevä korridoori. */
+  var ED_MERGE_METHODS=2, edMergeMethod=0;
+  function edMethodName(){ return edMergeMethod===1 ? 'tiet\u00e4 my\u00f6t\u00e4ilev\u00e4' : 'kupera peitto'; }
+  function edMergeGeom(){
+    if(edMergeMethod===1){
+      var g=null; try{ g=edMergeGeomCorridor(); }catch(e){ g=null; }
+      if(g) return g;                       /* jos korridoori epäonnistuu, varmuuskopiona kupera */
+    }
+    return edMergeGeomHull();
+  }
+  function cycleMergeMethod(){
+    edMergeMethod=(edMergeMethod+1)%ED_MERGE_METHODS;
+    edPreviewGeom=edMergeGeom();
+    if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[{type:'Feature',geometry:edPreviewGeom,properties:{}}]});
+    updateEditUI();
+    edHint('Yhdist\u00e4mistapa: '+edMethodName(), true);
   }
 
   function previewMerge(){
@@ -4431,9 +4518,11 @@ body.vresizing *{cursor:ns-resize !important}
     var bar=edBar(); if(!bar) return;
     if(edInPreview){
       bar.classList.add('open');
-      bar.innerHTML='<span class="di" id="ed-status">Esikatselu \u2014 oranssi = yhdistetty alue</span>'
+      bar.innerHTML='<span class="di" id="ed-status">Esikatselu \u2014 '+edMethodName()+'</span>'
+        +'<button class="drawbtn alt" id="ed-method-btn" type="button" title="Vaihda yhdist\u00e4mistapa">Vaihda tapa</button>'
         +'<button class="drawbtn ok" id="ed-confirm-btn" type="button" title="Enter">Hyv\u00e4ksy</button>'
         +'<button class="drawbtn ghost" id="ed-cancelprev-btn" type="button" title="Ctrl+Z">Peru yhdist\u00e4minen</button>';
+      document.getElementById('ed-method-btn').addEventListener('click', cycleMergeMethod);
       document.getElementById('ed-confirm-btn').addEventListener('click', confirmMerge);
       document.getElementById('ed-cancelprev-btn').addEventListener('click', cancelEditPreview);
       return;
@@ -4546,7 +4635,7 @@ body.vresizing *{cursor:ns-resize !important}
     if(!adminMap.__editClickBound){ adminMap.__editClickBound=true; adminMap.on('click', handleEditClick); }
     enableBoxSelect();
     adminMap.getCanvas().style.cursor='pointer';
-    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
+    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null; edMergeMethod=0;
     var r=edRail(); if(r) r.classList.add('open');
     updateEditUI();
     edHint(ok ? 'Valitse alueita klikkaamalla tai maalaamalla suorakulmio. Enter = eteenp\u00e4in, Ctrl+Z = takaisin.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
