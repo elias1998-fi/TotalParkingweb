@@ -4400,8 +4400,8 @@ body.vresizing *{cursor:ns-resize !important}
     return {type:'Polygon', coordinates:[ringXY.map(LL)]};
   }
 
-  /* Yhdistämistavat: 0 = kupera peitto (oletus), 1 = tietä myötäilevä korridoori. */
-  var ED_MERGE_METHODS=2, edMergeMethod=0;
+  /* Yhdistämistavat: 1 = tietä myötäilevä korridoori (oletus), 0 = kupera peitto. */
+  var ED_MERGE_METHODS=2, edMergeMethod=1;
   function edMethodName(){ return edMergeMethod===1 ? 'tiet\u00e4 my\u00f6t\u00e4ilev\u00e4' : 'kupera peitto'; }
   function edMergeGeom(){
     if(edMergeMethod===1){
@@ -4616,7 +4616,7 @@ body.vresizing *{cursor:ns-resize !important}
     if(!adminMap.__editClickBound){ adminMap.__editClickBound=true; adminMap.on('click', handleEditClick); }
     enableBoxSelect();
     adminMap.getCanvas().style.cursor='pointer';
-    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null; edMergeMethod=0;
+    edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null; edMergeMethod=1;
     var r=edRail(); if(r) r.classList.add('open');
     updateEditUI();
     edHint(ok ? 'Valitse alueita klikkaamalla tai maalaamalla suorakulmio. Enter = eteenp\u00e4in, Ctrl+Z = takaisin.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
