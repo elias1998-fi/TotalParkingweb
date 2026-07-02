@@ -4346,8 +4346,8 @@ body.vresizing *{cursor:ns-resize !important}
     if(edInPreview){
       bar.classList.add('open');
       bar.innerHTML='<span class="di" id="ed-status">Esikatselu \u2014 oranssi = yhdistetty alue</span>'
-        +'<button class="drawbtn ok" id="ed-confirm-btn" type="button">Hyv\u00e4ksy</button>'
-        +'<button class="drawbtn ghost" id="ed-cancelprev-btn" type="button">Peru yhdist\u00e4minen</button>';
+        +'<button class="drawbtn ok" id="ed-confirm-btn" type="button" title="Enter">Hyv\u00e4ksy</button>'
+        +'<button class="drawbtn ghost" id="ed-cancelprev-btn" type="button" title="Ctrl+Z">Peru yhdist\u00e4minen</button>';
       document.getElementById('ed-confirm-btn').addEventListener('click', confirmMerge);
       document.getElementById('ed-cancelprev-btn').addEventListener('click', cancelEditPreview);
       return;
@@ -4356,7 +4356,7 @@ body.vresizing *{cursor:ns-resize !important}
     var ready=n>=2;
     bar.classList.add('open');
     bar.innerHTML='<span class="di" id="ed-status">'+n+' valittu'+(ready?' \u2014 valmis yhdistett\u00e4v\u00e4ksi':' \u2014 valitse v\u00e4hint\u00e4\u00e4n 2 samanlaista aluetta')+'</span>'
-      +'<button class="drawbtn ok" id="ed-merge-btn" type="button"'+(ready?'':' disabled')+'>Yhdist\u00e4</button>'
+      +'<button class="drawbtn ok" id="ed-merge-btn" type="button"'+(ready?'':' disabled')+' title="Enter">Yhdist\u00e4</button>'
       +'<button class="drawbtn ghost" id="ed-clear-btn" type="button">Peru valinnat</button>';
     document.getElementById('ed-merge-btn').addEventListener('click', previewMerge);
     document.getElementById('ed-clear-btn').addEventListener('click', clearEdSelection);
@@ -4455,7 +4455,7 @@ body.vresizing *{cursor:ns-resize !important}
     edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
     var r=edRail(); if(r) r.classList.add('open');
     updateEditUI();
-    edHint(ok ? 'Valitse alueita klikkaamalla, tai maalaa suorakulmio hiiren vasemmalla painikkeella.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
+    edHint(ok ? 'Valitse alueita klikkaamalla tai maalaamalla suorakulmio. Enter = eteenp\u00e4in, Ctrl+Z = takaisin.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
   }
   function exitEditMode(){
     if(adminMap){
@@ -4470,6 +4470,26 @@ body.vresizing *{cursor:ns-resize !important}
     edHint(null);
   }
   function refreshEditAfterReload(){ if(adminMap && adminMap.__editActive) updateEditUI(); }
+
+  /* Eteenpäin muokkaustilan vaiheissa: valinnat → esikatselu → hyväksy. */
+  function editForward(){
+    if(!adminMap || !adminMap.__editActive) return;
+    if(edInPreview){ confirmMerge(); }               /* esikatselu → hyväksy (kirjoittaa kantaan) */
+    else if(edSelected.size>=2){ previewMerge(); }   /* valinnat → esikatselu */
+  }
+  /* Pikanäppäimet muokkaustilassa: Enter = eteenpäin, Ctrl/Cmd+Z = takaisin. */
+  document.addEventListener('keydown',function(e){
+    if(!adminMap || !adminMap.__editActive) return;
+    var t=e.target, tag=t&&t.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t&&t.isContentEditable)) return;  /* ei häiritse tekstikenttiä */
+    if(e.key==='Enter'){
+      if(e.ctrlKey||e.metaKey||e.altKey) return;
+      e.preventDefault(); editForward(); return;
+    }
+    if((e.key==='z'||e.key==='Z') && (e.ctrlKey||e.metaKey) && !e.shiftKey){
+      e.preventDefault(); undoEdit(); return;
+    }
+  });
 })();
 </script>
 </body>
