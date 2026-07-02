@@ -921,6 +921,20 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .map-hint.open{display:block}
 /* laatikkovalinnan suorakulmio (muokkaustilan raahausvalinta) */
 .map-select-box{position:absolute; z-index:6; border:1.5px dashed #0C0243; background:rgba(12,2,67,.13); pointer-events:none; border-radius:2px}
+/* ero-boksi: kertoo sanallisesti miten yhteensopimaton alue eroaa valituista */
+.map-diffbox{position:absolute; top:14px; left:50%; transform:translateX(-50%); z-index:9; display:none; width:min(460px, calc(100% - 28px)); background:#fff; border:1px solid #F3C0BB; border-left:4px solid #E53935; border-radius:12px; box-shadow:var(--shadow-lg); overflow:hidden}
+.map-diffbox.open{display:block}
+.diffbox-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; background:#FDECEA; border-bottom:1px solid #F3C0BB}
+.diffbox-title{font-size:13.5px; font-weight:700; color:#C0392B}
+.diffbox-close{border:none; background:none; font-size:21px; line-height:1; color:#C0392B; cursor:pointer; padding:0 3px}
+.diffbox-body{padding:8px 14px 12px; max-height:250px; overflow:auto}
+.diffrow{display:flex; flex-direction:column; gap:3px; padding:8px 0; border-bottom:1px solid var(--line-soft)}
+.diffrow:last-child{border-bottom:none}
+.diff-key{font-size:12.5px; font-weight:700; color:var(--ink)}
+.diff-vals{display:flex; flex-wrap:wrap; gap:3px 18px; font-size:12.5px}
+.diff-ref{color:var(--ink-soft)}
+.diff-red{color:#C0392B}
+.diff-vals b{font-weight:700}
 .map-vresizer{position:absolute; left:0; right:0; bottom:0; height:14px; z-index:9; cursor:ns-resize; touch-action:none; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; background:transparent}
 .map-vresizer::after{content:""; width:44px; height:4px; border-radius:2px; background:var(--line); opacity:0; transition:opacity .15s, background .15s}
 .map-vresizer:hover::after, body.vresizing .map-vresizer::after{opacity:1; background:var(--brand)}
@@ -4202,6 +4216,51 @@ body.vresizing *{cursor:ns-resize !important}
     return true;
   }
 
+  /* --- Alueiden ominaisuuserojen sanallinen erittely (ero-boksi) --- */
+  function edFmtDur(h,m){ h=parseInt(h||0,10)||0; m=parseInt(m||0,10)||0; if(!h&&!m) return '\u2014'; var s=''; if(h) s+=h+' h'; if(m) s+=(s?' ':'')+m+' min'; return s; }
+  function edVal2(v){ return (v===null||v===undefined||v==='')?'\u2014':String(v); }
+  function edRange2(a,b){ a=edVal2(a); b=edVal2(b); if(a==='\u2014'&&b==='\u2014') return '\u2014'; return a+'\u2013'+b; }
+  /* vertaa referenssiä (edFirstProps) hylättyyn alueeseen; palauttaa erot */
+  function edDiffItems(refP, redP){
+    var out=[];
+    function add(label, r, x){ if(String(r)!==String(x)) out.push({label:label, ref:r, red:x}); }
+    add('Alueen tyyppi', edVal2(refP.area_type), edVal2(redP.area_type));
+    add('Pys\u00e4k\u00f6innin tyyppi', edVal2(refP.parking_type), edVal2(redP.parking_type));
+    add('Omistaja / yll\u00e4pit\u00e4j\u00e4', edVal2(refP.owner_parking_area), edVal2(redP.owner_parking_area));
+    add('Kaupunki', edVal2(refP.location_city), edVal2(redP.location_city));
+    add('Kaupunkiv\u00f6ohyke', edVal2(refP.city_zone), edVal2(redP.city_zone));
+    add('V\u00f6ohykenumero', edVal2(refP.zone_number), edVal2(redP.zone_number));
+    add('Max. pys\u00e4k\u00f6intiaika', edFmtDur(refP.max_hours, refP.max_minutes), edFmtDur(redP.max_hours, redP.max_minutes));
+    add('Voimassa ma\u2013pe', edRange2(refP.valid_mape_from, refP.valid_mape_to), edRange2(redP.valid_mape_from, redP.valid_mape_to));
+    add('Voimassa la', edRange2(refP.valid_la_from, refP.valid_la_to), edRange2(redP.valid_la_from, redP.valid_la_to));
+    add('Voimassa su', edRange2(refP.valid_su_from, refP.valid_su_to), edRange2(redP.valid_su_from, redP.valid_su_to));
+    add('Poikkeukset', edVal2(refP.data_exceptions), edVal2(redP.data_exceptions));
+    add('Lis\u00e4tiedot', edVal2(refP.info_additional), edVal2(redP.info_additional));
+    return out;
+  }
+  var edDiffT=null;
+  function edShowDiffBox(redP){
+    var panel=edPanelEl(); if(!panel || !edFirstProps) return;
+    var box=document.getElementById('map-diffbox');
+    if(!box){ box=document.createElement('div'); box.id='map-diffbox'; box.className='map-diffbox'; panel.appendChild(box); }
+    var items=edDiffItems(edFirstProps, redP);
+    var body;
+    if(items.length){
+      body=items.map(function(it){
+        return '<div class="diffrow"><div class="diff-key">'+it.label+'</div><div class="diff-vals"><span class="diff-ref">Referenssi: <b>'+it.ref+'</b></span><span class="diff-red">Punainen alue: <b>'+it.red+'</b></span></div></div>';
+      }).join('');
+    } else {
+      body='<div class="diffrow"><div class="diff-key">Alueet eroavat toisistaan tavalla, jota ei voi yhdist\u00e4\u00e4.</div></div>';
+    }
+    box.innerHTML='<div class="diffbox-head"><span class="diffbox-title">Aluetta ei voi yhdist\u00e4\u00e4 \u2014 eroavat tiedot</span><button class="diffbox-close" type="button" aria-label="Sulje">&times;</button></div>'
+      +'<div class="diffbox-body">'+body+'</div>';
+    box.classList.add('open');
+    var cl=box.querySelector('.diffbox-close'); if(cl) cl.onclick=function(){ box.classList.remove('open'); };
+    if(edDiffT) clearTimeout(edDiffT);
+    edDiffT=setTimeout(function(){ box.classList.remove('open'); }, 9000);
+  }
+  function edHideDiffBox(){ var box=document.getElementById('map-diffbox'); if(box) box.classList.remove('open'); if(edDiffT){ clearTimeout(edDiffT); edDiffT=null; } }
+
   function flashEdReject(id){
     if(!adminMap || !adminMap.getLayer('edit-reject-fill')) return;
     var count=0, total=3;
@@ -4211,7 +4270,9 @@ body.vresizing *{cursor:ns-resize !important}
       count++;
       if(count>=total*2){ clearInterval(iv); adminMap.setFilter('edit-reject-fill',['==',['get','id'],'__none__']); adminMap.setFilter('edit-reject-line',['==',['get','id'],'__none__']); }
     },130);
-    edHint('Alue ei sovi nykyiseen valintaan (eri tyyppi tai ehdot).', true);
+    var feat=findEdFeature(id);
+    if(feat && edFirstProps){ edShowDiffBox(feat.properties); }
+    else { edHint('Alue ei sovi nykyiseen valintaan (eri tyyppi tai ehdot).', true); }
   }
 
   function handleEditClick(e){
@@ -4219,7 +4280,23 @@ body.vresizing *{cursor:ns-resize !important}
     if(adminMap.__boxJustSelected) return;   /* raahausvalinnan jälkeinen klikkaus ohitetaan */
     if(!adminMap.getLayer('master-poly-fill')) return;
     var fs=adminMap.queryRenderedFeatures(e.point,{layers:['master-poly-fill']});
-    if(!fs.length) return;
+    if(!fs.length){
+      /* Klikkaus ei osu pysäköintialueeseen. Tarkista ettei se osu myöskään
+         latauspiste-/halli-ikoniin — jos kohta on täysin tyhjä, tyhjennä valinnat.
+         Yksi klikkaus tyhjään → puhdas pöytä (peruttavissa Ctrl+Z:lla). */
+      var iconLayers=['charging-icons','halli-icons'].filter(function(l){ return adminMap.getLayer(l); });
+      var onIcon = iconLayers.length ? adminMap.queryRenderedFeatures(e.point,{layers:iconLayers}).length>0 : false;
+      if(!onIcon){
+        edHideDiffBox();
+        if(edSelected.size>0){
+          pushEdHistory();
+          edSelected=new Set(); edFirstProps=null;
+          updateEditUI();
+          edHint('Valinnat tyhjennetty.', true);
+        }
+      }
+      return;
+    }
     var id=String(fs[0].properties.id);
     var feat=findEdFeature(id); if(!feat) return;
     if(edSelected.has(id)){
@@ -4280,6 +4357,7 @@ body.vresizing *{cursor:ns-resize !important}
   function clearEdSelection(){
     edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
     if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
+    edHideDiffBox();
     updateEditUI();
   }
 
@@ -4362,61 +4440,56 @@ body.vresizing *{cursor:ns-resize !important}
     document.getElementById('ed-clear-btn').addEventListener('click', clearEdSelection);
   }
 
-  /* Laatikkovalinta: valitsee kaikki suorakulmioon osuvat alueet kerralla.
-     queryRenderedFeatures hyväksyy ruutulaatikon [[x1,y1],[x2,y2]] ja palauttaa
-     kaikki sen leikkaavat alueet. Yhteensopivuustarkistus (sama tyyppi/ehdot)
-     säilyy: ensimmäinen valittu määrittää mallin, muut lisätään vain jos sopivat. */
-  function boxSelectFeatures(p1,p2){
-    if(!adminMap.__editActive || edInPreview) return;
-    if(!adminMap.getLayer('master-poly-fill')) return;
-    var fs=adminMap.queryRenderedFeatures([p1,p2],{layers:['master-poly-fill']});
-    if(!fs.length){ return; }
-    /* uniikit id:t järjestyksessä */
-    var seen={}, cand=[];
-    fs.forEach(function(f){
-      var id=String(f.properties.id);
-      if(!seen[id]){ seen[id]=1; cand.push({id:id, feat:findEdFeature(id)||f}); }
-    });
-    pushEdHistory();
-    var added=0, skipped=0;
-    cand.forEach(function(c){
-      if(edSelected.has(c.id)) return;
-      if(!edFirstProps){ edFirstProps=c.feat.properties; edSelected.add(c.id); added++; }
-      else if(isEdCompatible(c.feat)){ edSelected.add(c.id); added++; }
-      else { skipped++; }
-    });
-    if(added===0){ edHistory.pop(); }
-    updateEditUI();
-    if(added>0){
-      edHint(added+' aluetta lis\u00e4tty valintaan'+(skipped>0? ' \u2014 '+skipped+' ei sopinut (eri tyyppi tai ehdot)':'')+'.', true);
-    } else if(skipped>0){
-      edHint('Valitut alueet eiv\u00e4t sovi nykyiseen valintaan (eri tyyppi tai ehdot).', true);
-    }
-  }
-
-  /* Piirtoalue: vasen painike pohjaan + raahaus muokkaustilassa piirtää
-     suorakulmion. Panorointi vasemmalla poistetaan raahauksen ajaksi
-     (keskinapilla panorointi toimii edelleen). Pelkkä klikkaus (ei liikettä)
-     menee normaaliin yhden alueen valintaan. */
+  /* Piirtoalue (laatikkovalinta): vasen painike pohjaan + raahaus muokkaustilassa.
+     Alueet valitaan HETI kun ne osuvat suorakulmioon (reaaliaikaisesti raahatessa),
+     ei vasta raahauksen loputtua. Yhteensopivuustarkistus säilyy: ensimmäinen alue
+     määrittää mallin, ja yhteensopimaton alue vilkkuu heti punaisena + näyttää
+     ero-boksin. Panorointi vasemmalla poistetaan raahauksen ajaksi (keskinappi toimii).
+     Kukin alue käsitellään kerran per raahaus (ei toistuvaa vilkkumista). */
   function enableBoxSelect(){
     if(!adminMap || adminMap.__boxSelectBound) return;
     adminMap.__boxSelectBound=true;
     var container=adminMap.getCanvasContainer();
-    var startPt=null, boxEl=null, dragging=false;
+    var startPt=null, lastPt=null, boxEl=null, dragging=false, processed=null, histPushed=false, rafPending=false;
     function pos(e){ var rect=adminMap.getCanvas().getBoundingClientRect(); return {x:e.clientX-rect.left, y:e.clientY-rect.top}; }
+    function processBox(){
+      rafPending=false;
+      if(!dragging || !startPt || !lastPt) return;
+      if(!adminMap.__editActive || edInPreview) return;
+      if(!adminMap.getLayer('master-poly-fill')) return;
+      var a=[Math.min(lastPt.x,startPt.x), Math.min(lastPt.y,startPt.y)];
+      var b=[Math.max(lastPt.x,startPt.x), Math.max(lastPt.y,startPt.y)];
+      var fs=adminMap.queryRenderedFeatures([a,b],{layers:['master-poly-fill']});
+      var changed=false, seenFrame={};
+      fs.forEach(function(f){
+        var id=String(f.properties.id);
+        if(seenFrame[id]) return; seenFrame[id]=1;
+        if(processed[id]) return;                 /* jo käsitelty tämän raahauksen aikana */
+        processed[id]=1;
+        if(edSelected.has(id)) return;            /* jo valittu ennestään */
+        var feat=findEdFeature(id)||f;
+        if(!edFirstProps){ if(!histPushed){ pushEdHistory(); histPushed=true; } edFirstProps=feat.properties; edSelected.add(id); changed=true; }
+        else if(isEdCompatible(feat)){ if(!histPushed){ pushEdHistory(); histPushed=true; } edSelected.add(id); changed=true; }
+        else { flashEdReject(id); }               /* yhteensopimaton → heti vilkku + ero-boksi */
+      });
+      if(changed) updateEditUI();
+    }
+    function scheduleProcess(){ if(rafPending) return; rafPending=true; (window.requestAnimationFrame||function(cb){setTimeout(cb,16);})(processBox); }
     function onMove(e){
       if(!startPt) return;
-      var c=pos(e), dx=Math.abs(c.x-startPt.x), dy=Math.abs(c.y-startPt.y);
+      lastPt=pos(e);
+      var dx=Math.abs(lastPt.x-startPt.x), dy=Math.abs(lastPt.y-startPt.y);
       if(!dragging && (dx>4||dy>4)){
         dragging=true;
         boxEl=document.createElement('div'); boxEl.className='map-select-box'; container.appendChild(boxEl);
         adminMap.getCanvas().style.cursor='crosshair';
       }
       if(dragging && boxEl){
-        boxEl.style.left=Math.min(c.x,startPt.x)+'px';
-        boxEl.style.top=Math.min(c.y,startPt.y)+'px';
-        boxEl.style.width=Math.abs(c.x-startPt.x)+'px';
-        boxEl.style.height=Math.abs(c.y-startPt.y)+'px';
+        boxEl.style.left=Math.min(lastPt.x,startPt.x)+'px';
+        boxEl.style.top=Math.min(lastPt.y,startPt.y)+'px';
+        boxEl.style.width=Math.abs(lastPt.x-startPt.x)+'px';
+        boxEl.style.height=Math.abs(lastPt.y-startPt.y)+'px';
+        scheduleProcess();                        /* reaaliaikainen valinta (throttlattu rAF:lla) */
       }
     }
     function onUp(e){
@@ -4425,20 +4498,18 @@ body.vresizing *{cursor:ns-resize !important}
       if(adminMap.dragPan) adminMap.dragPan.enable();
       adminMap.getCanvas().style.cursor=adminMap.__editActive?'pointer':'';
       if(dragging){
-        var c=pos(e);
-        var a=[Math.min(c.x,startPt.x), Math.min(c.y,startPt.y)];
-        var b=[Math.max(c.x,startPt.x), Math.max(c.y,startPt.y)];
+        lastPt=pos(e); processBox();              /* varmista lopullinen suorakulmio */
         if(boxEl){ boxEl.parentNode&&boxEl.parentNode.removeChild(boxEl); boxEl=null; }
-        boxSelectFeatures(a,b);
         adminMap.__boxJustSelected=true;
         setTimeout(function(){ adminMap.__boxJustSelected=false; },60);
       }
-      startPt=null; dragging=false;
+      startPt=null; lastPt=null; dragging=false; processed=null; histPushed=false;
     }
     container.addEventListener('mousedown',function(e){
       if(!adminMap.__editActive || edInPreview) return;
-      if(e.button!==0) return;                 /* vain vasen painike */
-      startPt=pos(e); dragging=false;
+      if(e.button!==0) return;                     /* vain vasen painike */
+      startPt=pos(e); lastPt=startPt; dragging=false; processed={}; histPushed=false;
+      edHideDiffBox();                             /* uusi raahaus → piilota edellinen ero-boksi */
       if(adminMap.dragPan) adminMap.dragPan.disable();
       window.addEventListener('mousemove',onMove);
       window.addEventListener('mouseup',onUp);
@@ -4467,6 +4538,7 @@ body.vresizing *{cursor:ns-resize !important}
     edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
     var r=document.getElementById('map-editrail'); if(r) r.classList.remove('open');
     var b=document.getElementById('map-editbar'); if(b){ b.classList.remove('open'); b.innerHTML=''; }
+    edHideDiffBox();
     edHint(null);
   }
   function refreshEditAfterReload(){ if(adminMap && adminMap.__editActive) updateEditUI(); }
