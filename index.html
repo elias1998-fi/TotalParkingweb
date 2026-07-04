@@ -4819,6 +4819,7 @@ body.vresizing *{cursor:ns-resize !important}
   }
 
   function enterEditMode(){
+    console.log('TotalParking MASTER — muokkaustila. BUILD: yksittäisen alueen suorakulmio-muokkaus KÄYTÖSSÄ (valitse 1 alue → "Muokkaa muotoa").');
     if(!adminMap) return;
     var ok=ensureEditLayers();
     adminMap.__editActive=true;
