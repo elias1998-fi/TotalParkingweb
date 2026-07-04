@@ -4397,10 +4397,68 @@ body.vresizing *{cursor:ns-resize !important}
     return {type:'Polygon', coordinates:[ring]};
   }
 
-  /* Yhdistämistavat: 0 = kupera peitto (oletus), 1 = ulkorajat (konkaavi peite). */
-  var ED_MERGE_METHODS=2, edMergeMethod=0;
-  function edMethodName(){ return edMergeMethod===1 ? 'ulkorajat' : 'kupera peitto'; }
+  /* Suorakulmio (kierretty rajaava suorakulmio, min-area OBB): muodostaa
+     valituista alueista suorakulmion jossa on 90° kulmat. Kohdistetaan
+     alueiden pääsuuntaan (kadun suuntaan) ja mitoitetaan niiden max pituuden ja
+     max leveyden mukaan. Laskenta Web Mercator -tasossa, jotta kulmat näkyvät
+     suorina kartalla. Kokeillaan jokaista peitteen reunaa (pyörivät kaliiperit)
+     ja valitaan pienimmän pinta-alan suunta. */
+  function edMerc(lng,lat){ var R=6378137; return [R*lng*Math.PI/180, R*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))]; }
+  function edUnmerc(x,y){ var R=6378137; return [x/R*180/Math.PI, (2*Math.atan(Math.exp(y/R))-Math.PI/2)*180/Math.PI]; }
+  function edConvexHull2(points){
+    var pts=points.slice().sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var n=pts.length; if(n<3) return pts.slice();
+    function cr(o,a,b){ return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]); }
+    var lo=[],i;
+    for(i=0;i<n;i++){ while(lo.length>=2 && cr(lo[lo.length-2],lo[lo.length-1],pts[i])<=0) lo.pop(); lo.push(pts[i]); }
+    var up=[];
+    for(i=n-1;i>=0;i--){ while(up.length>=2 && cr(up[up.length-2],up[up.length-1],pts[i])<=0) up.pop(); up.push(pts[i]); }
+    lo.pop(); up.pop(); return lo.concat(up);
+  }
+  function edMergeGeomRect(){
+    var feats=Array.from(edSelected).map(findEdFeature).filter(Boolean);
+    if(feats.length<2) return null;
+    var pts=[];
+    feats.forEach(function(f){
+      var g=f.geometry; if(!g) return;
+      var exts = g.type==='MultiPolygon' ? g.coordinates.map(function(poly){return poly[0];}) : [g.coordinates[0]];
+      exts.forEach(function(r){ if(r) r.forEach(function(pt){ pts.push(edMerc(pt[0],pt[1])); }); });
+    });
+    if(pts.length<3) return null;
+    var hull=edConvexHull2(pts);
+    if(hull.length<3) return null;
+    var best=null, i, j;
+    for(i=0;i<hull.length;i++){
+      var p1=hull[i], p2=hull[(i+1)%hull.length];
+      var ex=p2[0]-p1[0], ey=p2[1]-p1[1], len=Math.sqrt(ex*ex+ey*ey);
+      if(len<1e-9) continue;
+      var ux=ex/len, uy=ey/len, vx=-uy, vy=ux;
+      var minA=1e30,maxA=-1e30,minB=1e30,maxB=-1e30;
+      for(j=0;j<hull.length;j++){
+        var dx=hull[j][0]-p1[0], dy=hull[j][1]-p1[1];
+        var a=dx*ux+dy*uy, b=dx*vx+dy*vy;
+        if(a<minA)minA=a; if(a>maxA)maxA=a; if(b<minB)minB=b; if(b>maxB)maxB=b;
+      }
+      var area=(maxA-minA)*(maxB-minB);
+      if(best===null || area<best.area){
+        best={area:area,p1:p1,ux:ux,uy:uy,vx:vx,vy:vy,minA:minA,maxA:maxA,minB:minB,maxB:maxB};
+      }
+    }
+    if(!best) return null;
+    function C(a,b){ return edUnmerc(best.p1[0]+a*best.ux+b*best.vx, best.p1[1]+a*best.uy+b*best.vy); }
+    var ring=[C(best.minA,best.minB),C(best.maxA,best.minB),C(best.maxA,best.maxB),C(best.minA,best.maxB)];
+    ring.push([ring[0][0],ring[0][1]]);
+    return {type:'Polygon', coordinates:[ring]};
+  }
+
+  /* Yhdistämistavat: 0 = kupera peitto (oletus), 1 = ulkorajat (konkaavi peite), 2 = suorakulmio (rajaava OBB). */
+  var ED_MERGE_METHODS=3, edMergeMethod=0;
+  function edMethodName(){ return edMergeMethod===2 ? 'suorakulmio' : (edMergeMethod===1 ? 'ulkorajat' : 'kupera peitto'); }
   function edMergeGeom(){
+    if(edMergeMethod===2){
+      var gr=null; try{ gr=edMergeGeomRect(); }catch(e){ gr=null; }
+      if(gr) return gr;                      /* jos suorakulmio epäonnistuu, varmuuskopiona kupera */
+    }
     if(edMergeMethod===1){
       var g=null; try{ g=edMergeGeomConcave(); }catch(e){ g=null; }
       if(g) return g;                       /* jos peite epäonnistuu, varmuuskopiona kupera */
