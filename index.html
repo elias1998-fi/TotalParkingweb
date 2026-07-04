@@ -4422,7 +4422,7 @@ body.vresizing *{cursor:ns-resize !important}
   }
   function edMergeGeomRect(){
     var feats=Array.from(edSelected).map(findEdFeature).filter(Boolean);
-    if(feats.length<2) return null;
+    if(feats.length<1) return null;
     var pts=[];
     feats.forEach(function(f){
       var g=f.geometry; if(!g) return;
@@ -4519,14 +4519,14 @@ body.vresizing *{cursor:ns-resize !important}
     return {type:'Polygon', coordinates:[out]};
   }
 
-  /* Yhdistämistavat: 0 = suorakulmio (oletus), 1 = kupera peitto (kupera kuori kaikkien kärkien ympäri, kattaa koko alueen). Konkaavi- ja S-kirjain-koodi jää talteen mutta ei kierrossa. */
+  /* Yhdistämistavat: 0 = suorakulmio (oletus), 1 = kupera peitto (myötäilee molempia pitkiä reunoja, sisä- JA ulkopuolelta = konkaavi peite). Kupera kuori (edMergeGeomHull) jää varakopioksi, S-kirjain talteen mutta ei kierrossa. */
   var ED_MERGE_METHODS=2, edMergeMethod=0;
   function edMethodName(){ return edMergeMethod===0 ? 'suorakulmio' : 'kupera peitto'; }
   function edMergeGeom(){
     var g=null;
     try{
       if(edMergeMethod===0) g=edMergeGeomRect();
-      else if(edMergeMethod===1) g=edMergeGeomHull();
+      else if(edMergeMethod===1) g=edMergeGeomConcave();
     }catch(e){ g=null; }
     return g || edMergeGeomHull();
   }
@@ -4539,7 +4539,7 @@ body.vresizing *{cursor:ns-resize !important}
   }
 
   function previewMerge(){
-    if(edSelected.size<2) return;
+    if(edSelected.size<1) return;
     edPreviewGeom=edMergeGeom();
     if(adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[{type:'Feature',geometry:edPreviewGeom,properties:{}}]});
     edInPreview=true;
@@ -4563,9 +4563,31 @@ body.vresizing *{cursor:ns-resize !important}
      (edCommitPending) tapahtuu vasta kun aloittaa uuden yhdistämisen tai sulkee
      muokkaustilan. "Peru" (edUndoPending) palauttaa lähdealueet kirjoittamatta kantaan. */
   async function confirmMerge(){
-    if(!edPreviewGeom || edSelected.size<2) return;
+    if(!edPreviewGeom || edSelected.size<1) return;
     var sids=Array.from(edSelected).map(String);
-    if(sids.indexOf(ED_TEMP_ID)!==-1){ edHint('Peru tai tallenna edellinen yhdistäminen ensin.', true); return; }
+    if(sids.indexOf(ED_TEMP_ID)!==-1){ edHint('Peru tai tallenna edellinen muutos ensin.', true); return; }
+    if(edPending){ await edCommitPending(); }   /* uusi hyväksyntä lopettaa edellisen peruutusikkunan */
+
+    if(sids.length===1){
+      /* YHDEN alueen muodon muokkaus (esim. suunnikas → suorakulmio): päivittää alueen
+         geometrian paikallaan (sama id säilyy) suoralla PATCH:lla — ei yhdistämistä. */
+      var sid=sids[0];
+      var isFree1=sid.indexOf('ilm_')===0;
+      var table=isFree1?'parking_master_ilmaiset':'parking_master';
+      var realId=isFree1? sid.slice(4) : sid;
+      var feat=findEdFeature(sid);
+      if(!feat){ edHint('Aluetta ei löytynyt.', true); return; }
+      var srcFeat=JSON.parse(JSON.stringify(feat));
+      var geomR=edPreviewGeom;
+      feat.geometry=JSON.parse(JSON.stringify(geomR));   /* sovella paikallisesti */
+      edSetLocalFeatures();
+      edPending={kind:'reshape', id:sid, table:table, realId:realId, geom:geomR, srcFeat:srcFeat};
+      clearEdSelection();
+      edHint('✓ Muoto muutettu suorakulmioksi. Voit vielä perua "Peru"-napista.', true);
+      return;
+    }
+
+    /* KAHDEN tai useamman alueen yhdistäminen (kuten ennen). */
     var freeCount=sids.filter(function(s){return s.indexOf('ilm_')===0;}).length;
     if(freeCount!==0 && freeCount!==sids.length){
       edHint('Maksullisia ja ilmaisia alueita ei voi yhdistää keskenään.', true);
@@ -4574,7 +4596,6 @@ body.vresizing *{cursor:ns-resize !important}
     var isFree=freeCount===sids.length;
     var rpc=isFree?'merge_parking_areas_ilmaiset':'merge_parking_areas';
     var ids=sids.map(function(s){ return parseInt(isFree? s.slice(4) : s, 10); });
-    if(edPending){ await edCommitPending(); }   /* uusi hyväksyntä lopettaa edellisen peruutusikkunan */
     var srcFeats=[];
     sids.forEach(function(id){ var f=findEdFeature(id); if(f) srcFeats.push(JSON.parse(JSON.stringify(f))); });
     if(srcFeats.length<2){ edHint('Alueita ei löytynyt.', true); return; }
@@ -4585,8 +4606,8 @@ body.vresizing *{cursor:ns-resize !important}
     MASTER_AREA_FEATURES=MASTER_AREA_FEATURES.filter(function(f){ return !srcSet[String(f.properties.id)]; });
     MASTER_AREA_FEATURES.push(mergedFeat);
     edSetLocalFeatures();
-    edPending={ids:ids, rpc:rpc, geom:edPreviewGeom, srcFeats:srcFeats, tempId:ED_TEMP_ID};
-    clearEdSelection();   /* nollaa valinnat/esikatselu + päivittää palkin → näyttää Peru-napin */
+    edPending={kind:'merge', ids:ids, rpc:rpc, geom:edPreviewGeom, srcFeats:srcFeats, tempId:ED_TEMP_ID};
+    clearEdSelection();
     edHint('✓ Alueet yhdistetty. Voit vielä perua "Peru"-napista ennen kuin aloitat uuden yhdistämisen tai suljet.', true);
   }
   function edSetLocalFeatures(){
@@ -4598,12 +4619,21 @@ body.vresizing *{cursor:ns-resize !important}
     if(!edPending) return;
     var p=edPending; edPending=null;
     try{
-      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/rpc/'+p.rpc,{
-        method:'POST',
-        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify({source_ids:p.ids, merged_geom:p.geom})
-      });
-      if(!res.ok) throw new Error('HTTP '+res.status);
+      if(p.kind==='reshape'){
+        var resR=await fetch(TP_SUPABASE_URL+'/rest/v1/'+p.table+'?id=eq.'+encodeURIComponent(p.realId),{
+          method:'PATCH',
+          headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+          body:JSON.stringify({polygon_coordinates:p.geom})
+        });
+        if(!resR.ok) throw new Error('HTTP '+resR.status);
+      } else {
+        var res=await fetch(TP_SUPABASE_URL+'/rest/v1/rpc/'+p.rpc,{
+          method:'POST',
+          headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json'},
+          body:JSON.stringify({source_ids:p.ids, merged_geom:p.geom})
+        });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+      }
       await tpLoadAreas(adminMap);
       if(phoneMap) await tpLoadAreas(phoneMap);
     }catch(err){
@@ -4615,6 +4645,15 @@ body.vresizing *{cursor:ns-resize !important}
   function edUndoPending(){
     if(!edPending) return;
     var p=edPending; edPending=null;
+    if(p.kind==='reshape'){
+      var feat=findEdFeature(p.id);
+      if(feat){ feat.geometry=JSON.parse(JSON.stringify(p.srcFeat.geometry)); }
+      else { MASTER_AREA_FEATURES.push(p.srcFeat); }
+      edSetLocalFeatures();
+      updateEditUI();
+      edHint('Muodon muutos peruttu — alue palautettu.', true);
+      return;
+    }
     MASTER_AREA_FEATURES=MASTER_AREA_FEATURES.filter(function(f){ return String(f.properties.id)!==p.tempId; });
     p.srcFeats.forEach(function(f){ MASTER_AREA_FEATURES.push(f); });
     edSetLocalFeatures();
@@ -4673,11 +4712,16 @@ body.vresizing *{cursor:ns-resize !important}
       return;
     }
     if(n===0){ bar.classList.remove('open'); bar.innerHTML=''; return; }
-    var ready=n>=2;
     bar.classList.add('open');
-    bar.innerHTML='<span class="di" id="ed-status">'+n+' valittu'+(ready?' \u2014 valmis yhdistett\u00e4v\u00e4ksi':' \u2014 valitse v\u00e4hint\u00e4\u00e4n 2 samanlaista aluetta')+'</span>'
-      +'<button class="drawbtn ok" id="ed-merge-btn" type="button"'+(ready?'':' disabled')+' title="Enter">Yhdist\u00e4</button>'
-      +'<button class="drawbtn ghost" id="ed-clear-btn" type="button">Peru valinnat</button>';
+    if(n===1){
+      bar.innerHTML='<span class="di" id="ed-status">1 valittu — muokkaa muotoa suorakulmioksi</span>'
+        +'<button class="drawbtn ok" id="ed-merge-btn" type="button" title="Enter">Muokkaa muotoa</button>'
+        +'<button class="drawbtn ghost" id="ed-clear-btn" type="button">Peru valinnat</button>';
+    } else {
+      bar.innerHTML='<span class="di" id="ed-status">'+n+' valittu — valmis yhdistettäväksi</span>'
+        +'<button class="drawbtn ok" id="ed-merge-btn" type="button" title="Enter">Yhdistä</button>'
+        +'<button class="drawbtn ghost" id="ed-clear-btn" type="button">Peru valinnat</button>';
+    }
     document.getElementById('ed-merge-btn').addEventListener('click', previewMerge);
     document.getElementById('ed-clear-btn').addEventListener('click', clearEdSelection);
   }
@@ -4806,7 +4850,7 @@ body.vresizing *{cursor:ns-resize !important}
   function editForward(){
     if(!adminMap || !adminMap.__editActive) return;
     if(edInPreview){ confirmMerge(); }               /* esikatselu → hyväksy (kirjoittaa kantaan) */
-    else if(edSelected.size>=2){ previewMerge(); }   /* valinnat → esikatselu */
+    else if(edSelected.size>=1){ previewMerge(); }   /* valinnat → esikatselu (1 = muodon muokkaus, 2+ = yhdistäminen) */
   }
   /* Pikanäppäimet muokkaustilassa: Enter = eteenpäin, Ctrl/Cmd+Z = takaisin. */
   document.addEventListener('keydown',function(e){
