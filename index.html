@@ -905,6 +905,8 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.ghost{background:var(--paper); color:var(--ink-soft)}
 .drawbtn.alt{background:#FFF3D6; color:#8A5A00; border:1px solid #F1D08A}
 .drawbtn.alt:hover{background:#FFEBB8}
+.drawbtn.danger{background:#e53935; color:#fff}
+.drawbtn.danger:hover{background:#c62828}
 .map-side-rail{position:absolute; right:14px; top:100px; z-index:7; display:none; flex-direction:column; gap:8px; align-items:flex-end}
 .map-side-rail.open{display:flex}
 .addrail-btn{display:flex; align-items:center; gap:7px; height:38px; padding:0 13px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); color:var(--ink); font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit}
@@ -4189,6 +4191,8 @@ body.vresizing *{cursor:ns-resize !important}
      uses. Lives in the outer scope so tpLoadAreas() above can call
      refreshEditAfterReload() after every reload. */
   var edSelected=new Set(), edFirstProps=null, edHistory=[], edInPreview=false, edPreviewGeom=null;
+  var edPending=null;                     /* {ids,rpc,geom,srcFeats,tempId} — hyväksytty mutta vielä peruttavissa oleva yhdistäminen */
+  var ED_TEMP_ID='__pending_merge__';
   var COMPAT_KEYS=['area_type','parking_type','owner_parking_area','location_city','city_zone','zone_number','max_hours','max_minutes','valid_mape_from','valid_mape_to','valid_la_from','valid_la_to','valid_su_from','valid_su_to','data_exceptions','info_additional'];
 
   function edPanelEl(){ return document.querySelector('#app-admin .panel[data-id="a-map"] .map-stage'); }
@@ -4295,6 +4299,7 @@ body.vresizing *{cursor:ns-resize !important}
 
   function handleEditClick(e){
     if(!adminMap.__editActive) return;
+    if(edPending){ edCommitPending(); return; }   /* pending yhdistäminen → tallenna ja aloita alusta */
     if(adminMap.__boxJustSelected) return;   /* raahausvalinnan jälkeinen klikkaus ohitetaan */
     if(!adminMap.getLayer('master-poly-fill')) return;
     var fs=adminMap.queryRenderedFeatures(e.point,{layers:['master-poly-fill']});
@@ -4552,33 +4557,69 @@ body.vresizing *{cursor:ns-resize !important}
     updateEditUI();
   }
 
+  /* Yhdistämisen HYVÄKSYNTÄ on kaksivaiheinen, jotta vahingossa tehdyn voi vielä
+     perua: "Hyväksy" soveltaa yhdistämisen paikallisesti (näytöllä) muttei vielä
+     kirjoita kantaan, ja näyttää punaisen "Peru"-napin. Kantaan kirjoitus
+     (edCommitPending) tapahtuu vasta kun aloittaa uuden yhdistämisen tai sulkee
+     muokkaustilan. "Peru" (edUndoPending) palauttaa lähdealueet kirjoittamatta kantaan. */
   async function confirmMerge(){
     if(!edPreviewGeom || edSelected.size<2) return;
     var sids=Array.from(edSelected).map(String);
+    if(sids.indexOf(ED_TEMP_ID)!==-1){ edHint('Peru tai tallenna edellinen yhdistäminen ensin.', true); return; }
     var freeCount=sids.filter(function(s){return s.indexOf('ilm_')===0;}).length;
     if(freeCount!==0 && freeCount!==sids.length){
-      edHint('Maksullisia ja ilmaisia alueita ei voi yhdist\u00e4\u00e4 kesken\u00e4\u00e4n.', true);
+      edHint('Maksullisia ja ilmaisia alueita ei voi yhdistää keskenään.', true);
       return;
     }
     var isFree=freeCount===sids.length;
     var rpc=isFree?'merge_parking_areas_ilmaiset':'merge_parking_areas';
     var ids=sids.map(function(s){ return parseInt(isFree? s.slice(4) : s, 10); });
-    var btn=document.getElementById('ed-confirm-btn'); if(btn){ btn.disabled=true; btn.textContent='Yhdistet\u00e4\u00e4n\u2026'; }
+    if(edPending){ await edCommitPending(); }   /* uusi hyväksyntä lopettaa edellisen peruutusikkunan */
+    var srcFeats=[];
+    sids.forEach(function(id){ var f=findEdFeature(id); if(f) srcFeats.push(JSON.parse(JSON.stringify(f))); });
+    if(srcFeats.length<2){ edHint('Alueita ei löytynyt.', true); return; }
+    var props=JSON.parse(JSON.stringify(srcFeats[0].properties));
+    props.id=ED_TEMP_ID;
+    var mergedFeat={type:'Feature', properties:props, geometry:edPreviewGeom};
+    var srcSet={}; sids.forEach(function(id){ srcSet[String(id)]=1; });
+    MASTER_AREA_FEATURES=MASTER_AREA_FEATURES.filter(function(f){ return !srcSet[String(f.properties.id)]; });
+    MASTER_AREA_FEATURES.push(mergedFeat);
+    edSetLocalFeatures();
+    edPending={ids:ids, rpc:rpc, geom:edPreviewGeom, srcFeats:srcFeats, tempId:ED_TEMP_ID};
+    clearEdSelection();   /* nollaa valinnat/esikatselu + päivittää palkin → näyttää Peru-napin */
+    edHint('✓ Alueet yhdistetty. Voit vielä perua "Peru"-napista ennen kuin aloitat uuden yhdistämisen tai suljet.', true);
+  }
+  function edSetLocalFeatures(){
+    var gj={type:'FeatureCollection',features:MASTER_AREA_FEATURES};
+    if(adminMap && adminMap.getSource('master-polygons')) adminMap.getSource('master-polygons').setData(gj);
+    if(phoneMap && phoneMap.getSource('master-polygons')) phoneMap.getSource('master-polygons').setData(gj);
+  }
+  async function edCommitPending(){
+    if(!edPending) return;
+    var p=edPending; edPending=null;
     try{
-      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/rpc/'+rpc,{
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/rpc/'+p.rpc,{
         method:'POST',
         headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify({source_ids:ids, merged_geom:edPreviewGeom})
+        body:JSON.stringify({source_ids:p.ids, merged_geom:p.geom})
       });
       if(!res.ok) throw new Error('HTTP '+res.status);
-      clearEdSelection();
       await tpLoadAreas(adminMap);
       if(phoneMap) await tpLoadAreas(phoneMap);
-      edHint('\u2713 '+ids.length+' aluetta yhdistetty.', true);
     }catch(err){
-      edHint('Virhe yhdist\u00e4misess\u00e4: '+((err&&err.message)||err), true);
-      if(btn){ btn.disabled=false; btn.textContent='Hyv\u00e4ksy'; }
+      edHint('Virhe tallennuksessa: '+((err&&err.message)||err), true);
+      try{ await tpLoadAreas(adminMap); if(phoneMap) await tpLoadAreas(phoneMap); }catch(e){}
     }
+    if(adminMap && adminMap.__editActive) updateEditUI();
+  }
+  function edUndoPending(){
+    if(!edPending) return;
+    var p=edPending; edPending=null;
+    MASTER_AREA_FEATURES=MASTER_AREA_FEATURES.filter(function(f){ return String(f.properties.id)!==p.tempId; });
+    p.srcFeats.forEach(function(f){ MASTER_AREA_FEATURES.push(f); });
+    edSetLocalFeatures();
+    updateEditUI();
+    edHint('Yhdistäminen peruttu — alueet palautettu.', true);
   }
 
   function edRailHTML(){
@@ -4611,6 +4652,14 @@ body.vresizing *{cursor:ns-resize !important}
     adminMap.setFilter('edit-sel-fill', f);
     adminMap.setFilter('edit-sel-line', f);
     var undoBtn=document.getElementById('ed-undo-btn'); if(undoBtn) undoBtn.disabled = (edHistory.length===0 && !edInPreview);
+    if(edPending){
+      var pb=edBar(); if(!pb) return;
+      pb.classList.add('open');
+      pb.innerHTML='<span class="di" id="ed-status">Alueet yhdistetty — voit vielä perua</span>'
+        +'<button class="drawbtn danger" id="ed-undo-merge-btn" type="button" title="Peru juuri tehty yhdistäminen">Peru</button>';
+      var ub=document.getElementById('ed-undo-merge-btn'); if(ub) ub.addEventListener('click', edUndoPending);
+      return;
+    }
     var bar=edBar(); if(!bar) return;
     if(edInPreview){
       bar.classList.add('open');
@@ -4714,6 +4763,7 @@ body.vresizing *{cursor:ns-resize !important}
     }
     container.addEventListener('mousedown',function(e){
       if(!adminMap.__editActive || edInPreview) return;
+      if(edPending){ edCommitPending(); return; }    /* pending yhdistäminen → tallenna ensin */
       if(e.button!==0) return;                       /* vain vasen painike */
       startPt=pos(e); lastPt=startPt; dragging=false;
       baseSel=new Set(edSelected); flashed={}; histPushed=false;   /* säilytä ennen raahausta ollut valinta */
@@ -4737,6 +4787,7 @@ body.vresizing *{cursor:ns-resize !important}
     edHint(ok ? 'Valitse alueita klikkaamalla tai maalaamalla suorakulmio. Enter = eteenp\u00e4in, Ctrl+Z = takaisin.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
   }
   function exitEditMode(){
+    if(edPending){ edCommitPending(); }            /* sulkeminen tallentaa vielä peruttavissa olleen yhdistämisen */
     if(adminMap){
       adminMap.__editActive=false;
       adminMap.getCanvas().style.cursor='';
