@@ -344,9 +344,15 @@ body.logged-in #drawer-login{display:none}
 .aedit-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 14px}
 .aedit-field.aedit-full{grid-column:1 / -1}
 .aedit-field label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:4px}
-.aedit-field input,.aedit-field textarea{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit; color:var(--ink); background:var(--card); margin-bottom:14px; outline:none}
-.aedit-field input:focus,.aedit-field textarea:focus{border-color:var(--brand)}
+.aedit-field input,.aedit-field textarea,.aedit-field select{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit; color:var(--ink); background:var(--card); margin-bottom:14px; outline:none}
+.aedit-field input:focus,.aedit-field textarea:focus,.aedit-field select:focus{border-color:var(--brand)}
 .aedit-field textarea{resize:vertical; min-height:60px}
+.aedit-float{position:fixed; top:90px; right:28px; z-index:2500; width:min(94vw,420px); max-height:84vh; display:none; flex-direction:column; background:var(--card); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.28); border:1px solid var(--line); overflow:hidden}
+.aedit-float.open{display:flex}
+.aedit-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 16px; background:var(--brand,#0C0243); color:#fff; cursor:move; user-select:none; -webkit-user-select:none; touch-action:none; font-weight:700; font-size:15px; flex:0 0 auto}
+.aedit-close{background:rgba(255,255,255,.16); color:#fff; border:0; width:26px; height:26px; border-radius:7px; cursor:pointer; font-size:13px; line-height:1; display:grid; place-items:center; flex:none}
+.aedit-close:hover{background:rgba(255,255,255,.30)}
+.aedit-body{padding:18px; overflow:auto; flex:1 1 auto}
 .pop-area-details{display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee}
 .pop-area.open .pop-area-details{display:block}
 .pop-s .mono{color:var(--brand)}
@@ -2429,14 +2435,46 @@ body.vresizing *{cursor:ns-resize !important}
     var area=el.querySelector('.pop-area');
     if(area){ area.style.cursor='pointer'; area.addEventListener('click', function(){ area.classList.toggle('open'); }); }
   }
+  /* Kerää kentän erilliset arvot kaikista ladatuista alueista (alasvetovalikkoa varten). */
+  function tpDistinctValues(key){
+    var seen={}, out=[];
+    (MASTER_AREA_FEATURES||[]).forEach(function(f){
+      var v=f.properties?f.properties[key]:null; if(v==null) return;
+      v=String(v).trim(); if(!v||seen[v]) return; seen[v]=1; out.push(v);
+    });
+    out.sort(function(a,b){ return a.localeCompare(b,'fi'); });
+    return out;
+  }
+  /* Tekee paneelista raahattavan annetusta kahvasta (pointer = hiiri + kosketus). */
+  function tpMakeDraggable(panel, handle){
+    if(!handle || handle.__drag) return; handle.__drag=true;
+    var dragging=false, sx=0, sy=0, startL=0, startT=0;
+    handle.addEventListener('pointerdown', function(e){
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      var r=panel.getBoundingClientRect();
+      panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto'; panel.style.bottom='auto';
+      dragging=true; sx=e.clientX; sy=e.clientY; startL=r.left; startT=r.top;
+      try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault();
+    });
+    handle.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      var nl=startL+(e.clientX-sx), nt=startT+(e.clientY-sy);
+      nl=Math.max(-(panel.offsetWidth-120), Math.min(nl, window.innerWidth-60));
+      nt=Math.max(0, Math.min(nt, window.innerHeight-44));
+      panel.style.left=nl+'px'; panel.style.top=nt+'px';
+    });
+    function end(e){ dragging=false; try{ handle.releasePointerCapture(e.pointerId); }catch(_){} }
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
   function tpOpenAreaEdit(props){
     var m=document.getElementById('area-edit-modal');
     if(!m){
-      m=document.createElement('div'); m.id='area-edit-modal'; m.className='uc-modal';
-      m.innerHTML='<div class="uc-backdrop"></div>'
-        +'<div class="uc-card">'
-        +'<h3 style="margin:0 0 4px; font-size:18px">Muokkaa alueen tietoja</h3>'
-        +'<div id="aedit-sub" class="pop-s" style="margin-bottom:16px"></div>'
+      m=document.createElement('div'); m.id='area-edit-modal'; m.className='aedit-float';
+      m.innerHTML='<div class="aedit-head" id="aedit-head"><span>Muokkaa alueen tietoja</span><button class="aedit-close" id="aedit-close" type="button" aria-label="Sulje">\u2715</button></div>'
+        +'<div class="aedit-body">'
+        +'<div id="aedit-sub" class="pop-s" style="margin-bottom:14px"></div>'
         +'<div id="aedit-fields" class="aedit-grid"></div>'
         +'<div id="aedit-msg" style="min-height:18px; font-size:13px; margin:2px 0 10px"></div>'
         +'<div style="display:flex; gap:10px; justify-content:flex-end">'
@@ -2444,13 +2482,14 @@ body.vresizing *{cursor:ns-resize !important}
         +'<button class="drawbtn ok" id="aedit-save" type="button">Tallenna</button>'
         +'</div></div>';
       document.body.appendChild(m);
-      m.querySelector('.uc-backdrop').addEventListener('click', function(){ m.classList.remove('open'); });
+      m.querySelector('#aedit-close').addEventListener('click', function(){ m.classList.remove('open'); });
       m.querySelector('#aedit-cancel').addEventListener('click', function(){ m.classList.remove('open'); });
+      tpMakeDraggable(m, m.querySelector('#aedit-head'));
     }
     var fields=[
       ['area_name','Alueen nimi','text'],['area_code','Aluekoodi','text'],
-      ['area_type','Aluetyyppi','text'],['parking_type','Pys\u00e4k\u00f6intityyppi','text'],
-      ['owner_parking_area','Omistaja','text'],['location_city','Kaupunki','text'],
+      ['area_type','Aluetyyppi','select'],['parking_type','Pys\u00e4k\u00f6intityyppi','select'],
+      ['owner_parking_area','Omistaja','select'],['location_city','Kaupunki','select'],
       ['city_zone','Kaupunkivy\u00f6hyke','text'],['zone_number','Vy\u00f6hykenumero','num'],
       ['estimated_spots_total','Paikkoja (arvio)','num'],
       ['max_hours','Max tunnit','num'],['max_minutes','Max minuutit','num'],
@@ -2464,9 +2503,18 @@ body.vresizing *{cursor:ns-resize !important}
       var key=f[0], label=f[1], type=f[2];
       var val=props[key]!=null?String(props[key]):'';
       var wrap=document.createElement('div'); wrap.className='aedit-field'+(type==='area'?' aedit-full':'');
-      var inp = type==='area'
-        ? '<textarea data-key="'+key+'" rows="2"></textarea>'
-        : '<input data-key="'+key+'" type="'+(type==='num'?'number':'text')+'"'+(type==='num'?' inputmode="numeric" step="any"':'')+'>';
+      var inp;
+      if(type==='select'){
+        var opts=tpDistinctValues(key);
+        if(val && opts.indexOf(val)===-1) opts.unshift(val);
+        var oh='<option value="">\u2014 (ei valittu) \u2014</option>';
+        opts.forEach(function(o){ oh+='<option value="'+tpEsc(o).replace(/"/g,'&quot;')+'">'+tpEsc(o)+'</option>'; });
+        inp='<select data-key="'+key+'">'+oh+'</select>';
+      } else if(type==='area'){
+        inp='<textarea data-key="'+key+'" rows="2"></textarea>';
+      } else {
+        inp='<input data-key="'+key+'" type="'+(type==='num'?'number':'text')+'"'+(type==='num'?' inputmode="numeric" step="any"':'')+'>';
+      }
       wrap.innerHTML='<label>'+tpEsc(label)+'</label>'+inp;
       box.appendChild(wrap);
       wrap.querySelector('[data-key]').value=val;
@@ -2489,7 +2537,7 @@ body.vresizing *{cursor:ns-resize !important}
       var orig=props[key]!=null?String(props[key]).trim():'';
       if(v===orig) return;
       if(NUMERIC[key]){ patch[key]= v==='' ? null : (isNaN(Number(v)) ? null : Number(v)); }
-      else { patch[key]= v; }
+      else { patch[key]= v==='' ? null : v; }   /* tyhjä -> null (kelpaa myös kokonaisluku-sarakkeisiin) */
     });
     if(Object.keys(patch).length===0){ msg.style.color='#666'; msg.textContent='Ei muutoksia tallennettavaksi.'; return; }
     var isFree=String(props.id).indexOf('ilm_')===0;
