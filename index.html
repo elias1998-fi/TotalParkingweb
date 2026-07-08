@@ -336,6 +336,17 @@ body.logged-in #drawer-login{display:none}
 .pop-expand svg{width:15px; height:15px}
 .pop-expand:hover{background:#e9e9ee}
 .pop-area.open .pop-expand{transform:rotate(90deg)}
+.pop-btns{display:flex; flex-direction:column; gap:6px; flex:0 0 auto}
+.pop-area-txt{flex:1 1 auto; min-width:0}
+.pop-edit{width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:#f4f4f6; color:#666; cursor:pointer; display:grid; place-items:center; padding:0; transition:background .15s, color .15s}
+.pop-edit svg{width:14px; height:14px}
+.pop-edit:hover{background:#e9e9ee; color:var(--brand)}
+.aedit-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 14px}
+.aedit-field.aedit-full{grid-column:1 / -1}
+.aedit-field label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:4px}
+.aedit-field input,.aedit-field textarea{width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit; color:var(--ink); background:var(--card); margin-bottom:14px; outline:none}
+.aedit-field input:focus,.aedit-field textarea:focus{border-color:var(--brand)}
+.aedit-field textarea{resize:vertical; min-height:60px}
 .pop-area-details{display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee}
 .pop-area.open .pop-area-details{display:block}
 .pop-s .mono{color:var(--brand)}
@@ -2399,6 +2410,108 @@ body.vresizing *{cursor:ns-resize !important}
     }catch(e){console.error('Latauspisteiden lataus epäonnistui',e);}
   }
   function adminMapStatus(msg,isErr){ var s=document.getElementById('admin-map-status'); if(!s)return; if(msg===null){ s.classList.add('hidden'); return; } s.textContent=msg; s.classList.remove('hidden'); s.classList.toggle('err',!!isErr); }
+  function tpAreaPopHTML(info){
+    return '<div class="pop-area">'
+      +'<div class="pop-area-top">'
+      +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(info.type)+'</div><div class="pop-s">'+tpEsc(info.owner)+'</div></div>'
+      +'<div class="pop-btns">'
+      +'<button class="pop-expand" type="button" aria-label="N\u00e4yt\u00e4 lis\u00e4tiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
+      +'<button class="pop-edit" type="button" aria-label="Muokkaa tietoja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
+      +'</div>'
+      +'</div>'
+      +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
+      +'</div>';
+  }
+  function tpWireAreaPopup(pop, props){
+    var el=pop.getElement(); if(!el) return;
+    var pen=el.querySelector('.pop-edit');
+    if(pen){ pen.addEventListener('click', function(ev){ ev.stopPropagation(); tpOpenAreaEdit(props); }); }
+    var area=el.querySelector('.pop-area');
+    if(area){ area.style.cursor='pointer'; area.addEventListener('click', function(){ area.classList.toggle('open'); }); }
+  }
+  function tpOpenAreaEdit(props){
+    var m=document.getElementById('area-edit-modal');
+    if(!m){
+      m=document.createElement('div'); m.id='area-edit-modal'; m.className='uc-modal';
+      m.innerHTML='<div class="uc-backdrop"></div>'
+        +'<div class="uc-card">'
+        +'<h3 style="margin:0 0 4px; font-size:18px">Muokkaa alueen tietoja</h3>'
+        +'<div id="aedit-sub" class="pop-s" style="margin-bottom:16px"></div>'
+        +'<div id="aedit-fields" class="aedit-grid"></div>'
+        +'<div id="aedit-msg" style="min-height:18px; font-size:13px; margin:2px 0 10px"></div>'
+        +'<div style="display:flex; gap:10px; justify-content:flex-end">'
+        +'<button class="drawbtn ghost" id="aedit-cancel" type="button">Peruuta</button>'
+        +'<button class="drawbtn ok" id="aedit-save" type="button">Tallenna</button>'
+        +'</div></div>';
+      document.body.appendChild(m);
+      m.querySelector('.uc-backdrop').addEventListener('click', function(){ m.classList.remove('open'); });
+      m.querySelector('#aedit-cancel').addEventListener('click', function(){ m.classList.remove('open'); });
+    }
+    var fields=[
+      ['area_name','Alueen nimi','text'],['area_code','Aluekoodi','text'],
+      ['area_type','Aluetyyppi','text'],['parking_type','Pys\u00e4k\u00f6intityyppi','text'],
+      ['owner_parking_area','Omistaja','text'],['location_city','Kaupunki','text'],
+      ['city_zone','Kaupunkivy\u00f6hyke','text'],['zone_number','Vy\u00f6hykenumero','num'],
+      ['estimated_spots_total','Paikkoja (arvio)','num'],
+      ['max_hours','Max tunnit','num'],['max_minutes','Max minuutit','num'],
+      ['valid_mape_from','Ma\u2013pe alkaa','text'],['valid_mape_to','Ma\u2013pe p\u00e4\u00e4ttyy','text'],
+      ['valid_la_from','La alkaa','text'],['valid_la_to','La p\u00e4\u00e4ttyy','text'],
+      ['valid_su_from','Su alkaa','text'],['valid_su_to','Su p\u00e4\u00e4ttyy','text'],
+      ['data_exceptions','Poikkeukset','area'],['info_additional','Lis\u00e4tiedot','area']
+    ];
+    var box=m.querySelector('#aedit-fields'); box.innerHTML='';
+    fields.forEach(function(f){
+      var key=f[0], label=f[1], type=f[2];
+      var val=props[key]!=null?String(props[key]):'';
+      var wrap=document.createElement('div'); wrap.className='aedit-field'+(type==='area'?' aedit-full':'');
+      var inp = type==='area'
+        ? '<textarea data-key="'+key+'" rows="2"></textarea>'
+        : '<input data-key="'+key+'" type="'+(type==='num'?'number':'text')+'"'+(type==='num'?' inputmode="numeric" step="any"':'')+'>';
+      wrap.innerHTML='<label>'+tpEsc(label)+'</label>'+inp;
+      box.appendChild(wrap);
+      wrap.querySelector('[data-key]').value=val;
+    });
+    m.querySelector('#aedit-sub').textContent='ID '+props.id+(props.area_name?(' \u00b7 '+props.area_name):'');
+    m.querySelector('#aedit-msg').textContent='';
+    var saveBtn=m.querySelector('#aedit-save');
+    saveBtn.disabled=false; saveBtn.textContent='Tallenna';
+    saveBtn.onclick=function(){ tpSaveAreaEdit(props, m); };
+    m.classList.add('open');
+  }
+  async function tpSaveAreaEdit(props, modal){
+    var msg=modal.querySelector('#aedit-msg');
+    var saveBtn=modal.querySelector('#aedit-save');
+    var NUMERIC={zone_number:1,estimated_spots_total:1,max_hours:1,max_minutes:1};
+    var patch={};
+    modal.querySelectorAll('[data-key]').forEach(function(el){
+      var key=el.getAttribute('data-key');
+      var v=el.value.trim();
+      var orig=props[key]!=null?String(props[key]).trim():'';
+      if(v===orig) return;
+      if(NUMERIC[key]){ patch[key]= v==='' ? null : (isNaN(Number(v)) ? null : Number(v)); }
+      else { patch[key]= v; }
+    });
+    if(Object.keys(patch).length===0){ msg.style.color='#666'; msg.textContent='Ei muutoksia tallennettavaksi.'; return; }
+    var isFree=String(props.id).indexOf('ilm_')===0;
+    var table=isFree?'parking_master_ilmaiset':'parking_master';
+    var realId=isFree?String(props.id).slice(4):String(props.id);
+    saveBtn.disabled=true; saveBtn.textContent='Tallennetaan\u2026'; msg.style.color='#666'; msg.textContent='';
+    try{
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(realId),{
+        method:'PATCH',
+        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+        body:JSON.stringify(patch)
+      });
+      if(!res.ok){ var txt=await res.text().catch(function(){return '';}); throw new Error('HTTP '+res.status+(txt?(' \u2014 '+txt.slice(0,160)):'')); }
+      modal.classList.remove('open');
+      await tpLoadAreas(adminMap);
+      if(typeof phoneMap!=='undefined' && phoneMap) await tpLoadAreas(phoneMap);
+      if(typeof tpToast==='function') tpToast('Alueen tiedot p\u00e4ivitetty tietokantaan');
+    }catch(err){
+      saveBtn.disabled=false; saveBtn.textContent='Tallenna';
+      msg.style.color='#c62828'; msg.textContent='Tallennus ep\u00e4onnistui: '+((err&&err.message)||err);
+    }
+  }
   var tpIdSearchPopup=null;
   /* Hae pysäköintialue tietokannan id:llä → zoomaa siihen ja avaa sen tiedot
      samalla tavalla kuin aluetta klikatessa. */
@@ -2418,17 +2531,10 @@ body.vresizing *{cursor:ns-resize !important}
     }
     var ctr=tpGeomCenter(full.geometry, lons.length?[lons[0],lats[0]]:[24.941,60.17]);
     var p=full.properties, info=tpBuildAreaInfo(p);
-    var popHTML='<div class="pop-area">'
-      +'<div class="pop-area-top">'
-      +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(info.type)+'</div><div class="pop-s">'+tpEsc(info.owner)+'</div></div>'
-      +'<button class="pop-expand" type="button" aria-label="N\u00e4yt\u00e4 lis\u00e4tiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
-      +'</div>'
-      +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
-      +'</div>';
+    var popHTML=tpAreaPopHTML(info);
     if(tpIdSearchPopup){ try{tpIdSearchPopup.remove();}catch(e){} }
     tpIdSearchPopup=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
-    var el=tpIdSearchPopup.getElement();
-    if(el){ var area=el.querySelector('.pop-area'); if(area){ area.style.cursor='pointer'; area.addEventListener('click',function(){ area.classList.toggle('open'); }); } }
+    tpWireAreaPopup(tpIdSearchPopup, p);
     return true;
   }
   function initAdminMap(){
@@ -2478,13 +2584,7 @@ body.vresizing *{cursor:ns-resize !important}
            omistaja), sekä harmaa >-nuoli joka laajentaa voimassaoloajat ja
            lisätiedot. */
         var info=tpBuildAreaInfo(p);
-        popHTML='<div class="pop-area">'
-          +'<div class="pop-area-top">'
-          +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(info.type)+'</div><div class="pop-s">'+tpEsc(info.owner)+'</div></div>'
-          +'<button class="pop-expand" type="button" aria-label="Näytä lisätiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
-          +'</div>'
-          +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
-          +'</div>';
+        popHTML=tpAreaPopHTML(info);
       } else {
         var t = lid==='halli-icons' ? (p.name||'Pysäköintihalli') : (p.name||p.title||p.operator||'Latauspiste');
         var s = lid==='halli-icons' ? 'Pysäköintihalli' : ('Latauspiste'+(p.operator?(' \u00b7 '+p.operator):''));
@@ -2495,11 +2595,7 @@ body.vresizing *{cursor:ns-resize !important}
       /* Koko valkoisen boksin klikkaus laajentaa/pienentää lisätiedot samalla
          tavalla kuin >-nuoli. Klikkaus mistä tahansa kohdasta (myös taulukon
          päältä laajennettuna) kutistaa takaisin. */
-      var el=pop.getElement();
-      if(el){
-        var area=el.querySelector('.pop-area');
-        if(area){ area.style.cursor='pointer'; area.addEventListener('click',function(){ area.classList.toggle('open'); }); }
-      }
+      tpWireAreaPopup(pop, p);
     });
     adminMap.on('mousemove',function(e){
       if(adminMap.__drawing || adminMap.__editActive) return;
