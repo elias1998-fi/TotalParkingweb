@@ -886,6 +886,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .tp-info-label{font-size:10.5px; font-weight:bold; color:#888; text-transform:uppercase; letter-spacing:.4px; margin:10px 0 3px}
 .tp-info-value{font-size:13px; color:#333; line-height:1.45}
 .map-tools{position:absolute; left:14px; top:14px; z-index:6; display:flex; gap:8px; flex-wrap:wrap; max-width:calc(100% - 28px)}
+.map-idsearch{display:flex; align-items:center; gap:6px; background:#fff; border-radius:10px; padding:0 11px; box-shadow:0 2px 8px rgba(12,2,67,.12); color:var(--ink-soft)}
+.map-idsearch svg{width:16px; height:16px; flex:none; opacity:.55}
+.map-idsearch input{border:0; outline:0; background:transparent; font-family:inherit; font-size:13.5px; width:140px; color:var(--ink); padding:9px 0}
+.map-idsearch.notfound{box-shadow:0 0 0 2px #e53935}
+.map-zoom-ind{position:absolute; right:14px; bottom:14px; z-index:6; background:rgba(255,255,255,.92); color:var(--ink-soft); font-size:12px; font-weight:600; font-family:ui-monospace,Menlo,Consolas,monospace; padding:4px 9px; border-radius:8px; box-shadow:0 2px 8px rgba(12,2,67,.12); pointer-events:none}
 .tool-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:11px; padding:9px 13px; font-weight:600; font-size:13.5px; box-shadow:var(--shadow); color:var(--ink)}
 .tool-btn svg{width:16px; height:16px}
 .tool-btn.primary{background:var(--brand); color:#fff; border-color:var(--brand)}
@@ -2394,6 +2399,38 @@ body.vresizing *{cursor:ns-resize !important}
     }catch(e){console.error('Latauspisteiden lataus epäonnistui',e);}
   }
   function adminMapStatus(msg,isErr){ var s=document.getElementById('admin-map-status'); if(!s)return; if(msg===null){ s.classList.add('hidden'); return; } s.textContent=msg; s.classList.remove('hidden'); s.classList.toggle('err',!!isErr); }
+  var tpIdSearchPopup=null;
+  /* Hae pysäköintialue tietokannan id:llä → zoomaa siihen ja avaa sen tiedot
+     samalla tavalla kuin aluetta klikatessa. */
+  function tpFocusAreaById(rawId){
+    var q=String(rawId==null?'':rawId).trim(); if(!q) return false;
+    var inp=document.getElementById('admin-id-search');
+    var full=MASTER_AREA_FEATURES.find(function(x){return String(x.properties.id)===q;});
+    if(!full || !adminMap || !full.geometry){
+      if(inp){ inp.classList.add('notfound'); setTimeout(function(){inp.classList.remove('notfound');},1200); }
+      return false;
+    }
+    if(inp) inp.classList.remove('notfound');
+    var lons=[], lats=[];
+    (function walk(c){ if(typeof c[0]==='number'){ lons.push(c[0]); lats.push(c[1]); } else if(Array.isArray(c)){ c.forEach(walk); } })(full.geometry.coordinates);
+    if(lons.length){
+      adminMap.fitBounds([[Math.min.apply(null,lons),Math.min.apply(null,lats)],[Math.max.apply(null,lons),Math.max.apply(null,lats)]],{padding:90, maxZoom:17.5, duration:600});
+    }
+    var ctr=tpGeomCenter(full.geometry, lons.length?[lons[0],lats[0]]:[24.941,60.17]);
+    var p=full.properties, info=tpBuildAreaInfo(p);
+    var popHTML='<div class="pop-area">'
+      +'<div class="pop-area-top">'
+      +'<div class="pop-area-txt"><div class="pop-t">'+tpEsc(info.header)+'</div><div class="pop-s">'+tpEsc(info.type)+'</div><div class="pop-s">'+tpEsc(info.owner)+'</div></div>'
+      +'<button class="pop-expand" type="button" aria-label="N\u00e4yt\u00e4 lis\u00e4tiedot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>'
+      +'</div>'
+      +'<div class="pop-area-details">'+info.detailsHTML+'</div>'
+      +'</div>';
+    if(tpIdSearchPopup){ try{tpIdSearchPopup.remove();}catch(e){} }
+    tpIdSearchPopup=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+    var el=tpIdSearchPopup.getElement();
+    if(el){ var area=el.querySelector('.pop-area'); if(area){ area.style.cursor='pointer'; area.addEventListener('click',function(){ area.classList.toggle('open'); }); } }
+    return true;
+  }
   function initAdminMap(){
     if(adminMap)return;
     if(typeof maplibregl==='undefined'){ adminMapStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
@@ -2470,6 +2507,15 @@ body.vresizing *{cursor:ns-resize !important}
       var hit = ls.length && adminMap.queryRenderedFeatures(e.point,{layers:ls}).length;
       adminMap.getCanvas().style.cursor = hit ? 'pointer' : '';
     });
+    /* ID-haku: Enter → zoomaa alueeseen ja avaa sen tiedot */
+    var _idInp=document.getElementById('admin-id-search');
+    if(_idInp && !_idInp.__bound){ _idInp.__bound=true;
+      _idInp.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); tpFocusAreaById(_idInp.value); } });
+    }
+    /* Zoom-tason indikaattori (oikea alakulma) */
+    var _zInd=document.getElementById('admin-zoom-ind');
+    function _updZoom(){ if(_zInd) _zInd.textContent='z '+adminMap.getZoom().toFixed(1); }
+    adminMap.on('zoom', _updZoom); _updZoom();
     [60,250,600].forEach(function(ms){ setTimeout(function(){ if(adminMap)adminMap.resize(); }, ms); });
     setTimeout(function(){ if(!loaded) adminMapStatus('Karttapohja ei latautunut 10 sekunnissa.'+(lastErr?('\n\nViimeisin virhe:\n'+lastErr):''),true); }, 10000);
   }
@@ -2657,8 +2703,10 @@ body.vresizing *{cursor:ns-resize !important}
       +tool('','plus','Lisää alue')
       +tool('','edit','Muokkaa')
       +tool('','zone','Pysäköinnin maksuvyöhykkeet')
+      +'<div class="map-idsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="admin-id-search" type="text" inputmode="numeric" placeholder="Hae alue ID:ll\u00e4\u2026" autocomplete="off"></div>'
       +'</div>'
       +'<button class="phone-toggle-btn" id="phone-mode-btn" type="button" title="Puhelinnäkymä">'+ic('phone')+'</button>'
+      +'<div class="map-zoom-ind" id="admin-zoom-ind">z 12</div>'
       +'</div>'
       +'<div class="phone-pane" id="phone-pane">'
       +'<div class="phone-frame">'
