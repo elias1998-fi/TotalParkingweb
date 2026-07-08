@@ -2560,6 +2560,10 @@ body.vresizing *{cursor:ns-resize !important}
         var gj={type:'FeatureCollection',features:MASTER_AREA_FEATURES};
         if(adminMap && adminMap.getSource('master-polygons')) adminMap.getSource('master-polygons').setData(gj);
         if(typeof phoneMap!=='undefined' && phoneMap && phoneMap.getSource('master-polygons')) phoneMap.getSource('master-polygons').setData(gj);
+      } else {
+        /* Alue ei ollut kartalla (suodatettu pois) -> lataa uudelleen, jotta korjattu alue palaa. */
+        Object.keys(patch).forEach(function(k){ props[k]=(patch[k]==null?'':patch[k]); });
+        try{ await tpLoadAreas(adminMap); if(typeof phoneMap!=='undefined'&&phoneMap) await tpLoadAreas(phoneMap); }catch(e){}
       }
       modal.classList.remove('open');
       if(typeof tpToast==='function') tpToast('Alueen tiedot p\u00e4ivitetty tietokantaan');
@@ -2571,10 +2575,37 @@ body.vresizing *{cursor:ns-resize !important}
   var tpIdSearchPopup=null;
   /* Hae pysäköintialue tietokannan id:llä → zoomaa siihen ja avaa sen tiedot
      samalla tavalla kuin aluetta klikatessa. */
-  function tpFocusAreaById(rawId){
+  /* Hakee alueen suoraan tietokannasta ID:llä (löytää myös kartalta suodatetut). */
+  async function tpFetchAreaById(q){
+    try{
+      var isFree=q.indexOf('ilm_')===0;
+      var table=isFree?'parking_master_ilmaiset':'parking_master';
+      var realId=isFree?q.slice(4):q;
+      var SEL='id,area_name,area_type,parking_type,owner_parking_area,location_city,city_zone,zone_number,estimated_spots_total,area_code,max_hours,max_minutes,valid_mape_from,valid_mape_to,valid_la_from,valid_la_to,valid_su_from,valid_su_to,data_exceptions,info_additional,polygon_coordinates';
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+SEL+'&id=eq.'+encodeURIComponent(realId),{headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY}});
+      if(!res.ok) return null;
+      var rows=await res.json();
+      if(!rows || !rows.length) return null;
+      var r=rows[0]; if(isFree) r.id='ilm_'+r.id;
+      if(!r.polygon_coordinates || (r.polygon_coordinates.type!=='Polygon' && r.polygon_coordinates.type!=='MultiPolygon')) return null;
+      return {type:'Feature', properties:{
+        source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),
+        id:String(r.id), area_name:r.area_name||'', area_type:r.area_type||'', parking_type:r.parking_type||'',
+        owner_parking_area:r.owner_parking_area||'', location_city:r.location_city||'', city_zone:r.city_zone||'',
+        zone_number:r.zone_number||'', estimated_spots_total:r.estimated_spots_total||'', area_code:r.area_code||'',
+        max_hours:r.max_hours||'', max_minutes:r.max_minutes||'',
+        valid_mape_from:r.valid_mape_from||'', valid_mape_to:r.valid_mape_to||'',
+        valid_la_from:r.valid_la_from||'', valid_la_to:r.valid_la_to||'',
+        valid_su_from:r.valid_su_from||'', valid_su_to:r.valid_su_to||'',
+        data_exceptions:r.data_exceptions||'', info_additional:r.info_additional||''
+      }, geometry:r.polygon_coordinates};
+    }catch(e){ return null; }
+  }
+  async function tpFocusAreaById(rawId){
     var q=String(rawId==null?'':rawId).trim(); if(!q) return false;
     var inp=document.getElementById('admin-id-search');
     var full=MASTER_AREA_FEATURES.find(function(x){return String(x.properties.id)===q;});
+    if(!full){ full=await tpFetchAreaById(q); }   /* ei kartalla (ehk\u00e4 suodatettu) -> hae kannasta */
     if(!full || !adminMap || !full.geometry){
       if(inp){ inp.classList.add('notfound'); setTimeout(function(){inp.classList.remove('notfound');},1200); }
       return false;
