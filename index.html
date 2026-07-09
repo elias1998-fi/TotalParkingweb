@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
 <style>
 :root{
   --ink:#0A1A33; --ink-soft:#3E4D67; --muted:#717A8C;
@@ -327,7 +327,7 @@ body.logged-in #drawer-login{display:none}
 }
 .mk-charge svg{transform:rotate(-45deg); width:15px; height:15px; stroke:var(--brand)}
 .mk-charge.pulse::before{content:""; position:absolute; inset:-3px; border-radius:inherit; border:2px solid var(--charge); animation:ping 2.2s var(--ease) infinite}
-.maplibregl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
+.mapboxgl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
 .pop-t{font-family:var(--font-display); font-weight:600; font-size:15px; margin-bottom:3px}
 .pop-s{font-size:13px; color:var(--muted)}
 .pop-area-top{display:flex; align-items:flex-start; gap:8px}
@@ -1784,7 +1784,7 @@ body.vresizing *{cursor:ns-resize !important}
   </div>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* concaveman v2.0.0 (bundlattu esbuildilla, sis. rbush + tinyqueue + robust-predicates) — konkaavi peite alueiden ulkorajan yhdistamiseen, globaali window.concaveman */
@@ -1800,7 +1800,7 @@ body.vresizing *{cursor:ns-resize !important}
   function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
 
   /* Keep the page at a fixed scale on mobile: iOS Safari ignores user-scalable=no,
-     so block its pinch-zoom gesture. (MapLibre handles map zoom via touch events,
+     so block its pinch-zoom gesture. (Mapbox GL handles map zoom via touch events,
      not these gesture events, so the map still pinch-zooms normally.) */
   ['gesturestart','gesturechange','gestureend'].forEach(function(ev){
     document.addEventListener(ev,function(e){ e.preventDefault(); },{passive:false});
@@ -2148,15 +2148,15 @@ body.vresizing *{cursor:ns-resize !important}
   }
   function addPoints(map){
     POINTS.forEach(function(p){
-      var pop=new maplibregl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
-      new maplibregl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
+      var pop=new mapboxgl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
+      new mapboxgl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
     });
   }
   function newMap(id,zoom,interactive){
-    if(typeof maplibregl==='undefined') return null;
-    var map=new maplibregl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
-    map.addControl(new maplibregl.AttributionControl({compact:true}));
-    if(interactive!==false) map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    if(typeof mapboxgl==='undefined') return null;
+    var map=new mapboxgl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
+    map.addControl(new mapboxgl.AttributionControl({compact:true}));
+    if(interactive!==false) map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'bottom-right');
     map.on('load',function(){addPoints(map);});
     return map;
   }
@@ -2166,16 +2166,17 @@ body.vresizing *{cursor:ns-resize !important}
   function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
   function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
 
-  /* ---------- Admin map: real TotalParking data on the app's Digitransit basemap ----------
-     Read-only overview for the master view. Uses the same client-side keys the app
-     already ships, the same omakartta_style.json basemap, the same parking-area
-     colours, garage icon and charging icon. ------------------------------------------------ */
-  var TP_DIGITRANSIT_KEY='a002614565b24559b3feddfca8d01918';
+  /* ---------- Admin map: real TotalParking data on the app's Mapbox basemap ----------
+     Read-only overview for the master view. Basemap is the same Mapbox Studio
+     style the app uses (edits published in Studio show up here automatically),
+     with the same parking-area colours, garage icon and charging icon. -------- */
+  var TP_MAPBOX_TOKEN='pk.eyJ1IjoiZWxpYXMxOTk4IiwiYSI6ImNtcWdodHpmMDAwZXUydHM1OXR6eDRxb3UifQ.sEKSaKfCn8sUp644g11u9Q';
+  if(typeof mapboxgl!=='undefined') mapboxgl.accessToken=TP_MAPBOX_TOKEN;
+  var TP_MAPBOX_STYLE='mapbox://styles/elias1998/cmrdfv8xk000j01s77gpl4n21';
   var TP_SUPABASE_URL='https://glphxelazjodpiekmoew.supabase.co';
   var TP_SUPABASE_KEY='sb_publishable_MEZLuJOl-QsZxgLZI3nnTA_e-xL5VQW';
   var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
   var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(TP_SUPABASE_URL,TP_SUPABASE_KEY):null;
-  function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
   /* Laskee geometrian keskipisteen (kaikkien kärkipisteiden keskiarvo).
      Käytetään kun klikattu alue keskitetään kartan keskelle. */
   function tpGeomCenter(geom, fallback){
@@ -2257,7 +2258,7 @@ body.vresizing *{cursor:ns-resize !important}
     return s.indexOf('ilmainen')!==-1 || s.indexOf('kiekko')!==-1 || s==='community';
   }
 
-  /* Keskinappi-panorointi: MapLibre ei tue hiiren rullapainikkeella raahaamista
+  /* Keskinappi-panorointi: Mapbox GL ei tue hiiren rullapainikkeella raahaamista
      natiivisti, joten lisätään se canvasin tapahtumilla. Painike pohjassa raahaus
      siirtää karttaa panBy:llä, ja oletusselaintoiminto (autoscroll) estetään. */
   function tpEnableMiddleButtonPan(map){
@@ -2620,30 +2621,26 @@ body.vresizing *{cursor:ns-resize !important}
     var p=full.properties, info=tpBuildAreaInfo(p);
     var popHTML=tpAreaPopHTML(info);
     if(tpIdSearchPopup){ try{tpIdSearchPopup.remove();}catch(e){} }
-    tpIdSearchPopup=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+    tpIdSearchPopup=new mapboxgl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
     tpWireAreaPopup(tpIdSearchPopup, p);
     return true;
   }
   function initAdminMap(){
     if(adminMap)return;
-    if(typeof maplibregl==='undefined'){ adminMapStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
+    if(typeof mapboxgl==='undefined'){ adminMapStatus('Karttakirjastoa (Mapbox GL) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
     if(!document.getElementById('admin-map')) return;
     adminMapStatus('Ladataan karttaa…',false);
-    // Load the basemap style from the working Oma-kartta deployment (same origin,
-    // always in sync with the app). Cache-busted; HTML response means it 404'd.
-    fetch('https://elias1998-fi.github.io/Oma-kartta/omakartta_style.json?v='+Date.now(),{cache:'no-store'}).then(function(r){
-      return r.text().then(function(t){
-        if(!r.ok) throw new Error('Tyylitiedosto ei latautunut (HTTP '+r.status+').');
-        if(t.charAt(0)==='<') throw new Error('omakartta_style.json palautti HTML-sivun JSON:in sijaan (todennäköisesti 404). Varmista että tiedosto on repon juuressa, ja avaa sivu tuoreessa yksityisessä ikkunassa.');
-        return JSON.parse(t);
-      });
-    }).then(function(style){ TP_MAP_STYLE=style; buildAdminMap(style); }).catch(function(err){ adminMapStatus('Kartan lataus epäonnistui:\n'+((err&&err.message)||err),true); });
+    // Pohjakartta tulee nyt suoraan Mapboxista (sama Studio-tyyli kuin
+    // sovelluksessa) — tyylitiedostoa ei enää noudeta Oma-kartta-reposta.
+    TP_MAP_STYLE=TP_MAPBOX_STYLE;
+    buildAdminMap(TP_MAP_STYLE);
   }
   function buildAdminMap(style){
     var loaded=false, lastErr='';
-    adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
+    adminMap=new mapboxgl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
-    adminMap.addControl(new maplibregl.FullscreenControl(),'top-right');
+    adminMap.addControl(new mapboxgl.AttributionControl({compact:true}));
+    adminMap.addControl(new mapboxgl.FullscreenControl(),'top-right');
     adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpEnableMiddleButtonPan(adminMap); tpLoadZonePrices(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
     adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
     var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
@@ -2678,7 +2675,7 @@ body.vresizing *{cursor:ns-resize !important}
         var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+tpEsc(p.id)+'</span>' : '';
         popHTML='<div class="pop-t">'+tpEsc(t)+'</div><div class="pop-s">'+s+idline+'</div>';
       }
-      var pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+      var pop=new mapboxgl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
       /* Koko valkoisen boksin klikkaus laajentaa/pienentää lisätiedot samalla
          tavalla kuin >-nuoli. Klikkaus mistä tahansa kohdasta (myös taulukon
          päältä laajennettuna) kutistaa takaisin. */
@@ -3917,10 +3914,10 @@ body.vresizing *{cursor:ns-resize !important}
       var idx=pts.length;
       pts.push([ll.lng,ll.lat]);
       var el=document.createElement('div'); el.className='draw-corner';
-      var mk=new maplibregl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
+      var mk=new mapboxgl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
       mk.__idx=idx;
       /* Raahaus: päivitä vastaava piste ja piirrä polygoni reaaliajassa
-         molemmilla kartoilla. MapLibren draggable-marker estää itse kartan
+         molemmilla kartoilla. Mapbox GLn draggable-marker estää itse kartan
          panoroinnin raahauksen ajaksi. */
       mk.on('drag',function(){
         var p=mk.getLngLat();
@@ -4115,8 +4112,9 @@ body.vresizing *{cursor:ns-resize !important}
     }
     function buildPhoneMap(){
       if(phoneMap || !TP_MAP_STYLE || !adminMap) return;
-      phoneMap=new maplibregl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, transformRequest:tpTransformRequest, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false});
+      phoneMap=new mapboxgl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false});
       try{ phoneMap.touchZoomRotate.disableRotation(); }catch(e){}
+      phoneMap.addControl(new mapboxgl.AttributionControl({compact:true}));
       phoneMap.on('load',function(){
         phoneMap.resize();
         tpEnableMiddleButtonPan(phoneMap);
@@ -4268,13 +4266,13 @@ body.vresizing *{cursor:ns-resize !important}
     /* ---------- Karttasuodattimet (jaettu iso kartta + phone-mode) ----------
        Peilaa sovelluksen suodatusnäkymää: ilmaiset/maksulliset/kaikki,
        max-pysäköintiaika ja latauspisteiden näkyvyys. Suodattimet asetetaan
-       MapLibre-tasoille MOLEMMISSA kartoissa (adminMap + phoneMap), joten
+       Mapbox GL-tasoille MOLEMMISSA kartoissa (adminMap + phoneMap), joten
        muutos näkyy heti sekä isolla kartalla että puhelinnäkymässä. */
     var TP_FILTERS={ freeOn:false, freeMode:'all', maxtimeOn:false, maxtimeMin:0, evOn:true };
     var TP_FREE_SOURCES=['community','hel_ilmainen_pitka','hel_ilmainen_lyhyt','hel_sallittu_kiellon_ulkopuolella'];
 
     function tpAreaFilterExpr(){
-      /* Palauttaa MapLibre-filtterin master-poly-tasoille nykytilan mukaan,
+      /* Palauttaa Mapbox GL-filtterin master-poly-tasoille nykytilan mukaan,
          tai null jos kaikki näytetään. */
       var clauses=['all'];
       // Ilmaiset/maksulliset-rajaus
