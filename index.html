@@ -353,6 +353,17 @@ body.logged-in #drawer-login{display:none}
 .aedit-close{background:rgba(255,255,255,.16); color:#fff; border:0; width:26px; height:26px; border-radius:7px; cursor:pointer; font-size:13px; line-height:1; display:grid; place-items:center; flex:none}
 .aedit-close:hover{background:rgba(255,255,255,.30)}
 .aedit-body{padding:18px; overflow:auto; flex:1 1 auto}
+.aedit-head-actions{display:flex; align-items:center; gap:8px; flex:none}
+.aedit-reset{display:none; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap}
+.aedit-reset.show{display:inline-block}
+.aedit-reset:hover{background:rgba(255,255,255,.30)}
+.aedit-foot{flex:0 0 auto; background:var(--card); border-top:1px solid var(--line); padding:12px 18px; display:flex; align-items:center; justify-content:flex-end; gap:12px}
+.aedit-msg{font-size:13px; flex:1 1 auto; min-width:0; text-align:left}
+.aedit-foot-btns{display:flex; gap:10px; flex:none}
+.aedit-banner{position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(12,2,67,.45); z-index:5; padding:20px; border-radius:inherit}
+.aedit-banner.open{display:flex}
+.aedit-banner-card{background:#fff; border-radius:14px; padding:20px 22px; box-shadow:0 12px 40px rgba(0,0,0,.30); max-width:330px; text-align:center; font-size:14px; line-height:1.5; color:var(--ink)}
+.aedit-banner-btns{display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap}
 .pop-area-details{display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee}
 .pop-area.open .pop-area-details{display:block}
 .pop-s .mono{color:var(--brand)}
@@ -2461,6 +2472,7 @@ body.vresizing *{cursor:ns-resize !important}
     if(!handle || handle.__drag) return; handle.__drag=true;
     var dragging=false, sx=0, sy=0, startL=0, startT=0;
     handle.addEventListener('pointerdown', function(e){
+      if(e.target.closest('button')) return;         /* napit (esim. ✕, Palauta muutokset) toimivat normaalisti */
       if(e.pointerType==='mouse' && e.button!==0) return;
       var r=panel.getBoundingClientRect();
       panel.style.left=r.left+'px'; panel.style.top=r.top+'px'; panel.style.right='auto'; panel.style.bottom='auto';
@@ -2483,18 +2495,63 @@ body.vresizing *{cursor:ns-resize !important}
     var m=document.getElementById('area-edit-modal');
     if(!m){
       m=document.createElement('div'); m.id='area-edit-modal'; m.className='aedit-float';
-      m.innerHTML='<div class="aedit-head" id="aedit-head"><span>Muokkaa alueen tietoja</span><button class="aedit-close" id="aedit-close" type="button" aria-label="Sulje">\u2715</button></div>'
+      m.innerHTML='<div class="aedit-head" id="aedit-head"><span>Muokkaa alueen tietoja</span>'
+        +'<div class="aedit-head-actions">'
+        +'<button class="aedit-reset" id="aedit-reset" type="button" title="Palauta kentät alkuperäisiin arvoihin">Palauta muutokset</button>'
+        +'<button class="aedit-close" id="aedit-close" type="button" aria-label="Sulje">\u2715</button>'
+        +'</div></div>'
         +'<div class="aedit-body">'
         +'<div id="aedit-sub" class="pop-s" style="margin-bottom:14px"></div>'
         +'<div id="aedit-fields" class="aedit-grid"></div>'
-        +'<div id="aedit-msg" style="min-height:18px; font-size:13px; margin:2px 0 10px"></div>'
-        +'<div style="display:flex; gap:10px; justify-content:flex-end">'
+        +'</div>'
+        +'<div class="aedit-foot">'
+        +'<div id="aedit-msg" class="aedit-msg"></div>'
+        +'<div class="aedit-foot-btns">'
         +'<button class="drawbtn ghost" id="aedit-cancel" type="button">Peruuta</button>'
         +'<button class="drawbtn ok" id="aedit-save" type="button">Tallenna</button>'
-        +'</div></div>';
+        +'</div></div>'
+        +'<div class="aedit-banner" id="aedit-banner"><div class="aedit-banner-card"><div id="aedit-banner-text"></div><div class="aedit-banner-btns" id="aedit-banner-btns"></div></div></div>';
       document.body.appendChild(m);
-      m.querySelector('#aedit-close').addEventListener('click', function(){ m.classList.remove('open'); });
-      m.querySelector('#aedit-cancel').addEventListener('click', function(){ m.classList.remove('open'); });
+      /* Muutosten seuranta: onko jokin kenttä eri kuin avattaessa? */
+      m.__isDirty=function(){
+        var d=false, o=m.__origVals||{};
+        m.querySelectorAll('[data-key]').forEach(function(el){
+          var k=el.getAttribute('data-key');
+          var ov=(o[k]!=null?String(o[k]):'').trim();
+          if(String(el.value).trim()!==ov) d=true;
+        });
+        return d;
+      };
+      m.__updateDirty=function(){ var r=m.querySelector('#aedit-reset'); if(r) r.classList.toggle('show', m.__isDirty()); };
+      m.__hideBanner=function(){ m.querySelector('#aedit-banner').classList.remove('open'); };
+      function aeditCloseNow(){ m.__hideBanner(); m.classList.remove('open'); }
+      function aeditCloseRequest(){ if(m.__isDirty()){ m.__showBanner('discard'); } else { aeditCloseNow(); } }
+      /* Banneri: 'discard' = poistutaanko tallentamatta, 'confirm' = vahvista tallennus kantaan. */
+      m.__showBanner=function(kind){
+        var txt=m.querySelector('#aedit-banner-text'), btns=m.querySelector('#aedit-banner-btns');
+        if(kind==='discard'){
+          txt.textContent='Alueen tietoihin on tehty muutoksia. Muutoksia ei tallenneta.';
+          btns.innerHTML='<button class="drawbtn ghost" id="aedit-b-back" type="button">Takaisin</button>'
+            +'<button class="drawbtn danger" id="aedit-b-discard" type="button">Hylkää muutokset ja poistu</button>';
+          btns.querySelector('#aedit-b-back').addEventListener('click', function(){ m.__hideBanner(); });
+          btns.querySelector('#aedit-b-discard').addEventListener('click', aeditCloseNow);
+        } else {
+          txt.textContent='Alueen tietoihin tehty muutoksia. Hyväksymällä muutokset päivittyvät tietokantaan.';
+          btns.innerHTML='<button class="drawbtn ghost" id="aedit-b-return" type="button">Palaa takaisin</button>'
+            +'<button class="drawbtn ok" id="aedit-b-accept" type="button">Hyväksy</button>';
+          btns.querySelector('#aedit-b-return').addEventListener('click', function(){ m.__hideBanner(); });
+          btns.querySelector('#aedit-b-accept').addEventListener('click', function(){ m.__hideBanner(); tpSaveAreaEdit(m.__props, m); });
+        }
+        m.querySelector('#aedit-banner').classList.add('open');
+      };
+      m.querySelector('#aedit-close').addEventListener('click', aeditCloseRequest);
+      m.querySelector('#aedit-cancel').addEventListener('click', aeditCloseRequest);
+      m.querySelector('#aedit-reset').addEventListener('click', function(){
+        var o=m.__origVals||{};
+        m.querySelectorAll('[data-key]').forEach(function(el){ var k=el.getAttribute('data-key'); el.value=(o[k]!=null?String(o[k]):''); });
+        var mg=m.querySelector('#aedit-msg'); if(mg) mg.textContent='';
+        m.__updateDirty();
+      });
       tpMakeDraggable(m, m.querySelector('#aedit-head'));
     }
     var fields=[
@@ -2510,6 +2567,7 @@ body.vresizing *{cursor:ns-resize !important}
       ['data_exceptions','Poikkeukset','area'],['info_additional','Lis\u00e4tiedot','area']
     ];
     var box=m.querySelector('#aedit-fields'); box.innerHTML='';
+    var origVals={};
     fields.forEach(function(f){
       var key=f[0], label=f[1], type=f[2];
       var val=props[key]!=null?String(props[key]):'';
@@ -2528,13 +2586,24 @@ body.vresizing *{cursor:ns-resize !important}
       }
       wrap.innerHTML='<label>'+tpEsc(label)+'</label>'+inp;
       box.appendChild(wrap);
-      wrap.querySelector('[data-key]').value=val;
+      var ctl=wrap.querySelector('[data-key]');
+      ctl.value=val;
+      origVals[key]=val;
+      ctl.addEventListener('input', function(){ m.__updateDirty(); });
+      ctl.addEventListener('change', function(){ m.__updateDirty(); });
     });
+    m.__origVals=origVals;
+    m.__props=props;
     m.querySelector('#aedit-sub').textContent='ID '+props.id+(props.area_name?(' \u00b7 '+props.area_name):'');
     m.querySelector('#aedit-msg').textContent='';
+    m.__hideBanner();
+    m.__updateDirty();
     var saveBtn=m.querySelector('#aedit-save');
     saveBtn.disabled=false; saveBtn.textContent='Tallenna';
-    saveBtn.onclick=function(){ tpSaveAreaEdit(props, m); };
+    saveBtn.onclick=function(){
+      if(!m.__isDirty()){ var mg=m.querySelector('#aedit-msg'); mg.style.color='#666'; mg.textContent='Ei muutoksia tallennettavaksi.'; return; }
+      m.__showBanner('confirm');
+    };
     m.classList.add('open');
   }
   async function tpSaveAreaEdit(props, modal){
