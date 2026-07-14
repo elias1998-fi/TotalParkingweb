@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <style>
 :root{
   --ink:#0A1A33; --ink-soft:#3E4D67; --muted:#717A8C;
@@ -327,7 +327,7 @@ body.logged-in #drawer-login{display:none}
 }
 .mk-charge svg{transform:rotate(-45deg); width:15px; height:15px; stroke:var(--brand)}
 .mk-charge.pulse::before{content:""; position:absolute; inset:-3px; border-radius:inherit; border:2px solid var(--charge); animation:ping 2.2s var(--ease) infinite}
-.mapboxgl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
+.maplibregl-popup-content{font-family:var(--font-body); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-lg); border:1px solid var(--line)}
 .pop-t{font-family:var(--font-display); font-weight:600; font-size:15px; margin-bottom:3px}
 .pop-s{font-size:13px; color:var(--muted)}
 .pop-area-top{display:flex; align-items:flex-start; gap:8px}
@@ -831,10 +831,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .phone-notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:110px; height:22px; background:#000; border-radius:0 0 14px 14px; z-index:5}
 .phone-center-pin{position:absolute; top:50%; left:50%; transform:translate(-50%, calc(-100% + 5px)); z-index:7; pointer-events:none; width:24px; height:24px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
 .phone-center-pin svg{width:24px; height:24px; display:block}
-.phone-toggle-btn{position:absolute; top:54px; right:14px; z-index:7; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; padding:0}
-.phone-toggle-btn svg{width:18px; height:18px}
-.phone-toggle-btn:hover{background:var(--brand-50)}
-.phone-toggle-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+/* Kartan oikean laidan nappirail: koko näyttö / karttatyyli / puhelinnäkymä
+   (+ muokkausrail liittyy samaan pystyriviin). Kaikki napit samankokoisia. */
+.map-rail{position:absolute; right:14px; top:14px; z-index:7; display:flex; flex-direction:column; gap:8px; align-items:flex-end}
+.railbtn{width:42px; height:42px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; place-items:center; color:var(--ink); cursor:pointer; transition:background .15s, color .15s, border-color .15s; padding:0}
+.railbtn svg{width:19px; height:19px}
+.railbtn:hover{background:var(--brand-50)}
+.railbtn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.railbtn:disabled{opacity:.5; cursor:wait}
 .phone-menu-pill{position:absolute; top:12px; left:12px; z-index:11; background:#fff; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.2); width:38px; height:38px; overflow:hidden; transition:height .3s cubic-bezier(.25,.46,.45,.94)}
 .phone-menu-pill.expanded{height:200px}
 .phone-pill-btn{width:38px; height:38px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; z-index:1; padding:0}
@@ -931,7 +935,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .drawbtn.alt:hover{background:#FFEBB8}
 .drawbtn.danger{background:#e53935; color:#fff}
 .drawbtn.danger:hover{background:#c62828}
-.map-side-rail{position:absolute; right:14px; top:100px; z-index:7; display:none; flex-direction:column; gap:8px; align-items:flex-end}
+.map-side-rail{display:none; flex-direction:column; gap:8px; align-items:flex-end}
 .map-side-rail.open{display:flex}
 .addrail-btn{display:flex; align-items:center; gap:7px; height:38px; padding:0 13px; border-radius:11px; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); box-shadow:var(--shadow); color:var(--ink); font-weight:600; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit}
 .addrail-btn svg{width:16px; height:16px; flex:0 0 auto}
@@ -1784,7 +1788,7 @@ body.vresizing *{cursor:ns-resize !important}
   </div>
 </div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* concaveman v2.0.0 (bundlattu esbuildilla, sis. rbush + tinyqueue + robust-predicates) — konkaavi peite alueiden ulkorajan yhdistamiseen, globaali window.concaveman */
@@ -1800,7 +1804,7 @@ body.vresizing *{cursor:ns-resize !important}
   function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
 
   /* Keep the page at a fixed scale on mobile: iOS Safari ignores user-scalable=no,
-     so block its pinch-zoom gesture. (Mapbox GL handles map zoom via touch events,
+     so block its pinch-zoom gesture. (MapLibre handles map zoom via touch events,
      not these gesture events, so the map still pinch-zooms normally.) */
   ['gesturestart','gesturechange','gestureend'].forEach(function(ev){
     document.addEventListener(ev,function(e){ e.preventDefault(); },{passive:false});
@@ -2148,15 +2152,15 @@ body.vresizing *{cursor:ns-resize !important}
   }
   function addPoints(map){
     POINTS.forEach(function(p){
-      var pop=new mapboxgl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
-      new mapboxgl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
+      var pop=new maplibregl.Popup({offset:18,closeButton:false}).setHTML('<div class="pop-t">'+p.n+'</div><div class="pop-s">'+(p.t==='park'?'Pysäköinti':'Lataus')+' · <span class="mono">'+p.free+'</span> vapaana<br>'+p.info+'</div>');
+      new maplibregl.Marker({element:markerEl(p),anchor:'bottom'}).setLngLat(p.c).setPopup(pop).addTo(map);
     });
   }
   function newMap(id,zoom,interactive){
-    if(typeof mapboxgl==='undefined') return null;
-    var map=new mapboxgl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
-    map.addControl(new mapboxgl.AttributionControl({compact:true}));
-    if(interactive!==false) map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'bottom-right');
+    if(typeof maplibregl==='undefined') return null;
+    var map=new maplibregl.Map({container:id,style:cartoStyle,center:HKI,zoom:zoom||12.6,attributionControl:false,interactive:interactive!==false});
+    map.addControl(new maplibregl.AttributionControl({compact:true}));
+    if(interactive!==false) map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
     map.on('load',function(){addPoints(map);});
     return map;
   }
@@ -2166,17 +2170,16 @@ body.vresizing *{cursor:ns-resize !important}
   function initHeroMap(){if(heroMap||!document.getElementById('hero-map'))return; heroMap=newMap('hero-map',12.4,false);}
   function initStaffMap(){if(staffMap)return; staffMap=newMap('staff-map',12.6,true); setTimeout(function(){if(staffMap)staffMap.resize();},120);}
 
-  /* ---------- Admin map: real TotalParking data on the app's Mapbox basemap ----------
-     Read-only overview for the master view. Basemap is the same Mapbox Studio
-     style the app uses (edits published in Studio show up here automatically),
-     with the same parking-area colours, garage icon and charging icon. -------- */
-  var TP_MAPBOX_TOKEN='pk.eyJ1IjoiZWxpYXMxOTk4IiwiYSI6ImNtcWdodHpmMDAwZXUydHM1OXR6eDRxb3UifQ.sEKSaKfCn8sUp644g11u9Q';
-  if(typeof mapboxgl!=='undefined') mapboxgl.accessToken=TP_MAPBOX_TOKEN;
-  var TP_MAPBOX_STYLE='mapbox://styles/elias1998/cmrdfv8xk000j01s77gpl4n21';
+  /* ---------- Admin map: real TotalParking data on the app's Digitransit basemap ----------
+     Read-only overview for the master view. Uses the same client-side keys the app
+     already ships, the same omakartta_style.json basemap, the same parking-area
+     colours, garage icon and charging icon. ------------------------------------------------ */
+  var TP_DIGITRANSIT_KEY='a002614565b24559b3feddfca8d01918';
   var TP_SUPABASE_URL='https://glphxelazjodpiekmoew.supabase.co';
   var TP_SUPABASE_KEY='sb_publishable_MEZLuJOl-QsZxgLZI3nnTA_e-xL5VQW';
   var TP_AFIR_BASE='https://afir.digitraffic.fi/api/charging-network/v1';
   var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(TP_SUPABASE_URL,TP_SUPABASE_KEY):null;
+  function tpTransformRequest(url){ if(url.indexOf('digitransit.fi')>=0) return {url:url,headers:{'digitransit-subscription-key':TP_DIGITRANSIT_KEY}}; return {url:url}; }
   /* Laskee geometrian keskipisteen (kaikkien kärkipisteiden keskiarvo).
      Käytetään kun klikattu alue keskitetään kartan keskelle. */
   function tpGeomCenter(geom, fallback){
@@ -2258,7 +2261,7 @@ body.vresizing *{cursor:ns-resize !important}
     return s.indexOf('ilmainen')!==-1 || s.indexOf('kiekko')!==-1 || s==='community';
   }
 
-  /* Keskinappi-panorointi: Mapbox GL ei tue hiiren rullapainikkeella raahaamista
+  /* Keskinappi-panorointi: MapLibre ei tue hiiren rullapainikkeella raahaamista
      natiivisti, joten lisätään se canvasin tapahtumilla. Painike pohjassa raahaus
      siirtää karttaa panBy:llä, ja oletusselaintoiminto (autoscroll) estetään. */
   function tpEnableMiddleButtonPan(map){
@@ -2331,18 +2334,25 @@ body.vresizing *{cursor:ns-resize !important}
           data_exceptions:r.data_exceptions||'', info_additional:r.info_additional||''
         },geometry:r.polygon_coordinates};});
       MASTER_AREA_FEATURES=features;
-      var geojson={type:'FeatureCollection',features:features};
-      if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
-      else{
-        map.addSource('master-polygons',{type:'geojson',data:geojson});
-        map.addLayer({id:'master-poly-fill',type:'fill',source:'master-polygons',minzoom:11,paint:{'fill-opacity':0.30,'fill-color':['match',['get','source'],'community','#7F1F89','hel_ilmainen_pitka','#7F1F89','hel_ilmainen_lyhyt','#7F1F89','hel_sallittu_kiellon_ulkopuolella','#7F1F89','hel_kertamaksu_1h','#4A90D9','hel_kertamaksu_2h','#4A90D9','hel_kertamaksu_4h','#4A90D9','hel_maksullinen_ei_tunnusta','#4A90D9','hel_kertamaksu_1h_ei_tunnusta','#4A90D9','#4A90D9']}});
-        map.addLayer({id:'master-poly-line',type:'line',source:'master-polygons',minzoom:11,paint:{'line-width':1.5,'line-opacity':0.30,'line-color':['match',['get','source'],'community','#611868','hel_ilmainen_pitka','#611868','hel_ilmainen_lyhyt','#611868','hel_sallittu_kiellon_ulkopuolella','#611868','#2B6CB0']}});
-      }
-      ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
-      if(typeof refreshEditAfterReload==='function') refreshEditAfterReload();
-      if(typeof window.__tpApplyFilters==='function') window.__tpApplyFilters();
+      tpApplyAreaLayers(map, features);
       console.log('Admin-kartta: alueita',features.length);
     }catch(e){console.error('Alueiden lataus epäonnistui',e);}
+  }
+  /* Lisää/päivittää aluetasot kartalle annetusta feature-listasta. Erotettu omaksi
+     funktiokseen, jotta karttatyylin vaihdon jälkeen tasot voi palauttaa ilman
+     uutta raskasta hakua tietokannasta. */
+  function tpApplyAreaLayers(map, features){
+    if(!map || !features) return;
+    var geojson={type:'FeatureCollection',features:features};
+    if(map.getSource('master-polygons')){ map.getSource('master-polygons').setData(geojson); }
+    else{
+      map.addSource('master-polygons',{type:'geojson',data:geojson});
+      map.addLayer({id:'master-poly-fill',type:'fill',source:'master-polygons',minzoom:11,paint:{'fill-opacity':0.30,'fill-color':['match',['get','source'],'community','#7F1F89','hel_ilmainen_pitka','#7F1F89','hel_ilmainen_lyhyt','#7F1F89','hel_sallittu_kiellon_ulkopuolella','#7F1F89','hel_kertamaksu_1h','#4A90D9','hel_kertamaksu_2h','#4A90D9','hel_kertamaksu_4h','#4A90D9','hel_maksullinen_ei_tunnusta','#4A90D9','hel_kertamaksu_1h_ei_tunnusta','#4A90D9','#4A90D9']}});
+      map.addLayer({id:'master-poly-line',type:'line',source:'master-polygons',minzoom:11,paint:{'line-width':1.5,'line-opacity':0.30,'line-color':['match',['get','source'],'community','#611868','hel_ilmainen_pitka','#611868','hel_ilmainen_lyhyt','#611868','hel_sallittu_kiellon_ulkopuolella','#611868','#2B6CB0']}});
+    }
+    ['halli-icons','charging-icons'].forEach(function(id){if(map.getLayer(id))map.moveLayer(id);});
+    if(typeof refreshEditAfterReload==='function') refreshEditAfterReload();
+    if(typeof window.__tpApplyFilters==='function') window.__tpApplyFilters();
   }
   var _zonePricesLoaded=false;
   async function tpLoadZonePrices(){
@@ -2621,26 +2631,100 @@ body.vresizing *{cursor:ns-resize !important}
     var p=full.properties, info=tpBuildAreaInfo(p);
     var popHTML=tpAreaPopHTML(info);
     if(tpIdSearchPopup){ try{tpIdSearchPopup.remove();}catch(e){} }
-    tpIdSearchPopup=new mapboxgl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+    tpIdSearchPopup=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
     tpWireAreaPopup(tpIdSearchPopup, p);
     return true;
   }
+  /* ── Karttatyylit ──────────────────────────────────────────────────────────
+     0 = HSL/Digitransit (Oma-kartta-repo), 1 = uusi tyyli (TotalParkingweb-repo).
+     "Vaihda karttatyyli" -nappi kiertää näiden välillä. Tyylin vaihto pyyhkii
+     kartan omat lähteet/tasot, joten ne palautetaan tpReapplyMapData():lla. */
+  var TP_STYLES=[
+    {name:'HSL / Digitransit', url:'https://elias1998-fi.github.io/Oma-kartta/omakartta_style.json'},
+    {name:'Uusi tyyli',        url:'https://elias1998-fi.github.io/TotalParkingweb/omakartta_style_newstyle.json'}
+  ];
+  var tpStyleIdx=0, tpStyleBusy=false;
+  async function tpFetchStyleJSON(url){
+    var r=await fetch(url+'?v='+Date.now(),{cache:'no-store'});
+    var t=await r.text();
+    if(!r.ok) throw new Error('Tyylitiedosto ei latautunut (HTTP '+r.status+').');
+    if(t.charAt(0)==='<') throw new Error('Tyylitiedosto palautti HTML:n JSON:in sijaan (todenn\u00e4k\u00f6isesti 404). Tarkista tiedoston nimi ja sijainti repon juuressa.');
+    return JSON.parse(t);
+  }
+  function tpOnStyleReady(map, cb){
+    var done=false;
+    function go(){ if(done) return; done=true; try{ cb(); }catch(e){ console.warn('Tasojen palautus:',e); } }
+    if(map.isStyleLoaded && map.isStyleLoaded()){ go(); return; }
+    map.once('styledata', function(){ setTimeout(go,0); });
+    map.once('idle', go);
+  }
+  /* Palauttaa kaikki omat tasot tyylinvaihdon jälkeen (alueet välimuistista,
+     hallit/latauspisteet uudelleen, maksuvyöhykkeet ja muokkaustasot jos päällä). */
+  function tpReapplyMapData(map){
+    if(!map) return;
+    if(MASTER_AREA_FEATURES && MASTER_AREA_FEATURES.length) tpApplyAreaLayers(map, MASTER_AREA_FEATURES);
+    else tpLoadAreas(map);
+    tpLoadHallit(map);
+    tpLoadCharging(map);
+    if(typeof window.__tpReapplyZones==='function') window.__tpReapplyZones(map);
+    if(map===adminMap && adminMap.__editActive && typeof ensureEditLayers==='function'){
+      try{ ensureEditLayers(); if(typeof updateEditUI==='function') updateEditUI(); }catch(e){}
+    }
+  }
+  async function tpCycleMapStyle(){
+    if(!adminMap || tpStyleBusy) return;
+    var btn=document.getElementById('map-style-btn');
+    tpStyleBusy=true; if(btn){ btn.disabled=true; btn.classList.add('active'); }
+    var next=(tpStyleIdx+1)%TP_STYLES.length;
+    try{
+      var style=await tpFetchStyleJSON(TP_STYLES[next].url);
+      tpStyleIdx=next; TP_MAP_STYLE=style;
+      [adminMap, phoneMap].forEach(function(m){
+        if(!m) return;
+        m.setStyle(style);
+        tpOnStyleReady(m, function(){ tpReapplyMapData(m); });
+      });
+      if(typeof tpToast==='function') tpToast('Karttatyyli: '+TP_STYLES[next].name);
+    }catch(err){
+      adminMapStatus('Karttatyylin vaihto ep\u00e4onnistui:\n'+((err&&err.message)||err), true);
+      setTimeout(function(){ adminMapStatus(null); }, 5000);
+    }
+    tpStyleBusy=false; if(btn){ btn.disabled=false; btn.classList.remove('active'); }
+  }
+  /* Koko näyttö: oma nappi (korvaa MapLibren oman kontrollin), jotta kaikki
+     oikean laidan napit ovat samankokoisia ja samassa pystylinjassa. */
+  function tpToggleMapFullscreen(){
+    var el=document.querySelector('#app-admin .panel[data-id="a-map"] .map-stage');
+    if(!el) return;
+    var fsEl=document.fullscreenElement||document.webkitFullscreenElement;
+    if(!fsEl){
+      var rq=el.requestFullscreen||el.webkitRequestFullscreen;
+      if(rq) rq.call(el);
+    } else {
+      var ex=document.exitFullscreen||document.webkitExitFullscreen;
+      if(ex) ex.call(document);
+    }
+  }
+  document.addEventListener('fullscreenchange',function(){
+    var on=!!document.fullscreenElement;
+    var b=document.getElementById('map-fs-btn'); if(b) b.classList.toggle('active',on);
+    setTimeout(function(){ if(adminMap) adminMap.resize(); if(phoneMap) phoneMap.resize(); },80);
+  });
   function initAdminMap(){
     if(adminMap)return;
-    if(typeof mapboxgl==='undefined'){ adminMapStatus('Karttakirjastoa (Mapbox GL) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
+    if(typeof maplibregl==='undefined'){ adminMapStatus('Karttakirjastoa (MapLibre) ei saatu ladattua. Tarkista verkkoyhteys.',true); return; }
     if(!document.getElementById('admin-map')) return;
     adminMapStatus('Ladataan karttaa…',false);
-    // Pohjakartta tulee nyt suoraan Mapboxista (sama Studio-tyyli kuin
-    // sovelluksessa) — tyylitiedostoa ei enää noudeta Oma-kartta-reposta.
-    TP_MAP_STYLE=TP_MAPBOX_STYLE;
-    buildAdminMap(TP_MAP_STYLE);
+    /* Pohjakartta: Digitransit-vektoritiilet + HSL-tyyli (TP_STYLES[tpStyleIdx]).
+       Tyyliä voi vaihtaa kartan "Vaihda karttatyyli" -napista. */
+    tpFetchStyleJSON(TP_STYLES[tpStyleIdx].url)
+      .then(function(style){ TP_MAP_STYLE=style; buildAdminMap(style); })
+      .catch(function(err){ adminMapStatus('Kartan lataus epäonnistui:\n'+((err&&err.message)||err),true); });
   }
   function buildAdminMap(style){
     var loaded=false, lastErr='';
-    adminMap=new mapboxgl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
+    adminMap=new maplibregl.Map({container:'admin-map',style:style,center:[24.9410,60.1699],zoom:12.4,minZoom:5,maxZoom:19,transformRequest:tpTransformRequest,attributionControl:false,dragRotate:false,touchPitch:false,pitchWithRotate:false});
     try{adminMap.touchZoomRotate.disableRotation();}catch(e){}
-    adminMap.addControl(new mapboxgl.AttributionControl({compact:true}));
-    adminMap.addControl(new mapboxgl.FullscreenControl(),'top-right');
     adminMap.on('load',function(){ loaded=true; adminMapStatus(null); adminMap.resize(); tpEnableMiddleButtonPan(adminMap); tpLoadZonePrices(); tpLoadAreas(adminMap); tpLoadHallit(adminMap); tpLoadCharging(adminMap); });
     adminMap.on('error',function(e){ var m=(e&&e.error&&e.error.message)||'tuntematon virhe'; lastErr=m; console.warn('Admin-kartta:',m); if(!loaded) adminMapStatus('Karttaresurssin lataus epäonnistui:\n'+m,true); });
     var INFO_LAYERS=['master-poly-fill','halli-icons','charging-icons'];
@@ -2675,7 +2759,7 @@ body.vresizing *{cursor:ns-resize !important}
         var idline = p.id ? '<br><span class="mono" style="font-size:11px;opacity:.65">ID '+tpEsc(p.id)+'</span>' : '';
         popHTML='<div class="pop-t">'+tpEsc(t)+'</div><div class="pop-s">'+s+idline+'</div>';
       }
-      var pop=new mapboxgl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
+      var pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:'300px'}).setLngLat(ctr).setHTML(popHTML).addTo(adminMap);
       /* Koko valkoisen boksin klikkaus laajentaa/pienentää lisätiedot samalla
          tavalla kuin >-nuoli. Klikkaus mistä tahansa kohdasta (myös taulukon
          päältä laajennettuna) kutistaa takaisin. */
@@ -2885,7 +2969,11 @@ body.vresizing *{cursor:ns-resize !important}
       +tool('','zone','Pysäköinnin maksuvyöhykkeet')
       +'<div class="map-idsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="admin-id-search" type="text" inputmode="numeric" placeholder="Hae alue ID:ll\u00e4\u2026" autocomplete="off"></div>'
       +'</div>'
-      +'<button class="phone-toggle-btn" id="phone-mode-btn" type="button" title="Puhelinnäkymä">'+ic('phone')+'</button>'
+      +'<div class="map-rail" id="map-rail">'
+      +'<button class="railbtn" id="map-fs-btn" type="button" title="Koko näyttö"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>'
+      +'<button class="railbtn" id="map-style-btn" type="button" title="Vaihda karttatyyli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg></button>'
+      +'<button class="railbtn phone-toggle-btn" id="phone-mode-btn" type="button" title="Puhelinnäkymä">'+ic('phone')+'</button>'
+      +'</div>'
       +'<div class="map-zoom-ind" id="admin-zoom-ind">z 12</div>'
       +'</div>'
       +'<div class="phone-pane" id="phone-pane">'
@@ -3914,10 +4002,10 @@ body.vresizing *{cursor:ns-resize !important}
       var idx=pts.length;
       pts.push([ll.lng,ll.lat]);
       var el=document.createElement('div'); el.className='draw-corner';
-      var mk=new mapboxgl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
+      var mk=new maplibregl.Marker({element:el,anchor:'center',draggable:true}).setLngLat(ll).addTo(adminMap);
       mk.__idx=idx;
       /* Raahaus: päivitä vastaava piste ja piirrä polygoni reaaliajassa
-         molemmilla kartoilla. Mapbox GLn draggable-marker estää itse kartan
+         molemmilla kartoilla. MapLibren draggable-marker estää itse kartan
          panoroinnin raahauksen ajaksi. */
       mk.on('drag',function(){
         var p=mk.getLngLat();
@@ -4028,6 +4116,13 @@ body.vresizing *{cursor:ns-resize !important}
       var v=vis?'visible':'none';
       [adminMap, phoneMap].forEach(function(m){ if(m && m.getLayer('payment-zones-line')) m.setLayoutProperty('payment-zones-line','visibility',v); });
     }
+    /* Karttatyylin vaihto pyyhkii vyöhyketason — palautetaan se entiseen tilaansa. */
+    window.__tpReapplyZones=function(m){
+      if(!m || zonesState!=='loaded') return;
+      tpLoadPaymentZones(m).then(function(){
+        if(m.getLayer('payment-zones-line')) m.setLayoutProperty('payment-zones-line','visibility', zonesVisible?'visible':'none');
+      }).catch(function(){});
+    };
     function toggleZones(btn){
       if(zonesState==='loading') return;
       var on=btn.classList.toggle('active');
@@ -4112,9 +4207,8 @@ body.vresizing *{cursor:ns-resize !important}
     }
     function buildPhoneMap(){
       if(phoneMap || !TP_MAP_STYLE || !adminMap) return;
-      phoneMap=new mapboxgl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false});
+      phoneMap=new maplibregl.Map({container:'phone-map', style:TP_MAP_STYLE, center:adminMap.getCenter(), zoom:adminMap.getZoom(), minZoom:5, maxZoom:19, transformRequest:tpTransformRequest, attributionControl:false, dragRotate:false, touchPitch:false, pitchWithRotate:false});
       try{ phoneMap.touchZoomRotate.disableRotation(); }catch(e){}
-      phoneMap.addControl(new mapboxgl.AttributionControl({compact:true}));
       phoneMap.on('load',function(){
         phoneMap.resize();
         tpEnableMiddleButtonPan(phoneMap);
@@ -4266,13 +4360,13 @@ body.vresizing *{cursor:ns-resize !important}
     /* ---------- Karttasuodattimet (jaettu iso kartta + phone-mode) ----------
        Peilaa sovelluksen suodatusnäkymää: ilmaiset/maksulliset/kaikki,
        max-pysäköintiaika ja latauspisteiden näkyvyys. Suodattimet asetetaan
-       Mapbox GL-tasoille MOLEMMISSA kartoissa (adminMap + phoneMap), joten
+       MapLibre-tasoille MOLEMMISSA kartoissa (adminMap + phoneMap), joten
        muutos näkyy heti sekä isolla kartalla että puhelinnäkymässä. */
     var TP_FILTERS={ freeOn:false, freeMode:'all', maxtimeOn:false, maxtimeMin:0, evOn:true };
     var TP_FREE_SOURCES=['community','hel_ilmainen_pitka','hel_ilmainen_lyhyt','hel_sallittu_kiellon_ulkopuolella'];
 
     function tpAreaFilterExpr(){
-      /* Palauttaa Mapbox GL-filtterin master-poly-tasoille nykytilan mukaan,
+      /* Palauttaa MapLibre-filtterin master-poly-tasoille nykytilan mukaan,
          tai null jos kaikki näytetään. */
       var clauses=['all'];
       // Ilmaiset/maksulliset-rajaus
@@ -4403,6 +4497,10 @@ body.vresizing *{cursor:ns-resize !important}
     document.addEventListener('click',function(e){
       var pBtn=e.target.closest('#phone-mode-btn');
       if(pBtn && pBtn.closest('#app-admin')){ togglePhoneMode(pBtn); return; }
+      var fsBtn=e.target.closest('#map-fs-btn');
+      if(fsBtn && fsBtn.closest('#app-admin')){ tpToggleMapFullscreen(); return; }
+      var stBtn=e.target.closest('#map-style-btn');
+      if(stBtn && stBtn.closest('#app-admin')){ tpCycleMapStyle(); return; }
       var btn=e.target.closest('.tool-btn'); if(!btn) return;
       if(!btn.closest('#app-admin')) return;
       var t=btn.getAttribute('data-tool'); e.preventDefault();
@@ -4901,7 +4999,7 @@ body.vresizing *{cursor:ns-resize !important}
     var panel=edPanelEl(); if(!panel) return null;
     var r=document.getElementById('map-editrail');
     if(!r){
-      r=document.createElement('div'); r.className='map-side-rail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); panel.appendChild(r);
+      r=document.createElement('div'); r.className='map-side-rail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); (document.getElementById('map-rail')||panel).appendChild(r);
       document.getElementById('ed-pen-btn').addEventListener('click',function(){ edHint('Valitse alueita klikkaamalla, tai maalaa suorakulmio hiiren vasemmalla painikkeella.'); });
       document.getElementById('ed-undo-btn').addEventListener('click', undoEdit);
       document.getElementById('ed-exit-btn').addEventListener('click',function(){ var b=document.querySelector('#app-admin [data-tool="edit"]'); if(b) b.classList.remove('active'); exitEditMode(); });
