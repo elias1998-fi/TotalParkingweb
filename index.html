@@ -960,6 +960,11 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .editrail-btn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
 .editrail-btn.danger:hover{background:#FDE7E2; color:#C0392B; border-color:#F3C5BC}
 .editrail-btn:disabled{opacity:.4; cursor:not-allowed}
+.editrail-btn.wide{width:auto; min-width:42px; padding:0 12px; font-size:12px; font-weight:700; white-space:nowrap}
+.map-banner{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(12,2,67,.45); z-index:3000; padding:20px}
+.map-banner.open{display:flex}
+.shape-vertex{width:14px; height:14px; border-radius:50%; background:#fff; border:3px solid #F9A825; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:grab}
+.shape-vertex:active{cursor:grabbing}
 .map-hint{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:7; display:none; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-lg); padding:9px 15px; font-size:13px; line-height:1.45; color:var(--ink-soft); max-width:calc(100% - 28px); text-align:center}
 .map-hint.open{display:block}
 /* laatikkovalinnan suorakulmio (muokkaustilan raahausvalinta) */
@@ -4944,15 +4949,80 @@ body.vresizing *{cursor:ns-resize !important}
     updateEditUI();
   }
   function cancelEditPreview(){
+    exitShapeMode();
     edInPreview=false; edPreviewGeom=null;
     if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
     updateEditUI();
   }
   function clearEdSelection(){
+    exitShapeMode();
     edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null;
     if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[]});
     edHideDiffBox();
     updateEditUI();
+  }
+
+  /* ── Alueen POISTO ────────────────────────────────────────────────────────
+     ✕-nappi railissa (näkyy vain kun alueita valittuna) ja Delete-näppäin
+     avaavat vahvistusbannerin. Hyväksyminen poistaa alueen sekä kartalta että
+     Supabase-tietokannasta — poistoa EI voi perua. */
+  function edDelBanner(){
+    var b=document.getElementById('ed-del-banner');
+    if(!b){
+      b=document.createElement('div'); b.id='ed-del-banner'; b.className='map-banner';
+      b.innerHTML='<div class="aedit-banner-card"><div id="ed-del-text"></div>'
+        +'<div class="aedit-banner-btns">'
+        +'<button class="drawbtn ghost" id="ed-del-back" type="button">Takaisin</button>'
+        +'<button class="drawbtn danger" id="ed-del-accept" type="button">Hyväksy poisto</button>'
+        +'</div></div>';
+      document.body.appendChild(b);
+      b.querySelector('#ed-del-back').addEventListener('click', function(){ b.classList.remove('open'); });
+      b.querySelector('#ed-del-accept').addEventListener('click', edConfirmDelete);
+    }
+    return b;
+  }
+  function requestDeleteSelected(){
+    if(!adminMap || !adminMap.__editActive) return;
+    if(edInPreview || edPending) return;
+    if(edSelected.size<1) return;
+    var n=edSelected.size;
+    var b=edDelBanner();
+    b.querySelector('#ed-del-text').textContent = n===1
+      ? 'Olet poistamassa aluetta. Oletko varma? Muutosta ei voi perua sekä se päivittyy tietokantaan.'
+      : 'Olet poistamassa '+n+' aluetta. Oletko varma? Muutosta ei voi perua sekä se päivittyy tietokantaan.';
+    var ac=b.querySelector('#ed-del-accept'); ac.disabled=false; ac.textContent='Hyväksy poisto';
+    b.classList.add('open');
+  }
+  async function edConfirmDelete(){
+    var b=document.getElementById('ed-del-banner'); if(!b) return;
+    var ac=b.querySelector('#ed-del-accept');
+    var ids=Array.from(edSelected).map(String);
+    if(!ids.length){ b.classList.remove('open'); return; }
+    ac.disabled=true; ac.textContent='Poistetaan…';
+    var failed=[];
+    for(var i=0;i<ids.length;i++){
+      var sid=ids[i];
+      var isFree=sid.indexOf('ilm_')===0;
+      var table=isFree?'parking_master_ilmaiset':'parking_master';
+      var realId=isFree?sid.slice(4):sid;
+      try{
+        var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(realId),{
+          method:'DELETE',
+          headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,Prefer:'return=minimal'}
+        });
+        if(!res.ok) failed.push(sid+' (HTTP '+res.status+')');
+      }catch(err){ failed.push(sid); }
+    }
+    var okIds=ids.filter(function(id){ return !failed.some(function(f){ return f.indexOf(id)===0; }); });
+    if(okIds.length){
+      var okSet={}; okIds.forEach(function(id){ okSet[String(id)]=1; });
+      MASTER_AREA_FEATURES=MASTER_AREA_FEATURES.filter(function(f){ return !okSet[String(f.properties.id)]; });
+      edSetLocalFeatures();
+    }
+    b.classList.remove('open');
+    clearEdSelection();
+    if(failed.length) edHint('Osa poistoista epäonnistui: '+failed.join(', '), true);
+    else edHint(okIds.length===1 ? 'Alue poistettu kartalta ja tietokannasta.' : okIds.length+' aluetta poistettu kartalta ja tietokannasta.', true);
   }
 
   /* Yhdistämisen HYVÄKSYNTÄ on kaksivaiheinen, jotta vahingossa tehdyn voi vielä
@@ -5062,7 +5132,8 @@ body.vresizing *{cursor:ns-resize !important}
   function edRailHTML(){
     return '<button class="editrail-btn active" id="ed-pen-btn" type="button" title="Valitse alueita klikkaamalla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>'
       +'<button class="editrail-btn" id="ed-undo-btn" type="button" title="Peru viimeisin valinta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></button>'
-      +'<button class="editrail-btn danger" id="ed-exit-btn" type="button" title="Sulje muokkaustila"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
+      +'<button class="editrail-btn danger" id="ed-exit-btn" type="button" title="Poista valittu alue (Delete)" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+      +'<button class="editrail-btn wide" id="ed-shape-btn" type="button" title="Muokkaa alueen muotoa" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8 12 5l7 3-2 8-5 3-5-3z"/><circle cx="5" cy="8" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="8" r="1.6"/><circle cx="17" cy="16" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="7" cy="16" r="1.6"/></svg></button>';
   }
   function edRail(){
     var panel=edPanelEl(); if(!panel) return null;
@@ -5071,7 +5142,8 @@ body.vresizing *{cursor:ns-resize !important}
       r=document.createElement('div'); r.className='map-side-rail'; r.id='map-editrail'; r.innerHTML=edRailHTML(); (document.getElementById('map-rail')||panel).appendChild(r);
       document.getElementById('ed-pen-btn').addEventListener('click',function(){ edHint('Valitse alueita klikkaamalla, tai maalaa suorakulmio hiiren vasemmalla painikkeella.'); });
       document.getElementById('ed-undo-btn').addEventListener('click', undoEdit);
-      document.getElementById('ed-exit-btn').addEventListener('click',function(){ var b=document.querySelector('#app-admin [data-tool="edit"]'); if(b) b.classList.remove('active'); exitEditMode(); });
+      document.getElementById('ed-exit-btn').addEventListener('click', requestDeleteSelected);
+      document.getElementById('ed-shape-btn').addEventListener('click', cycleShapeMode);
     }
     return r;
   }
@@ -5082,6 +5154,99 @@ body.vresizing *{cursor:ns-resize !important}
     return b;
   }
 
+  /* ── MUODON MUOKKAUS (yksi valittu alue) ──────────────────────────────────
+     Rail-nappi kiertää: Autom. 1 → Autom. 2 → Manual → Autom. 1 …
+     Autom. 1: alueen pidemmän sivun VASEN puolisko levenee (kiilamaisesti).
+     Autom. 2: sama oikealle puoliskolle. Molemmat lasketaan alkuperäisestä
+     geometriasta (eivät kasaudu). Manual: alueen kulmiin tulee raahattavat
+     pisteet, joilla muotoa voi muokata vapaasti. Esikatselu näkyy keltaisena;
+     Hyväksy tallentaa (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
+  var edShapeMode=0, edShapeMarkers=[], edShapeWorkGeom=null, edShapeAreaId=null;
+  function edShapeModeName(){ return ['','Autom. 1','Autom. 2','Manual'][edShapeMode]||''; }
+  function edClearShapeMarkers(){ edShapeMarkers.forEach(function(m){ try{m.remove();}catch(e){} }); edShapeMarkers=[]; }
+  function exitShapeMode(){ edClearShapeMarkers(); edShapeMode=0; edShapeWorkGeom=null; edShapeAreaId=null; }
+  function edShapeWiden(geometry, side){
+    var g=JSON.parse(JSON.stringify(geometry));
+    var rings=[];
+    if(g.type==='Polygon'){ g.coordinates.forEach(function(r){ rings.push(r); }); }
+    else if(g.type==='MultiPolygon'){ g.coordinates.forEach(function(poly){ poly.forEach(function(r){ rings.push(r); }); }); }
+    else return null;
+    var pts=[]; rings.forEach(function(r){ r.forEach(function(p){ pts.push(edMerc(p[0],p[1])); }); });
+    if(pts.length<3) return null;
+    var mx=0,my=0; pts.forEach(function(p){ mx+=p[0]; my+=p[1]; }); mx/=pts.length; my/=pts.length;
+    var sxx=0,syy=0,sxy=0; pts.forEach(function(p){ var dx=p[0]-mx,dy=p[1]-my; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy; });
+    var ang=0.5*Math.atan2(2*sxy,sxx-syy);
+    var ux=Math.cos(ang), uy=Math.sin(ang);
+    if(ux<0){ ux=-ux; uy=-uy; }               /* u osoittaa itään → "vasen" = länsipää */
+    var vx=-uy, vy=ux;
+    var amin=1e30, amax=-1e30;
+    pts.forEach(function(p){ var a=(p[0]-mx)*ux+(p[1]-my)*uy; if(a<amin)amin=a; if(a>amax)amax=a; });
+    var span=amax-amin; if(span<=0) return null;
+    var K=0.6;                                 /* levennys ääripäässä: +60 % */
+    rings.forEach(function(r){
+      for(var i=0;i<r.length;i++){
+        var q=edMerc(r[i][0], r[i][1]);
+        var dx=q[0]-mx, dy=q[1]-my;
+        var a=dx*ux+dy*uy, s=dx*vx+dy*vy;
+        var t = side==='left' ? (amax-a)/span : (a-amin)/span;   /* 1 valitussa päässä, 0 toisessa */
+        var s2=s*(1+K*t);
+        var nx=mx+a*ux+s2*vx, ny=my+a*uy+s2*vy;
+        var ll=edUnmerc(nx,ny);
+        r[i][0]=ll[0]; r[i][1]=ll[1];
+      }
+    });
+    return g;
+  }
+  function edShapeUpdatePreview(){
+    edPreviewGeom=edShapeWorkGeom;
+    if(adminMap && adminMap.getSource('edit-preview')) adminMap.getSource('edit-preview').setData({type:'FeatureCollection',features:[{type:'Feature',geometry:edShapeWorkGeom,properties:{}}]});
+  }
+  function edBuildShapeMarkers(){
+    edClearShapeMarkers();
+    var g=edShapeWorkGeom; if(!g) return;
+    var rings=[];
+    if(g.type==='Polygon') rings.push(g.coordinates[0]);
+    else if(g.type==='MultiPolygon') g.coordinates.forEach(function(poly){ rings.push(poly[0]); });
+    rings.forEach(function(ring){
+      var closed = ring.length>1 && ring[0][0]===ring[ring.length-1][0] && ring[0][1]===ring[ring.length-1][1];
+      var last = closed ? ring.length-1 : ring.length;
+      for(var i=0;i<last;i++){
+        (function(ringRef, idx, isClosed, lastIdx){
+          var el=document.createElement('div'); el.className='shape-vertex';
+          var mk=new maplibregl.Marker({element:el, draggable:true}).setLngLat([ringRef[idx][0], ringRef[idx][1]]).addTo(adminMap);
+          mk.on('drag', function(){
+            var ll=mk.getLngLat();
+            ringRef[idx][0]=ll.lng; ringRef[idx][1]=ll.lat;
+            if(isClosed && idx===0){ ringRef[lastIdx][0]=ll.lng; ringRef[lastIdx][1]=ll.lat; }
+            edShapeUpdatePreview();
+          });
+          edShapeMarkers.push(mk);
+        })(ring, i, closed, ring.length-1);
+      }
+    });
+  }
+  function cycleShapeMode(){
+    if(!adminMap || !adminMap.__editActive) return;
+    if(edSelected.size!==1 || edPending) return;
+    var sid=Array.from(edSelected)[0];
+    var feat=findEdFeature(sid);
+    if(!feat || !feat.geometry){ edHint('Aluetta ei löytynyt.', true); return; }
+    var next = edShapeMode===0 ? 1 : (edShapeMode%3)+1;
+    edClearShapeMarkers();
+    var geom=null;
+    if(next===1) geom=edShapeWiden(feat.geometry,'left');
+    else if(next===2) geom=edShapeWiden(feat.geometry,'right');
+    else geom=JSON.parse(JSON.stringify(feat.geometry));
+    if(!geom){ edHint('Muodon laskenta epäonnistui.', true); return; }
+    edShapeMode=next; edShapeAreaId=sid; edShapeWorkGeom=geom;
+    edInPreview=true;
+    edShapeUpdatePreview();
+    if(next===3) edBuildShapeMarkers();
+    updateEditUI();
+    edHint(next===1 ? 'Autom. 1: pidemmän sivun vasen puoli levennetty. Klikkaa nappia uudelleen → Autom. 2.'
+         : next===2 ? 'Autom. 2: pidemmän sivun oikea puoli levennetty. Klikkaa nappia uudelleen → Manual.'
+         : 'Manual: raahaa kulmapisteitä muokataksesi muotoa. Hyväksy tallentaa.', true);
+  }
   function updateEditUI(){
     if(!adminMap || !adminMap.getLayer('edit-sel-fill')) return;
     var ids=Array.from(edSelected), n=ids.length;
@@ -5089,6 +5254,16 @@ body.vresizing *{cursor:ns-resize !important}
     adminMap.setFilter('edit-sel-fill', f);
     adminMap.setFilter('edit-sel-line', f);
     var undoBtn=document.getElementById('ed-undo-btn'); if(undoBtn) undoBtn.disabled = (edHistory.length===0 && !edInPreview);
+    /* ✕ (poisto) näkyy vain kun alueita on valittuna; muotonappi kun tasan yksi. */
+    var delBtn=document.getElementById('ed-exit-btn');
+    if(delBtn) delBtn.style.display = (edSelected.size>=1 && !edInPreview && !edPending) ? '' : 'none';
+    var shapeBtn=document.getElementById('ed-shape-btn');
+    if(shapeBtn){
+      shapeBtn.style.display = (edSelected.size===1 && !edPending) ? '' : 'none';
+      shapeBtn.innerHTML = edShapeMode>0 ? edShapeModeName()
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8 12 5l7 3-2 8-5 3-5-3z"/><circle cx="5" cy="8" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="8" r="1.6"/><circle cx="17" cy="16" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="7" cy="16" r="1.6"/></svg>';
+      shapeBtn.classList.toggle('active', edShapeMode>0);
+    }
     if(edPending){
       var pb=edBar(); if(!pb) return;
       pb.classList.add('open');
@@ -5100,6 +5275,14 @@ body.vresizing *{cursor:ns-resize !important}
     var bar=edBar(); if(!bar) return;
     if(edInPreview){
       bar.classList.add('open');
+      if(edShapeMode>0){
+        bar.innerHTML='<span class="di" id="ed-status">Muodon muokkaus \u2014 '+edShapeModeName()+'</span>'
+          +'<button class="drawbtn ok" id="ed-confirm-btn" type="button" title="Enter">Hyv\u00e4ksy</button>'
+          +'<button class="drawbtn ghost" id="ed-cancelprev-btn" type="button" title="Ctrl+Z">Peru muokkaus</button>';
+        document.getElementById('ed-confirm-btn').addEventListener('click', confirmMerge);
+        document.getElementById('ed-cancelprev-btn').addEventListener('click', cancelEditPreview);
+        return;
+      }
       bar.innerHTML='<span class="di" id="ed-status">Esikatselu \u2014 '+edMethodName()+'</span>'
         +'<button class="drawbtn alt" id="ed-method-btn" type="button" title="Vaihda yhdist\u00e4mistapa">Vaihda tapa</button>'
         +'<button class="drawbtn ok" id="ed-confirm-btn" type="button" title="Enter">Hyv\u00e4ksy</button>'
@@ -5224,12 +5407,14 @@ body.vresizing *{cursor:ns-resize !important}
     if(!adminMap.__editClickBound){ adminMap.__editClickBound=true; adminMap.on('click', handleEditClick); }
     enableBoxSelect();
     adminMap.getCanvas().style.cursor='pointer';
+    exitShapeMode();
     edSelected=new Set(); edFirstProps=null; edHistory=[]; edInPreview=false; edPreviewGeom=null; edMergeMethod=0;
     var r=edRail(); if(r) r.classList.add('open');
     updateEditUI();
     edHint(ok ? 'Valitse alueita klikkaamalla tai maalaamalla suorakulmio. Enter = eteenp\u00e4in, Ctrl+Z = takaisin.' : 'Kartta tai aluedata ei ole viel\u00e4 latautunut \u2014 odota hetki.');
   }
   function exitEditMode(){
+    exitShapeMode();
     if(edPending){ edCommitPending(); }            /* sulkeminen tallentaa vielä peruttavissa olleen yhdistämisen */
     if(adminMap){
       adminMap.__editActive=false;
@@ -5262,6 +5447,11 @@ body.vresizing *{cursor:ns-resize !important}
     }
     if((e.key==='z'||e.key==='Z') && (e.ctrlKey||e.metaKey) && !e.shiftKey){
       e.preventDefault(); undoEdit(); return;
+    }
+    if(e.key==='Delete'){
+      var db=document.getElementById('ed-del-banner');
+      if(db && db.classList.contains('open')) return;   /* banneri jo auki */
+      e.preventDefault(); requestDeleteSelected(); return;
     }
   });
 })();
