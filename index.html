@@ -965,6 +965,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .map-banner.open{display:flex}
 .shape-vertex{width:14px; height:14px; border-radius:50%; background:#fff; border:3px solid #F9A825; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:grab}
 .shape-vertex:active{cursor:grabbing}
+.shape-mode-label{background:#fff; color:var(--brand); border:1px solid var(--line); box-shadow:var(--shadow); font-size:11px; font-weight:700; padding:3px 9px; border-radius:8px; text-align:center; white-space:nowrap}
 .map-hint{position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:7; display:none; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-lg); padding:9px 15px; font-size:13px; line-height:1.45; color:var(--ink-soft); max-width:calc(100% - 28px); text-align:center}
 .map-hint.open{display:block}
 /* laatikkovalinnan suorakulmio (muokkaustilan raahausvalinta) */
@@ -4700,6 +4701,25 @@ body.vresizing *{cursor:ns-resize !important}
     else { edHint('Alue ei sovi nykyiseen valintaan (eri tyyppi tai ehdot).', true); }
   }
 
+  /* Hiiren oikea näppäin alueen (tai keltaisen esikatselun) päällä vaihtaa
+     muodonmuokkaustilaa, kun muodonmuokkaus on aktiivinen. */
+  function handleEditContextMenu(e){
+    if(!adminMap.__editActive || edShapeMode<=0) return;
+    var hit=false;
+    try{
+      if(adminMap.getLayer('edit-preview-fill')){
+        hit = adminMap.queryRenderedFeatures(e.point,{layers:['edit-preview-fill']}).length>0;
+      }
+      if(!hit && adminMap.getLayer('master-poly-fill')){
+        var fs=adminMap.queryRenderedFeatures(e.point,{layers:['master-poly-fill']});
+        hit = fs.some(function(f){ return edSelected.has(String(f.properties.id)) || edSelected.has(f.properties.id); });
+      }
+    }catch(err){ hit=false; }
+    if(!hit) return;
+    if(e.originalEvent && typeof e.originalEvent.preventDefault==='function') e.originalEvent.preventDefault();
+    if(typeof e.preventDefault==='function') e.preventDefault();
+    cycleShapeMode();
+  }
   function handleEditClick(e){
     if(!adminMap.__editActive) return;
     if(edPending){ edCommitPending(); return; }   /* pending yhdistäminen → tallenna ja aloita alusta */
@@ -5133,7 +5153,8 @@ body.vresizing *{cursor:ns-resize !important}
     return '<button class="editrail-btn active" id="ed-pen-btn" type="button" title="Valitse alueita klikkaamalla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>'
       +'<button class="editrail-btn" id="ed-undo-btn" type="button" title="Peru viimeisin valinta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></button>'
       +'<button class="editrail-btn danger" id="ed-exit-btn" type="button" title="Poista valittu alue (Delete)" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
-      +'<button class="editrail-btn wide" id="ed-shape-btn" type="button" title="Muokkaa alueen muotoa" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8 12 5l7 3-2 8-5 3-5-3z"/><circle cx="5" cy="8" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="8" r="1.6"/><circle cx="17" cy="16" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="7" cy="16" r="1.6"/></svg></button>';
+      +'<button class="editrail-btn" id="ed-shape-btn" type="button" title="Muokkaa alueen muotoa \u2014 hiiren oikea n\u00e4pp\u00e4in alueen p\u00e4\u00e4ll\u00e4 vaihtaa tilaa" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8 12 5l7 3-2 8-5 3-5-3z"/><circle cx="5" cy="8" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="8" r="1.6"/><circle cx="17" cy="16" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="7" cy="16" r="1.6"/></svg></button>'
+      +'<div class="shape-mode-label" id="ed-shape-label" style="display:none">Auto 1</div>';
   }
   function edRail(){
     var panel=edPanelEl(); if(!panel) return null;
@@ -5165,7 +5186,7 @@ body.vresizing *{cursor:ns-resize !important}
      raahattavat pisteet, joilla muotoa voi muokata vapaasti. Esikatselu näkyy
      keltaisena; Hyväksy tallentaa (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
   var edShapeMode=0, edShapeMarkers=[], edShapeWorkGeom=null, edShapeAreaId=null;
-  function edShapeModeName(){ return ['','Autom. 1','Autom. 2','Manual'][edShapeMode]||''; }
+  function edShapeModeName(){ return ['','Auto 1','Auto 2','Manual'][edShapeMode]||''; }
   function edClearShapeMarkers(){ edShapeMarkers.forEach(function(m){ try{m.remove();}catch(e){} }); edShapeMarkers=[]; }
   function exitShapeMode(){ edClearShapeMarkers(); edShapeMode=0; edShapeWorkGeom=null; edShapeAreaId=null; }
   var ED_SHAPE_WIDEN=0.75;   /* siirron suuruus = 0.75 × alueen nykyinen leveys */
@@ -5264,7 +5285,12 @@ body.vresizing *{cursor:ns-resize !important}
     var sid=Array.from(edSelected)[0];
     var feat=findEdFeature(sid);
     if(!feat || !feat.geometry){ edHint('Aluetta ei löytynyt.', true); return; }
-    var next = edShapeMode===0 ? 1 : (edShapeMode%3)+1;
+    var next=(edShapeMode+1)%4;              /* 0 → Auto 1 → Auto 2 → Manual → pois */
+    if(next===0){
+      cancelEditPreview();
+      edHint('Muodon muokkaus suljettu \u2014 valinta j\u00e4i voimaan.', true);
+      return;
+    }
     edClearShapeMarkers();
     var geom=null;
     if(next===1) geom=edShapeRectWiden('left') || edShapeWiden(feat.geometry,'left');
@@ -5276,8 +5302,8 @@ body.vresizing *{cursor:ns-resize !important}
     edShapeUpdatePreview();
     if(next===3) edBuildShapeMarkers();
     updateEditUI();
-    edHint(next===1 ? 'Autom. 1: kulmat suoristettu 90°:een ja toinen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Autom. 2.'
-         : next===2 ? 'Autom. 2: kulmat suoristettu 90°:een ja vastakkainen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Manual.'
+    edHint(next===1 ? 'Auto 1: kulmat suoristettu 90°:een ja toinen pitkä sivu siirretty etäämmäs. Napin klikkaus tai hiiren oikea näppäin alueen päällä vaihtaa tilaa.'
+         : next===2 ? 'Auto 2: kulmat suoristettu 90°:een ja vastakkainen pitkä sivu siirretty etäämmäs.'
          : 'Manual: raahaa kulmapisteitä muokataksesi muotoa. Hyväksy tallentaa.', true);
   }
   function updateEditUI(){
@@ -5291,11 +5317,15 @@ body.vresizing *{cursor:ns-resize !important}
     var delBtn=document.getElementById('ed-exit-btn');
     if(delBtn) delBtn.style.display = (edSelected.size>=1 && !edInPreview && !edPending) ? '' : 'none';
     var shapeBtn=document.getElementById('ed-shape-btn');
+    var shapeLbl=document.getElementById('ed-shape-label');
+    var shapeVisible=(edSelected.size===1 && !edPending);
     if(shapeBtn){
-      shapeBtn.style.display = (edSelected.size===1 && !edPending) ? '' : 'none';
-      shapeBtn.innerHTML = edShapeMode>0 ? edShapeModeName()
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8 12 5l7 3-2 8-5 3-5-3z"/><circle cx="5" cy="8" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="8" r="1.6"/><circle cx="17" cy="16" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="7" cy="16" r="1.6"/></svg>';
+      shapeBtn.style.display = shapeVisible ? '' : 'none';
       shapeBtn.classList.toggle('active', edShapeMode>0);
+    }
+    if(shapeLbl){
+      shapeLbl.style.display = (shapeVisible && edShapeMode>0) ? '' : 'none';
+      shapeLbl.textContent = edShapeModeName();
     }
     if(edPending){
       var pb=edBar(); if(!pb) return;
@@ -5438,6 +5468,7 @@ body.vresizing *{cursor:ns-resize !important}
     var ok=ensureEditLayers();
     adminMap.__editActive=true;
     if(!adminMap.__editClickBound){ adminMap.__editClickBound=true; adminMap.on('click', handleEditClick); }
+    if(!adminMap.__editCtxBound){ adminMap.__editCtxBound=true; adminMap.on('contextmenu', handleEditContextMenu); }
     enableBoxSelect();
     adminMap.getCanvas().style.cursor='pointer';
     exitShapeMode();
