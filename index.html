@@ -5156,15 +5156,18 @@ body.vresizing *{cursor:ns-resize !important}
 
   /* ── MUODON MUOKKAUS (yksi valittu alue) ──────────────────────────────────
      Rail-nappi kiertää: Autom. 1 → Autom. 2 → Manual → Autom. 1 …
-     Autom. 1: alueen pidemmän sivun VASEN puolisko levenee (kiilamaisesti).
-     Autom. 2: sama oikealle puoliskolle. Molemmat lasketaan alkuperäisestä
-     geometriasta (eivät kasaudu). Manual: alueen kulmiin tulee raahattavat
-     pisteet, joilla muotoa voi muokata vapaasti. Esikatselu näkyy keltaisena;
-     Hyväksy tallentaa (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
+     Autom. 1: alueen TOINEN pitkä sivu siirtyy kohtisuoraan etäämmäs, toinen
+     pysyy paikallaan → perusmuoto ja pitkien sivujen pituudet säilyvät, vain
+     lyhyet sivut pitenevät eli alue levenee. Autom. 2: sama vastakkaiselle
+     pitkälle sivulle. Molemmat lasketaan alkuperäisestä geometriasta (eivät
+     kasaudu). Manual: alueen kulmiin tulee raahattavat pisteet, joilla muotoa
+     voi muokata vapaasti. Esikatselu näkyy keltaisena; Hyväksy tallentaa
+     (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
   var edShapeMode=0, edShapeMarkers=[], edShapeWorkGeom=null, edShapeAreaId=null;
   function edShapeModeName(){ return ['','Autom. 1','Autom. 2','Manual'][edShapeMode]||''; }
   function edClearShapeMarkers(){ edShapeMarkers.forEach(function(m){ try{m.remove();}catch(e){} }); edShapeMarkers=[]; }
   function exitShapeMode(){ edClearShapeMarkers(); edShapeMode=0; edShapeWorkGeom=null; edShapeAreaId=null; }
+  var ED_SHAPE_WIDEN=0.5;   /* siirron suuruus = 0.5 × alueen nykyinen leveys */
   function edShapeWiden(geometry, side){
     var g=JSON.parse(JSON.stringify(geometry));
     var rings=[];
@@ -5177,19 +5180,20 @@ body.vresizing *{cursor:ns-resize !important}
     var sxx=0,syy=0,sxy=0; pts.forEach(function(p){ var dx=p[0]-mx,dy=p[1]-my; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy; });
     var ang=0.5*Math.atan2(2*sxy,sxx-syy);
     var ux=Math.cos(ang), uy=Math.sin(ang);
-    if(ux<0){ ux=-ux; uy=-uy; }               /* u osoittaa itään → "vasen" = länsipää */
+    if(ux<0){ ux=-ux; uy=-uy; }
     var vx=-uy, vy=ux;
-    var amin=1e30, amax=-1e30;
-    pts.forEach(function(p){ var a=(p[0]-mx)*ux+(p[1]-my)*uy; if(a<amin)amin=a; if(a>amax)amax=a; });
-    var span=amax-amin; if(span<=0) return null;
-    var K=0.6;                                 /* levennys ääripäässä: +60 % */
+    /* leveys = kohtisuora ulottuvuus; jaa kärjet keskilinjan mukaan kahteen pitkään sivuun */
+    var smin=1e30, smax=-1e30;
+    pts.forEach(function(p){ var s=(p[0]-mx)*vx+(p[1]-my)*vy; if(s<smin)smin=s; if(s>smax)smax=s; });
+    var width=smax-smin; if(width<=0) return null;
+    var sMid=(smin+smax)/2, delta=width*ED_SHAPE_WIDEN;
     rings.forEach(function(r){
       for(var i=0;i<r.length;i++){
         var q=edMerc(r[i][0], r[i][1]);
         var dx=q[0]-mx, dy=q[1]-my;
-        var a=dx*ux+dy*uy, s=dx*vx+dy*vy;
-        var t = side==='left' ? (amax-a)/span : (a-amin)/span;   /* 1 valitussa päässä, 0 toisessa */
-        var s2=s*(1+K*t);
+        var a=dx*ux+dy*uy, s=dx*vx+dy*vy, s2=s;
+        if(side==='left'){ if(s>=sMid) s2=s+delta; }   /* Autom. 1: toinen pitkä sivu tasaisesti ulommas */
+        else { if(s<sMid) s2=s-delta; }                /* Autom. 2: vastakkainen pitkä sivu ulommas */
         var nx=mx+a*ux+s2*vx, ny=my+a*uy+s2*vy;
         var ll=edUnmerc(nx,ny);
         r[i][0]=ll[0]; r[i][1]=ll[1];
@@ -5243,8 +5247,8 @@ body.vresizing *{cursor:ns-resize !important}
     edShapeUpdatePreview();
     if(next===3) edBuildShapeMarkers();
     updateEditUI();
-    edHint(next===1 ? 'Autom. 1: pidemmän sivun vasen puoli levennetty. Klikkaa nappia uudelleen → Autom. 2.'
-         : next===2 ? 'Autom. 2: pidemmän sivun oikea puoli levennetty. Klikkaa nappia uudelleen → Manual.'
+    edHint(next===1 ? 'Autom. 1: toinen pitkä sivu siirretty etäämmäs — alue levenee, muoto säilyy. Klikkaa uudelleen → Autom. 2.'
+         : next===2 ? 'Autom. 2: vastakkainen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Manual.'
          : 'Manual: raahaa kulmapisteitä muokataksesi muotoa. Hyväksy tallentaa.', true);
   }
   function updateEditUI(){
