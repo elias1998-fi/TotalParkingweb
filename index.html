@@ -5156,18 +5156,19 @@ body.vresizing *{cursor:ns-resize !important}
 
   /* ── MUODON MUOKKAUS (yksi valittu alue) ──────────────────────────────────
      Rail-nappi kiertää: Autom. 1 → Autom. 2 → Manual → Autom. 1 …
-     Autom. 1: alueen TOINEN pitkä sivu siirtyy kohtisuoraan etäämmäs, toinen
-     pysyy paikallaan → perusmuoto ja pitkien sivujen pituudet säilyvät, vain
-     lyhyet sivut pitenevät eli alue levenee. Autom. 2: sama vastakkaiselle
-     pitkälle sivulle. Molemmat lasketaan alkuperäisestä geometriasta (eivät
-     kasaudu). Manual: alueen kulmiin tulee raahattavat pisteet, joilla muotoa
-     voi muokata vapaasti. Esikatselu näkyy keltaisena; Hyväksy tallentaa
-     (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
+     Autom. 1 ja Autom. 2 SUORISTAVAT alueen ensin suorakulmioksi (tiukin
+     kiertyvä rajaava suorakulmio, tasan 90° kulmat) ja siirtävät sitten
+     alueen TOISTA pitkää sivua kohtisuoraan etäämmäs — toinen sivu pysyy
+     paikallaan, pitkät sivut säilyvät yhtä pitkinä ja lyhyet sivut pitenevät
+     eli alue levenee. Autom. 2 siirtää vastakkaista sivua. Molemmat lasketaan
+     alkuperäisestä geometriasta (eivät kasaudu). Manual: alueen kulmiin tulee
+     raahattavat pisteet, joilla muotoa voi muokata vapaasti. Esikatselu näkyy
+     keltaisena; Hyväksy tallentaa (sama PATCH + Peru-mahdollisuus kuin ennenkin). */
   var edShapeMode=0, edShapeMarkers=[], edShapeWorkGeom=null, edShapeAreaId=null;
   function edShapeModeName(){ return ['','Autom. 1','Autom. 2','Manual'][edShapeMode]||''; }
   function edClearShapeMarkers(){ edShapeMarkers.forEach(function(m){ try{m.remove();}catch(e){} }); edShapeMarkers=[]; }
   function exitShapeMode(){ edClearShapeMarkers(); edShapeMode=0; edShapeWorkGeom=null; edShapeAreaId=null; }
-  var ED_SHAPE_WIDEN=0.5;   /* siirron suuruus = 0.5 × alueen nykyinen leveys */
+  var ED_SHAPE_WIDEN=0.75;   /* siirron suuruus = 0.75 × alueen nykyinen leveys */
   function edShapeWiden(geometry, side){
     var g=JSON.parse(JSON.stringify(geometry));
     var rings=[];
@@ -5200,6 +5201,34 @@ body.vresizing *{cursor:ns-resize !important}
       }
     });
     return g;
+  }
+  /* Autom. 1/2: suorista valittu alue suorakulmioksi (90° kulmat, sama laskenta
+     kuin yhdistämisen suorakulmiotavassa) ja siirrä toista pitkää sivua
+     ED_SHAPE_WIDEN × leveys ulommas. Siirto tehdään suorakulmion omassa
+     kehyksessä, joten kulmat pysyvät tasan 90 asteessa. */
+  function edShapeRectWiden(side){
+    var rect=null;
+    try{ rect=edMergeGeomRect(); }catch(e){ rect=null; }
+    if(!rect || rect.type!=='Polygon' || !rect.coordinates || !rect.coordinates[0] || rect.coordinates[0].length<5) return null;
+    var c=rect.coordinates[0].slice(0,4).map(function(p){ return edMerc(p[0],p[1]); });
+    var e1x=c[1][0]-c[0][0], e1y=c[1][1]-c[0][1], L1=Math.hypot(e1x,e1y);
+    var e2x=c[2][0]-c[1][0], e2y=c[2][1]-c[1][1], L2=Math.hypot(e2x,e2y);
+    if(L1<=0 || L2<=0) return null;
+    var delta, nx, ny;
+    if(L1>=L2){
+      /* pitkät sivut: (c0,c1) ja (c3,c2); leveys = L2; normaali suuntaan c0→c3 */
+      delta=L2*ED_SHAPE_WIDEN; nx=(c[3][0]-c[0][0])/L2; ny=(c[3][1]-c[0][1])/L2;
+      if(side==='left'){ c[2][0]+=nx*delta; c[2][1]+=ny*delta; c[3][0]+=nx*delta; c[3][1]+=ny*delta; }
+      else { c[0][0]-=nx*delta; c[0][1]-=ny*delta; c[1][0]-=nx*delta; c[1][1]-=ny*delta; }
+    } else {
+      /* pitkät sivut: (c1,c2) ja (c0,c3); leveys = L1; normaali suuntaan c0→c1 */
+      delta=L1*ED_SHAPE_WIDEN; nx=e1x/L1; ny=e1y/L1;
+      if(side==='left'){ c[1][0]+=nx*delta; c[1][1]+=ny*delta; c[2][0]+=nx*delta; c[2][1]+=ny*delta; }
+      else { c[0][0]-=nx*delta; c[0][1]-=ny*delta; c[3][0]-=nx*delta; c[3][1]-=ny*delta; }
+    }
+    var ring=c.map(function(p){ return edUnmerc(p[0],p[1]); });
+    ring.push([ring[0][0], ring[0][1]]);
+    return {type:'Polygon', coordinates:[ring]};
   }
   function edShapeUpdatePreview(){
     edPreviewGeom=edShapeWorkGeom;
@@ -5238,8 +5267,8 @@ body.vresizing *{cursor:ns-resize !important}
     var next = edShapeMode===0 ? 1 : (edShapeMode%3)+1;
     edClearShapeMarkers();
     var geom=null;
-    if(next===1) geom=edShapeWiden(feat.geometry,'left');
-    else if(next===2) geom=edShapeWiden(feat.geometry,'right');
+    if(next===1) geom=edShapeRectWiden('left') || edShapeWiden(feat.geometry,'left');
+    else if(next===2) geom=edShapeRectWiden('right') || edShapeWiden(feat.geometry,'right');
     else geom=JSON.parse(JSON.stringify(feat.geometry));
     if(!geom){ edHint('Muodon laskenta epäonnistui.', true); return; }
     edShapeMode=next; edShapeAreaId=sid; edShapeWorkGeom=geom;
@@ -5247,8 +5276,8 @@ body.vresizing *{cursor:ns-resize !important}
     edShapeUpdatePreview();
     if(next===3) edBuildShapeMarkers();
     updateEditUI();
-    edHint(next===1 ? 'Autom. 1: toinen pitkä sivu siirretty etäämmäs — alue levenee, muoto säilyy. Klikkaa uudelleen → Autom. 2.'
-         : next===2 ? 'Autom. 2: vastakkainen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Manual.'
+    edHint(next===1 ? 'Autom. 1: kulmat suoristettu 90°:een ja toinen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Autom. 2.'
+         : next===2 ? 'Autom. 2: kulmat suoristettu 90°:een ja vastakkainen pitkä sivu siirretty etäämmäs. Klikkaa uudelleen → Manual.'
          : 'Manual: raahaa kulmapisteitä muokataksesi muotoa. Hyväksy tallentaa.', true);
   }
   function updateEditUI(){
