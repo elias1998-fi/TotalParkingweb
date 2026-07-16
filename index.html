@@ -757,6 +757,9 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-note.pz-err{color:#c0392b}
 .pz-save.pz-ok{color:#1d7a3f; border-color:#1d7a3f}
 .pz-save.pz-fail{color:#c0392b; border-color:#c0392b}
+.pz-save:disabled{opacity:.45; cursor:default}
+.pz-cancel{background:#fdecea; color:#c0392b; border-color:#f2c6c0}
+.pz-cancel:hover{background:#fbdcd8}
 .pz-search{width:190px; margin-right:8px}
 /* Lukittu kenttä näyttää tavalliselta tekstiltä; reunat vain muokattaessa. */
 .pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
@@ -2172,12 +2175,25 @@ body.vresizing *{cursor:ns-resize !important}
     var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
     return isFinite(n) ? String(n).replace('.',',')+' €/h' : '';
   }
-  function pzSetEditing(tr,on){
-    tr.classList.toggle('pz-editing',on);
-    tr.querySelectorAll('.pz-inp').forEach(function(i){ i.disabled=!on; });
-    tr.querySelector('.pz-edit').hidden=on;
-    tr.querySelector('.pz-cancel').hidden=!on;
-    tr.querySelector('.pz-save').hidden=!on;
+  function pzRowState(tr,mode){ // 'locked' | 'editing'
+    var editing=(mode==='editing');
+    tr.classList.toggle('pz-editing',editing);
+    tr.querySelectorAll('.pz-inp').forEach(function(i){ i.disabled=!editing; });
+    tr.querySelector('.pz-edit').hidden=editing;
+    var sv=tr.querySelector('.pz-save');
+    sv.hidden=!editing; sv.disabled=true;          // passiivinen kunnes muutoksia
+    tr.querySelector('.pz-cancel').hidden=true;    // ilmestyy vasta muutoksista
+  }
+  /* Rivi on "likainen" kun jokin kenttä eroaa Muokkaa-hetken arvoista.
+     Arvoihin perustuva vertailu: jos käyttäjä kirjoittaa arvot takaisin
+     alkuperäisiksi, Tallenna passivoituu ja Peru piiloutuu taas. */
+  function pzRowDirty(tr){
+    var o=JSON.parse(tr.dataset.orig||'{}'); var d=false;
+    tr.querySelectorAll('.pz-inp').forEach(function(i){
+      var f=i.getAttribute('data-f');
+      if(String(o[f]!=null?o[f]:'')!==i.value) d=true;
+    });
+    return d;
   }
   function applyPzSearch(){
     var box=document.getElementById('pz-search');
@@ -2192,12 +2208,18 @@ body.vresizing *{cursor:ns-resize !important}
   }
   document.addEventListener('input',function(e){
     if(e.target && e.target.id==='pz-search'){ applyPzSearch(); return; }
-    // price_label elää livenä price_per_hour-kentän mukana muokattaessa
-    if(e.target && e.target.classList && e.target.classList.contains('pz-inp')
-       && e.target.getAttribute('data-f')==='price_per_hour'){
+    if(e.target && e.target.classList && e.target.classList.contains('pz-inp')){
       var tr=e.target.closest('tr[data-pz]');
-      var lbl=tr && tr.querySelector('.pz-label');
-      if(lbl) lbl.textContent=pzLabelFor(e.target.value);
+      if(!tr || !tr.classList.contains('pz-editing')) return;
+      // price_label elää livenä price_per_hour-kentän mukana
+      if(e.target.getAttribute('data-f')==='price_per_hour'){
+        var lbl=tr.querySelector('.pz-label');
+        if(lbl) lbl.textContent=pzLabelFor(e.target.value);
+      }
+      // Tallenna aktivoituu ja Peru ilmestyy vasta oikeista muutoksista
+      var dirty=pzRowDirty(tr);
+      tr.querySelector('.pz-save').disabled=!dirty;
+      tr.querySelector('.pz-cancel').hidden=!dirty;
     }
   });
   function loadAdminPrices(force){
@@ -2231,10 +2253,13 @@ body.vresizing *{cursor:ns-resize !important}
               +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
               +'<td><input class="pz-inp pz-narrow" data-f="valid_from" disabled value="'+pzEsc(r.valid_from)+'"></td>'
               +'<td><input class="pz-inp pz-narrow" data-f="valid_to" disabled value="'+pzEsc(r.valid_to)+'"></td>'
+              /* Nappitilat: lukittuna vain Muokkaa. Muokkaa vaihtuu
+                 Tallennaksi (passiivinen kunnes rivillä on oikeita muutoksia);
+                 muutos tuo viereen haaleanpunaisen "Peru muutokset". */
               +'<td class="pz-actions">'
                 +'<button class="btn ghost sm pz-edit">Muokkaa</button>'
+                +'<button class="btn ghost sm pz-save" hidden disabled>Tallenna</button>'
                 +'<button class="btn ghost sm pz-cancel" hidden>Peru muutokset</button>'
-                +'<button class="btn ghost sm pz-save" hidden>Tallenna</button>'
               +'</td>'
               +'</tr>';
           });
@@ -2256,10 +2281,11 @@ body.vresizing *{cursor:ns-resize !important}
       var tr=ed.closest('tr[data-pz]'); var o={};
       tr.querySelectorAll('.pz-inp').forEach(function(i){ o[i.getAttribute('data-f')]=i.value; });
       tr.dataset.orig=JSON.stringify(o);
-      pzSetEditing(tr,true);
+      pzRowState(tr,'editing');
       return;
     }
-    // Peru muutokset: palauta alkuarvot (myös johdettu label) ja lukitse
+    // Peru muutokset: palauta alkuarvot (myös johdettu label) ja palauta
+    // rivi perustilaan, jossa näkyy vain Muokkaa
     var ca=closest('.pz-cancel');
     if(ca){
       var tr=ca.closest('tr[data-pz]');
@@ -2269,7 +2295,7 @@ body.vresizing *{cursor:ns-resize !important}
       });
       var lbl=tr.querySelector('.pz-label');
       if(lbl) lbl.textContent=pzLabelFor((o.price_per_hour!=null)?o.price_per_hour:'');
-      pzSetEditing(tr,false);
+      pzRowState(tr,'locked');
       return;
     }
     // Tallenna: PATCH Supabaseen; price_label kirjoitetaan johdettuna
@@ -2299,8 +2325,8 @@ body.vresizing *{cursor:ns-resize !important}
       btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
       setTimeout(function(){
         btn.textContent='Tallenna'; btn.classList.remove('pz-ok');
-        btn.disabled=false; cancelBtn.disabled=false;
-        pzSetEditing(tr,false);   // uudet arvot jäävät rivin uudeksi perustilaksi
+        cancelBtn.disabled=false;
+        pzRowState(tr,'locked');   // uudet arvot jäävät rivin uudeksi perustilaksi
       },1200);
     }).catch(function(e){
       btn.textContent='Virhe'; btn.classList.add('pz-fail');
