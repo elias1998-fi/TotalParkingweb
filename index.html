@@ -758,8 +758,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-save.pz-ok{color:#1d7a3f; border-color:#1d7a3f}
 .pz-save.pz-fail{color:#c0392b; border-color:#c0392b}
 .pz-save:disabled{opacity:.45; cursor:default}
-.pz-cancel{background:#fdecea; color:#c0392b; border-color:#f2c6c0}
-.pz-cancel:hover{background:#fbdcd8}
+/* Tallenna muutokset — haalea vihreä, Perun vastaväri. */
+.pz-save{background:#e7f6ec; color:#1d7a3f; border-color:#bfe3cc}
+.pz-save:hover{background:#d9f0e1}
+/* Päänappi Peru-roolissa: sama haalea punainen kuin ennenkin. */
+.pz-edit.pz-iscancel{background:#fdecea; color:#c0392b; border-color:#f2c6c0}
+.pz-edit.pz-iscancel:hover{background:#fbdcd8}
+.pz-inp.pz-missing{opacity:.35}
+.pz-rowerr{display:block; margin-top:6px; font-size:12px; color:#c0392b; max-width:280px; white-space:normal; text-align:left}
 /* hidden-attribuutti takaisin voimaan: .btn asettaa display:inline-flex,
    ja tekijän tyyli voittaa aina selaimen [hidden]{display:none} -säännön —
    ilman tätä Tallenna ja Peru näkyivät heti sivun latauksessa. */
@@ -2182,6 +2188,25 @@ body.vresizing *{cursor:ns-resize !important}
      taulussa on id-sarake, muuten city+zone_number-yhdistelmällä). */
   var _pzLoaded=false;
   function pzEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  var _pzCols=null;   // parking_prices-taulun todelliset sarakkeet (select=* -riveistä)
+  /* Kenttäsolu: jos saraketta ei ole taulussa, kenttä on pysyvästi lukittu
+     ja himmennetty (title kertoo syyn) eikä sitä koskaan lähetetä kantaan. */
+  function pzFieldCell(r,f,extra){
+    var exists=!_pzCols || _pzCols.indexOf(f)>=0;
+    if(exists) return '<td><input class="pz-inp '+(extra||'')+'" data-f="'+f+'" '+(f==='price_per_hour'?'inputmode="decimal" ':'')+'disabled value="'+pzEsc(r[f])+'"></td>';
+    return '<td><input class="pz-inp '+(extra||'')+' pz-missing" disabled title="Saraketta '+f+' ei ole parking_prices-taulussa" value=""></td>';
+  }
+  function pzErrMsg(status,t){
+    if(status===401||status===403) return 'HTTP '+status+' — tarkista parking_prices-taulun UPDATE-oikeus (RLS-policy).';
+    return 'HTTP '+status+' '+String(t||'').slice(0,160);
+  }
+  function pzShowRowError(tr,msg){
+    var cell=tr.querySelector('.pz-actions');
+    var old=cell.querySelector('.pz-rowerr'); if(old) old.remove();
+    var d=document.createElement('div'); d.className='pz-rowerr'; d.textContent=msg;
+    cell.appendChild(d);
+    setTimeout(function(){ d.remove(); },7000);
+  }
   /* Sama label-muoto kuin sovelluksen fallbackissa: desimaalipilkku + " €/h". */
   function pzLabelFor(v){
     var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
@@ -2190,10 +2215,15 @@ body.vresizing *{cursor:ns-resize !important}
   function pzRowState(tr,mode){ // 'locked' | 'editing'
     var editing=(mode==='editing');
     tr.classList.toggle('pz-editing',editing);
-    tr.querySelectorAll('.pz-inp').forEach(function(i){ i.disabled=!editing; });
-    tr.querySelector('.pz-edit').classList.toggle('pz-edit-active',editing);
-    tr.querySelector('.pz-save').hidden=true;      // ilmestyvät vasta muutoksista
-    tr.querySelector('.pz-cancel').hidden=true;
+    tr.querySelectorAll('.pz-inp').forEach(function(i){
+      if(!i.classList.contains('pz-missing')) i.disabled=!editing;
+    });
+    var main=tr.querySelector('.pz-edit');
+    main.textContent='Muokkaa';
+    main.classList.remove('pz-iscancel');
+    main.classList.toggle('pz-edit-active',editing);
+    main.disabled=false;
+    tr.querySelector('.pz-save').hidden=true;   // ilmestyy vasta muutoksista
   }
   /* Rivi on "likainen" kun jokin kenttä eroaa Muokkaa-hetken arvoista.
      Arvoihin perustuva vertailu: jos käyttäjä kirjoittaa arvot takaisin
@@ -2227,11 +2257,18 @@ body.vresizing *{cursor:ns-resize !important}
         var lbl=tr.querySelector('.pz-label');
         if(lbl) lbl.textContent=pzLabelFor(e.target.value);
       }
-      // Tallenna ja Peru ilmestyvät vasta oikeista muutoksista — ja
-      // piiloutuvat, jos arvot kirjoitetaan takaisin alkuperäisiksi
+      // Muutokset morfaavat päänapin Peruksi ja tuovat vihreän Tallennan
+      // esiin; arvojen palautus käsin kääntää kaiken takaisin.
       var dirty=pzRowDirty(tr);
+      var main=tr.querySelector('.pz-edit');
+      if(dirty){
+        main.textContent='Peru muutokset';
+        main.classList.add('pz-iscancel'); main.classList.remove('pz-edit-active');
+      } else {
+        main.textContent='Muokkaa';
+        main.classList.remove('pz-iscancel'); main.classList.add('pz-edit-active');
+      }
       tr.querySelector('.pz-save').hidden=!dirty;
-      tr.querySelector('.pz-cancel').hidden=!dirty;
     }
   });
   function loadAdminPrices(force){
@@ -2245,6 +2282,7 @@ body.vresizing *{cursor:ns-resize !important}
       .then(function(rows){
         _pzLoaded=true;
         if(!rows.length){ body.innerHTML='<div class="pz-note">parking_prices-taulu on tyhjä.</div>'; return; }
+        _pzCols=Object.keys(rows[0]);
         var byCity={};
         rows.forEach(function(r){ var c=(r.city||'—'); (byCity[c]=byCity[c]||[]).push(r); });
         var html='';
@@ -2258,22 +2296,21 @@ body.vresizing *{cursor:ns-resize !important}
             var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
             html+='<tr data-pz="'+pzEsc(key)+'">'
               +'<td class="strong">Vyöhyke '+pzEsc(r.zone_number)+'</td>'
-              +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" disabled value="'+pzEsc(r.price_per_hour)+'"></td>'
+              +pzFieldCell(r,'price_per_hour','')
               /* price_label ei ole muokattava: se johdetaan aina
                  price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h")
                  ja kirjoitetaan kantaan samassa muodossa tallennettaessa. */
               +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
-              +'<td><input class="pz-inp pz-narrow" data-f="valid_from" disabled value="'+pzEsc(r.valid_from)+'"></td>'
-              +'<td><input class="pz-inp pz-narrow" data-f="valid_to" disabled value="'+pzEsc(r.valid_to)+'"></td>'
-              /* Nappitilat: lukittuna vain Muokkaa. Klikkaus muuttaa sen
-                 haaleansiniseksi aktiivichipiksi (kuten sovelluksen liitin-
-                 tyyppivalinnat) ja avaa kentät. Tallenna ja Peru muutokset
-                 ILMESTYVÄT vasta kun rivillä on oikeita muutoksia — ja
-                 katoavat jos arvot palautetaan käsin alkuperäisiksi. */
+              +pzFieldCell(r,'valid_from','pz-narrow')
+              +pzFieldCell(r,'valid_to','pz-narrow')
+              /* Yksi morfaava päänappi pitää paikkansa aina: lukittuna
+                 "Muokkaa", auki sininen aktiivichippi, ja muutosten myötä
+                 SAMA nappi vaihtuu haaleanpunaiseksi "Peru muutokset"
+                 -napiksi. Vihreä "Tallenna muutokset" ilmestyy sen viereen
+                 vain kun oikeita muutoksia on. */
               +'<td class="pz-actions">'
                 +'<button class="btn ghost sm pz-edit">Muokkaa</button>'
-                +'<button class="btn ghost sm pz-save" hidden>Tallenna</button>'
-                +'<button class="btn ghost sm pz-cancel" hidden>Peru muutokset</button>'
+                +'<button class="btn ghost sm pz-save" hidden>Tallenna muutokset</button>'
               +'</td>'
               +'</tr>';
           });
@@ -2289,15 +2326,23 @@ body.vresizing *{cursor:ns-resize !important}
     var closest=function(sel){ return e.target.closest ? e.target.closest(sel) : null; };
     if(closest('#pz-reload')){ loadAdminPrices(true); return; }
 
-    // Muokkaa: avaa rivin kentät ja ota alkuarvot talteen perumista varten.
-    // Toimii togglena: jos rivi on jo auki ILMAN muutoksia, sama klikkaus
-    // sulkee sen. Muutosten kanssa klikkaus ei tee mitään — silloin
-    // poistuminen tapahtuu Peru- tai Tallenna-napilla.
+    // Päänappi kolmessa roolissa: lukittu rivi → avaa muokkaus (alkuarvot
+    // talteen); auki ilman muutoksia → chippi togglaa rivin kiinni; auki
+    // muutosten kanssa → nappi ON "Peru muutokset": palauta arvot (myös
+    // johdettu label) ja lukitse rivi.
     var ed=closest('.pz-edit');
     if(ed){
       var tr=ed.closest('tr[data-pz]');
       if(tr.classList.contains('pz-editing')){
-        if(!pzRowDirty(tr)) pzRowState(tr,'locked');
+        if(pzRowDirty(tr)){
+          var o=JSON.parse(tr.dataset.orig||'{}');
+          tr.querySelectorAll('.pz-inp').forEach(function(i){
+            var f=i.getAttribute('data-f'); if(f in o) i.value=o[f];
+          });
+          var lbl=tr.querySelector('.pz-label');
+          if(lbl) lbl.textContent=pzLabelFor((o.price_per_hour!=null)?o.price_per_hour:'');
+        }
+        pzRowState(tr,'locked');
         return;
       }
       var o={};
@@ -2306,55 +2351,54 @@ body.vresizing *{cursor:ns-resize !important}
       pzRowState(tr,'editing');
       return;
     }
-    // Peru muutokset: palauta alkuarvot (myös johdettu label) ja palauta
-    // rivi perustilaan, jossa näkyy vain Muokkaa
-    var ca=closest('.pz-cancel');
-    if(ca){
-      var tr=ca.closest('tr[data-pz]');
-      var o=JSON.parse(tr.dataset.orig||'{}');
-      tr.querySelectorAll('.pz-inp').forEach(function(i){
-        var f=i.getAttribute('data-f'); if(f in o) i.value=o[f];
-      });
-      var lbl=tr.querySelector('.pz-label');
-      if(lbl) lbl.textContent=pzLabelFor((o.price_per_hour!=null)?o.price_per_hour:'');
-      pzRowState(tr,'locked');
-      return;
-    }
     // Tallenna: PATCH Supabaseen; price_label kirjoitetaan johdettuna
     var btn=closest('.pz-save');
     if(!btn) return;
     var tr=btn.closest('tr[data-pz]');
     var key=tr.getAttribute('data-pz');
+    // Payload rakennetaan VAIN taulun todellisista sarakkeista — puuttuvan
+    // sarakkeen lähettäminen kaataisi koko PATCHin (PGRST204 / HTTP 400).
     var payload={};
     tr.querySelectorAll('.pz-inp').forEach(function(inp){
-      var f=inp.getAttribute('data-f'), v=inp.value.trim();
+      if(inp.classList.contains('pz-missing')) return;
+      var f=inp.getAttribute('data-f');
+      if(_pzCols && _pzCols.indexOf(f)<0) return;
+      var v=inp.value.trim();
       if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
       else payload[f]=(v==='')?null:v;
     });
-    payload.price_label = pzLabelFor(payload.price_per_hour) || null;
+    if(!_pzCols || _pzCols.indexOf('price_label')>=0){
+      payload.price_label = pzLabelFor(payload.price_per_hour) || null;
+    }
     var filter = key.indexOf('id:')===0
       ? 'id=eq.'+encodeURIComponent(key.slice(3))
       : 'city=eq.'+key.split(':')[1]+'&zone_number=eq.'+encodeURIComponent(key.split(':')[2]);
-    var cancelBtn=tr.querySelector('.pz-cancel');
-    btn.disabled=true; cancelBtn.disabled=true; btn.textContent='Tallennetaan…';
+    var main=tr.querySelector('.pz-edit');
+    btn.disabled=true; main.disabled=true; btn.textContent='Tallennetaan…';
+    // return=representation: saadaan päivitetyt rivit takaisin, jolloin
+    // myös RLS:n hiljainen 0 riviä -tapaus paljastuu virheenä eikä näytä
+    // valheellista onnistumista.
     fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?'+filter,{
       method:'PATCH',
       headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,
-               'Content-Type':'application/json',Prefer:'return=minimal'},
+               'Content-Type':'application/json',Prefer:'return=representation'},
       body:JSON.stringify(payload)
     }).then(function(r){
-      if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t.slice(0,120)); });
+      if(!r.ok) return r.text().then(function(t){ throw new Error(pzErrMsg(r.status,t)); });
+      return r.json();
+    }).then(function(updated){
+      if(!updated || !updated.length) throw new Error('Rivi ei päivittynyt — tarkista parking_prices-taulun UPDATE-oikeus (RLS-policy).');
       btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
       setTimeout(function(){
-        btn.textContent='Tallenna'; btn.classList.remove('pz-ok');
-        cancelBtn.disabled=false;
+        btn.textContent='Tallenna muutokset'; btn.classList.remove('pz-ok'); btn.disabled=false;
         pzRowState(tr,'locked');   // uudet arvot jäävät rivin uudeksi perustilaksi
       },1200);
     }).catch(function(e){
       btn.textContent='Virhe'; btn.classList.add('pz-fail');
-      btn.disabled=false; cancelBtn.disabled=false;
+      btn.disabled=false; main.disabled=false;
       btn.title=e.message;
-      setTimeout(function(){ btn.textContent='Tallenna'; btn.classList.remove('pz-fail'); },2600);
+      pzShowRowError(tr, e.message);
+      setTimeout(function(){ btn.textContent='Tallenna muutokset'; btn.classList.remove('pz-fail'); },2600);
     });
   });
 
