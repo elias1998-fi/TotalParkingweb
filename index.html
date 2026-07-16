@@ -782,7 +782,16 @@ tr.pz-editing td{background:#f3f7fe}
 /* Lukittu kenttä näyttää tavalliselta tekstiltä; reunat vain muokattaessa. */
 .pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
 .pz-label{font-size:14px; color:var(--ink-soft)}
-.pz-actions{white-space:nowrap}
+/* table-layout:fixed on VÄLTTÄMÄTÖN: auto-layout mitoittaa sarakkeet kunkin
+   taulukon oman sisällön mukaan, joten eri kaupunkien (eri hinta-arvot, eri
+   rivimäärät) toimintosarakkeen vasen reuna asettuu eri kohtaan pelkän
+   kiinteän leveydenkin kanssa. fixed tekee sarakegeometrian sisällöstä
+   riippumattomaksi → päänapin (Muokkaa/Peru) vasen reuna osuu samaan linjaan
+   JOKAISESSA taulukossa ja tilasta riippumatta. Toimintosarake mitoitettu
+   kahdelle napille (Peru + Tallenna); muut viisi jakavat lopun tasan. */
+.pz-wrap .tbl{table-layout:fixed}
+.pz-actions{white-space:nowrap; text-align:left}
+.pz-wrap .tbl th:last-child, .pz-wrap .tbl td.pz-actions{width:380px}
 .pz-actions .btn{margin-left:6px}
 .pz-actions .btn:first-child{margin-left:0}
 .tbl-wrap.tbl-users{overflow-x:scroll; padding-bottom:0}
@@ -2207,6 +2216,18 @@ body.vresizing *{cursor:ns-resize !important}
     cell.appendChild(d);
     setTimeout(function(){ d.remove(); },7000);
   }
+  /* Supabase-pyynnöt tehdään kirjautuneen käyttäjän OMALLA tokenilla, kun
+     master-istunto on olemassa — silloin RLS-policyt voi rajata rooliin
+     "authenticated" eikä hintoja tarvitse avata julkisesti kirjoitettaviksi.
+     Ilman istuntoa (demo/kirjautumaton) pudotaan publishable-avaimeen. */
+  function pzGetToken(){
+    if(!sb) return Promise.resolve(null);
+    try{
+      return sb.auth.getSession()
+        .then(function(r){ var s=r&&r.data&&r.data.session; return s?s.access_token:null; })
+        .catch(function(){ return null; });
+    }catch(e){ return Promise.resolve(null); }
+  }
   /* Sama label-muoto kuin sovelluksen fallbackissa: desimaalipilkku + " €/h". */
   function pzLabelFor(v){
     var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
@@ -2276,8 +2297,10 @@ body.vresizing *{cursor:ns-resize !important}
     var body=document.getElementById('pz-body');
     if(!body) return;
     body.innerHTML='<div class="pz-note">Ladataan…</div>';
-    var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
-    fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?select=*&order=city.asc,zone_number.asc',{headers:headers})
+    pzGetToken().then(function(tok){
+      var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+(tok||TP_SUPABASE_KEY)};
+      return fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?select=*&order=city.asc,zone_number.asc',{headers:headers});
+    })
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(rows){
         _pzLoaded=true;
@@ -2378,16 +2401,18 @@ body.vresizing *{cursor:ns-resize !important}
     // return=representation: saadaan päivitetyt rivit takaisin, jolloin
     // myös RLS:n hiljainen 0 riviä -tapaus paljastuu virheenä eikä näytä
     // valheellista onnistumista.
-    fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?'+filter,{
-      method:'PATCH',
-      headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,
-               'Content-Type':'application/json',Prefer:'return=representation'},
-      body:JSON.stringify(payload)
+    pzGetToken().then(function(tok){
+      return fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?'+filter,{
+        method:'PATCH',
+        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+(tok||TP_SUPABASE_KEY),
+                 'Content-Type':'application/json',Prefer:'return=representation'},
+        body:JSON.stringify(payload)
+      });
     }).then(function(r){
       if(!r.ok) return r.text().then(function(t){ throw new Error(pzErrMsg(r.status,t)); });
       return r.json();
     }).then(function(updated){
-      if(!updated || !updated.length) throw new Error('Rivi ei päivittynyt — tarkista parking_prices-taulun UPDATE-oikeus (RLS-policy).');
+      if(!updated || !updated.length) throw new Error('Supabase esti päivityksen (0 riviä). Lisää parking_prices-taululle UPDATE-policy ja kirjaudu master-tunnuksilla (ei demotila).');
       btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
       setTimeout(function(){
         btn.textContent='Tallenna muutokset'; btn.classList.remove('pz-ok'); btn.disabled=false;
