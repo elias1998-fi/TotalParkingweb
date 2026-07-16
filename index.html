@@ -747,9 +747,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
    kiinnitetty pysyvästi oikeaan reunaan (näkyvät scrollatessakin). */
 /* Hinnat ja vyöhykkeet -paneeli: kaupunkiotsikko boldattuna ja
    alleviivattuna, muokattavat kentät taulukon soluissa. */
-.pz-city{font-size:16px; font-weight:800; text-decoration:underline; text-underline-offset:3px; margin:22px 0 10px; color:var(--ink)}
-.pz-city:first-child{margin-top:4px}
-.pz-wrap{margin-bottom:6px}
+.pz-city{font-size:16px; font-weight:800; text-decoration:underline; text-underline-offset:3px; margin:0 0 10px; color:var(--ink)}
+/* Kaupunkilohkojen väljyys tulee kääreestä, ei otsikosta. Vanha
+   .pz-city:first-child-sääntö osui kääreiden takia JOKAISEEN otsikkoon
+   (h3 on aina oman pz-citywrapinsa ensimmäinen lapsi) ja painoi lohkot
+   4 px päähän toisistaan — siksi näkymä oli niin tiivis. */
+.pz-citywrap{margin-bottom:46px}
+.pz-citywrap:last-of-type{margin-bottom:14px}
+.pz-wrap{margin-bottom:0}
 .pz-inp{width:120px; max-width:100%; padding:7px 10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); font:inherit; font-size:13.5px; color:var(--ink)}
 .pz-inp:focus{outline:none; border-color:var(--brand); background:var(--card)}
 .pz-inp.pz-narrow{width:86px}
@@ -782,6 +787,7 @@ tr.pz-editing td{background:#f3f7fe}
 /* Lukittu kenttä näyttää tavalliselta tekstiltä; reunat vain muokattaessa. */
 .pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
 .pz-label{font-size:14px; color:var(--ink-soft)}
+.pz-by{font-size:11.5px; color:var(--muted)}
 /* table-layout:fixed on VÄLTTÄMÄTÖN: auto-layout mitoittaa sarakkeet kunkin
    taulukon oman sisällön mukaan, joten eri kaupunkien (eri hinta-arvot, eri
    rivimäärät) toimintosarakkeen vasen reuna asettuu eri kohtaan pelkän
@@ -2233,6 +2239,15 @@ body.vresizing *{cursor:ns-resize !important}
     var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
     return isFinite(n) ? String(n).replace('.',',')+' €/h' : '';
   }
+  /* Muokattu-sarake: edited_at + edited_by luettavassa muodossa. Näytetään
+     viiva, jos sarakkeita ei (vielä) ole taulussa tai arvot puuttuvat. */
+  function pzEditedInner(r){
+    var t='';
+    if(r && r.edited_at){ var d=new Date(r.edited_at); if(!isNaN(d)) t=d.toLocaleString('fi-FI',{day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+    var by=(r && r.edited_by) ? String(r.edited_by) : '';
+    return '<span class="pz-label">'+pzEsc(t||'\u2014')+'</span>'+(by?('<br><span class="pz-by">'+pzEsc(by)+'</span>'):'');
+  }
+  function pzEditedCell(r){ return '<td class="pz-edited">'+pzEditedInner(r)+'</td>'; }
   function pzRowState(tr,mode){ // 'locked' | 'editing'
     var editing=(mode==='editing');
     tr.classList.toggle('pz-editing',editing);
@@ -2314,7 +2329,7 @@ body.vresizing *{cursor:ns-resize !important}
           html+='<h3 class="pz-city">'+pzEsc(city)+'</h3>';
           html+='<div class="tbl-wrap pz-wrap"><table class="tbl"><thead><tr>'
               +'<th>Vyöhyke</th><th>Price_per_hour</th><th>price_label</th>'
-              +'<th>Valid_from</th><th>Valid_to</th><th></th></tr></thead><tbody>';
+              +'<th>Muokattu</th><th></th></tr></thead><tbody>';
           byCity[city].forEach(function(r){
             var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
             html+='<tr data-pz="'+pzEsc(key)+'">'
@@ -2324,8 +2339,7 @@ body.vresizing *{cursor:ns-resize !important}
                  price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h")
                  ja kirjoitetaan kantaan samassa muodossa tallennettaessa. */
               +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
-              +pzFieldCell(r,'valid_from','pz-narrow')
-              +pzFieldCell(r,'valid_to','pz-narrow')
+              +pzEditedCell(r)
               /* Yksi morfaava päänappi pitää paikkansa aina: lukittuna
                  "Muokkaa", auki sininen aktiivichippi, ja muutosten myötä
                  SAMA nappi vaihtuu haaleanpunaiseksi "Peru muutokset"
@@ -2393,6 +2407,14 @@ body.vresizing *{cursor:ns-resize !important}
     if(!_pzCols || _pzCols.indexOf('price_label')>=0){
       payload.price_label = pzLabelFor(payload.price_per_hour) || null;
     }
+    // Muokkausjälki: kuka ja milloin. Kirjoitetaan vain jos sarakkeet ovat
+    // olemassa, joten tämä toimii sekä ennen migraatiota että sen jälkeen.
+    if(_pzCols && _pzCols.indexOf('edited_by')>=0){
+      payload.edited_by = (typeof sess!=='undefined' && sess && sess.email) ? sess.email : null;
+    }
+    if(_pzCols && _pzCols.indexOf('edited_at')>=0){
+      payload.edited_at = new Date().toISOString();
+    }
     var filter = key.indexOf('id:')===0
       ? 'id=eq.'+encodeURIComponent(key.slice(3))
       : 'city=eq.'+key.split(':')[1]+'&zone_number=eq.'+encodeURIComponent(key.split(':')[2]);
@@ -2413,6 +2435,8 @@ body.vresizing *{cursor:ns-resize !important}
       return r.json();
     }).then(function(updated){
       if(!updated || !updated.length) throw new Error('Supabase esti päivityksen (0 riviä). Lisää parking_prices-taululle UPDATE-policy ja kirjaudu master-tunnuksilla (ei demotila).');
+      var ec=tr.querySelector('.pz-edited');
+      if(ec) ec.innerHTML=pzEditedInner(updated[0]);
       btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
       setTimeout(function(){
         btn.textContent='Tallenna muutokset'; btn.classList.remove('pz-ok'); btn.disabled=false;
