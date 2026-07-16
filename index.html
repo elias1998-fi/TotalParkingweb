@@ -760,6 +760,14 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-save:disabled{opacity:.45; cursor:default}
 .pz-cancel{background:#fdecea; color:#c0392b; border-color:#f2c6c0}
 .pz-cancel:hover{background:#fbdcd8}
+/* Aktiivinen Muokkaa-chippi + rivin haaleansininen korostus — sama henki
+   kuin sovelluksen liitintyyppivalinnoissa (esim. Type 2). */
+.pz-edit.pz-edit-active{background:#eaf1fd; color:#1266f1; border-color:#b9d2fa}
+.pz-edit.pz-edit-active:hover{background:#ddeafc}
+tr.pz-editing td{background:#f3f7fe}
+.tbl tr.pz-editing:hover td{background:#f3f7fe}
+/* Muokattavan kentän kehys selvästi näkyvämmäksi kuin peruslinja. */
+.pz-editing .pz-inp:not(:disabled){border-color:#a9b7cb; background:#fff}
 .pz-search{width:190px; margin-right:8px}
 /* Lukittu kenttä näyttää tavalliselta tekstiltä; reunat vain muokattaessa. */
 .pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
@@ -2179,10 +2187,9 @@ body.vresizing *{cursor:ns-resize !important}
     var editing=(mode==='editing');
     tr.classList.toggle('pz-editing',editing);
     tr.querySelectorAll('.pz-inp').forEach(function(i){ i.disabled=!editing; });
-    tr.querySelector('.pz-edit').hidden=editing;
-    var sv=tr.querySelector('.pz-save');
-    sv.hidden=!editing; sv.disabled=true;          // passiivinen kunnes muutoksia
-    tr.querySelector('.pz-cancel').hidden=true;    // ilmestyy vasta muutoksista
+    tr.querySelector('.pz-edit').classList.toggle('pz-edit-active',editing);
+    tr.querySelector('.pz-save').hidden=true;      // ilmestyvät vasta muutoksista
+    tr.querySelector('.pz-cancel').hidden=true;
   }
   /* Rivi on "likainen" kun jokin kenttä eroaa Muokkaa-hetken arvoista.
      Arvoihin perustuva vertailu: jos käyttäjä kirjoittaa arvot takaisin
@@ -2216,9 +2223,10 @@ body.vresizing *{cursor:ns-resize !important}
         var lbl=tr.querySelector('.pz-label');
         if(lbl) lbl.textContent=pzLabelFor(e.target.value);
       }
-      // Tallenna aktivoituu ja Peru ilmestyy vasta oikeista muutoksista
+      // Tallenna ja Peru ilmestyvät vasta oikeista muutoksista — ja
+      // piiloutuvat, jos arvot kirjoitetaan takaisin alkuperäisiksi
       var dirty=pzRowDirty(tr);
-      tr.querySelector('.pz-save').disabled=!dirty;
+      tr.querySelector('.pz-save').hidden=!dirty;
       tr.querySelector('.pz-cancel').hidden=!dirty;
     }
   });
@@ -2253,12 +2261,14 @@ body.vresizing *{cursor:ns-resize !important}
               +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
               +'<td><input class="pz-inp pz-narrow" data-f="valid_from" disabled value="'+pzEsc(r.valid_from)+'"></td>'
               +'<td><input class="pz-inp pz-narrow" data-f="valid_to" disabled value="'+pzEsc(r.valid_to)+'"></td>'
-              /* Nappitilat: lukittuna vain Muokkaa. Muokkaa vaihtuu
-                 Tallennaksi (passiivinen kunnes rivillä on oikeita muutoksia);
-                 muutos tuo viereen haaleanpunaisen "Peru muutokset". */
+              /* Nappitilat: lukittuna vain Muokkaa. Klikkaus muuttaa sen
+                 haaleansiniseksi aktiivichipiksi (kuten sovelluksen liitin-
+                 tyyppivalinnat) ja avaa kentät. Tallenna ja Peru muutokset
+                 ILMESTYVÄT vasta kun rivillä on oikeita muutoksia — ja
+                 katoavat jos arvot palautetaan käsin alkuperäisiksi. */
               +'<td class="pz-actions">'
                 +'<button class="btn ghost sm pz-edit">Muokkaa</button>'
-                +'<button class="btn ghost sm pz-save" hidden disabled>Tallenna</button>'
+                +'<button class="btn ghost sm pz-save" hidden>Tallenna</button>'
                 +'<button class="btn ghost sm pz-cancel" hidden>Peru muutokset</button>'
               +'</td>'
               +'</tr>';
@@ -2275,10 +2285,18 @@ body.vresizing *{cursor:ns-resize !important}
     var closest=function(sel){ return e.target.closest ? e.target.closest(sel) : null; };
     if(closest('#pz-reload')){ loadAdminPrices(true); return; }
 
-    // Muokkaa: avaa rivin kentät ja ota alkuarvot talteen perumista varten
+    // Muokkaa: avaa rivin kentät ja ota alkuarvot talteen perumista varten.
+    // Toimii togglena: jos rivi on jo auki ILMAN muutoksia, sama klikkaus
+    // sulkee sen. Muutosten kanssa klikkaus ei tee mitään — silloin
+    // poistuminen tapahtuu Peru- tai Tallenna-napilla.
     var ed=closest('.pz-edit');
     if(ed){
-      var tr=ed.closest('tr[data-pz]'); var o={};
+      var tr=ed.closest('tr[data-pz]');
+      if(tr.classList.contains('pz-editing')){
+        if(!pzRowDirty(tr)) pzRowState(tr,'locked');
+        return;
+      }
+      var o={};
       tr.querySelectorAll('.pz-inp').forEach(function(i){ o[i.getAttribute('data-f')]=i.value; });
       tr.dataset.orig=JSON.stringify(o);
       pzRowState(tr,'editing');
