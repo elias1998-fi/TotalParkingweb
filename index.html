@@ -760,6 +760,10 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-save:disabled{opacity:.45; cursor:default}
 .pz-cancel{background:#fdecea; color:#c0392b; border-color:#f2c6c0}
 .pz-cancel:hover{background:#fbdcd8}
+/* hidden-attribuutti takaisin voimaan: .btn asettaa display:inline-flex,
+   ja tekijän tyyli voittaa aina selaimen [hidden]{display:none} -säännön —
+   ilman tätä Tallenna ja Peru näkyivät heti sivun latauksessa. */
+.pz-actions [hidden]{display:none !important}
 /* Aktiivinen Muokkaa-chippi + rivin haaleansininen korostus — sama henki
    kuin sovelluksen liitintyyppivalinnoissa (esim. Type 2). */
 .pz-edit.pz-edit-active{background:#eaf1fd; color:#1266f1; border-color:#b9d2fa}
