@@ -757,6 +757,13 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-note.pz-err{color:#c0392b}
 .pz-save.pz-ok{color:#1d7a3f; border-color:#1d7a3f}
 .pz-save.pz-fail{color:#c0392b; border-color:#c0392b}
+.pz-search{width:190px; margin-right:8px}
+/* Lukittu kenttä näyttää tavalliselta tekstiltä; reunat vain muokattaessa. */
+.pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
+.pz-label{font-size:14px; color:var(--ink-soft)}
+.pz-actions{white-space:nowrap}
+.pz-actions .btn{margin-left:6px}
+.pz-actions .btn:first-child{margin-left:0}
 .tbl-wrap.tbl-users{overflow-x:scroll; padding-bottom:0}
 .tbl-users table.tbl{min-width:940px}
 .tbl-users .tbl th,.tbl-users .tbl td{white-space:nowrap}
@@ -2160,6 +2167,39 @@ body.vresizing *{cursor:ns-resize !important}
      taulussa on id-sarake, muuten city+zone_number-yhdistelmällä). */
   var _pzLoaded=false;
   function pzEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  /* Sama label-muoto kuin sovelluksen fallbackissa: desimaalipilkku + " €/h". */
+  function pzLabelFor(v){
+    var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
+    return isFinite(n) ? String(n).replace('.',',')+' €/h' : '';
+  }
+  function pzSetEditing(tr,on){
+    tr.classList.toggle('pz-editing',on);
+    tr.querySelectorAll('.pz-inp').forEach(function(i){ i.disabled=!on; });
+    tr.querySelector('.pz-edit').hidden=on;
+    tr.querySelector('.pz-cancel').hidden=!on;
+    tr.querySelector('.pz-save').hidden=!on;
+  }
+  function applyPzSearch(){
+    var box=document.getElementById('pz-search');
+    var q=box ? box.value.trim().toLowerCase() : '';
+    var any=false;
+    document.querySelectorAll('#pz-body .pz-citywrap').forEach(function(w){
+      var hit=!q || w.getAttribute('data-city').indexOf(q)>=0;
+      w.style.display=hit?'':'none'; if(hit) any=true;
+    });
+    var none=document.getElementById('pz-nohit');
+    if(none) none.style.display=(any||!q)?'none':'';
+  }
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='pz-search'){ applyPzSearch(); return; }
+    // price_label elää livenä price_per_hour-kentän mukana muokattaessa
+    if(e.target && e.target.classList && e.target.classList.contains('pz-inp')
+       && e.target.getAttribute('data-f')==='price_per_hour'){
+      var tr=e.target.closest('tr[data-pz]');
+      var lbl=tr && tr.querySelector('.pz-label');
+      if(lbl) lbl.textContent=pzLabelFor(e.target.value);
+    }
+  });
   function loadAdminPrices(force){
     if(_pzLoaded && !force) return;
     var body=document.getElementById('pz-body');
@@ -2175,6 +2215,7 @@ body.vresizing *{cursor:ns-resize !important}
         rows.forEach(function(r){ var c=(r.city||'—'); (byCity[c]=byCity[c]||[]).push(r); });
         var html='';
         Object.keys(byCity).sort(function(a,b){return a.localeCompare(b,'fi');}).forEach(function(city){
+          html+='<div class="pz-citywrap" data-city="'+pzEsc(String(city).toLowerCase())+'">';
           html+='<h3 class="pz-city">'+pzEsc(city)+'</h3>';
           html+='<div class="tbl-wrap pz-wrap"><table class="tbl"><thead><tr>'
               +'<th>Vyöhyke</th><th>Price_per_hour</th><th>price_label</th>'
@@ -2183,23 +2224,56 @@ body.vresizing *{cursor:ns-resize !important}
             var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
             html+='<tr data-pz="'+pzEsc(key)+'">'
               +'<td class="strong">Vyöhyke '+pzEsc(r.zone_number)+'</td>'
-              +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" value="'+pzEsc(r.price_per_hour)+'"></td>'
-              +'<td><input class="pz-inp" data-f="price_label" value="'+pzEsc(r.price_label)+'"></td>'
-              +'<td><input class="pz-inp pz-narrow" data-f="valid_from" value="'+pzEsc(r.valid_from)+'"></td>'
-              +'<td><input class="pz-inp pz-narrow" data-f="valid_to" value="'+pzEsc(r.valid_to)+'"></td>'
-              +'<td><button class="btn ghost sm pz-save">Tallenna</button></td>'
+              +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" disabled value="'+pzEsc(r.price_per_hour)+'"></td>'
+              /* price_label ei ole muokattava: se johdetaan aina
+                 price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h")
+                 ja kirjoitetaan kantaan samassa muodossa tallennettaessa. */
+              +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
+              +'<td><input class="pz-inp pz-narrow" data-f="valid_from" disabled value="'+pzEsc(r.valid_from)+'"></td>'
+              +'<td><input class="pz-inp pz-narrow" data-f="valid_to" disabled value="'+pzEsc(r.valid_to)+'"></td>'
+              +'<td class="pz-actions">'
+                +'<button class="btn ghost sm pz-edit">Muokkaa</button>'
+                +'<button class="btn ghost sm pz-cancel" hidden>Peru muutokset</button>'
+                +'<button class="btn ghost sm pz-save" hidden>Tallenna</button>'
+              +'</td>'
               +'</tr>';
           });
-          html+='</tbody></table></div>';
+          html+='</tbody></table></div></div>';
         });
+        html+='<div id="pz-nohit" class="pz-note" style="display:none">Ei osumia haulle.</div>';
         body.innerHTML=html;
+        applyPzSearch();
       })
       .catch(function(e){ body.innerHTML='<div class="pz-note pz-err">Lataus epäonnistui: '+pzEsc(e.message)+'</div>'; });
   }
   document.addEventListener('click',function(e){
-    var rel=e.target.closest && e.target.closest('#pz-reload');
-    if(rel){ loadAdminPrices(true); return; }
-    var btn=e.target.closest && e.target.closest('.pz-save');
+    var closest=function(sel){ return e.target.closest ? e.target.closest(sel) : null; };
+    if(closest('#pz-reload')){ loadAdminPrices(true); return; }
+
+    // Muokkaa: avaa rivin kentät ja ota alkuarvot talteen perumista varten
+    var ed=closest('.pz-edit');
+    if(ed){
+      var tr=ed.closest('tr[data-pz]'); var o={};
+      tr.querySelectorAll('.pz-inp').forEach(function(i){ o[i.getAttribute('data-f')]=i.value; });
+      tr.dataset.orig=JSON.stringify(o);
+      pzSetEditing(tr,true);
+      return;
+    }
+    // Peru muutokset: palauta alkuarvot (myös johdettu label) ja lukitse
+    var ca=closest('.pz-cancel');
+    if(ca){
+      var tr=ca.closest('tr[data-pz]');
+      var o=JSON.parse(tr.dataset.orig||'{}');
+      tr.querySelectorAll('.pz-inp').forEach(function(i){
+        var f=i.getAttribute('data-f'); if(f in o) i.value=o[f];
+      });
+      var lbl=tr.querySelector('.pz-label');
+      if(lbl) lbl.textContent=pzLabelFor((o.price_per_hour!=null)?o.price_per_hour:'');
+      pzSetEditing(tr,false);
+      return;
+    }
+    // Tallenna: PATCH Supabaseen; price_label kirjoitetaan johdettuna
+    var btn=closest('.pz-save');
     if(!btn) return;
     var tr=btn.closest('tr[data-pz]');
     var key=tr.getAttribute('data-pz');
@@ -2209,10 +2283,12 @@ body.vresizing *{cursor:ns-resize !important}
       if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
       else payload[f]=(v==='')?null:v;
     });
+    payload.price_label = pzLabelFor(payload.price_per_hour) || null;
     var filter = key.indexOf('id:')===0
       ? 'id=eq.'+encodeURIComponent(key.slice(3))
       : 'city=eq.'+key.split(':')[1]+'&zone_number=eq.'+encodeURIComponent(key.split(':')[2]);
-    btn.disabled=true; btn.textContent='Tallennetaan…';
+    var cancelBtn=tr.querySelector('.pz-cancel');
+    btn.disabled=true; cancelBtn.disabled=true; btn.textContent='Tallennetaan…';
     fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?'+filter,{
       method:'PATCH',
       headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,
@@ -2221,9 +2297,14 @@ body.vresizing *{cursor:ns-resize !important}
     }).then(function(r){
       if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t.slice(0,120)); });
       btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
-      setTimeout(function(){ btn.textContent='Tallenna'; btn.classList.remove('pz-ok'); btn.disabled=false; },1600);
+      setTimeout(function(){
+        btn.textContent='Tallenna'; btn.classList.remove('pz-ok');
+        btn.disabled=false; cancelBtn.disabled=false;
+        pzSetEditing(tr,false);   // uudet arvot jäävät rivin uudeksi perustilaksi
+      },1200);
     }).catch(function(e){
-      btn.textContent='Virhe'; btn.classList.add('pz-fail'); btn.disabled=false;
+      btn.textContent='Virhe'; btn.classList.add('pz-fail');
+      btn.disabled=false; cancelBtn.disabled=false;
       btn.title=e.message;
       setTimeout(function(){ btn.textContent='Tallenna'; btn.classList.remove('pz-fail'); },2600);
     });
@@ -3417,7 +3498,8 @@ body.vresizing *{cursor:ns-resize !important}
     /* prices & zones — sisältö ladataan Supabasesta avattaessa */
     html+='<div class="panel" data-id="a-prices">';
     html+=panelHead('Hinnat ja vyöhykkeet','parking_prices-taulun kaupunkikohtaiset vyöhykehinnat',
-      '<button class="btn ghost sm" id="pz-reload">Päivitä</button>');
+      '<input id="pz-search" class="pz-inp pz-search" type="search" placeholder="Hae kaupunkia…">'
+      +'<button class="btn ghost sm" id="pz-reload">Päivitä</button>');
     html+='<div id="pz-body"><div class="pz-note">Ladataan…</div></div>';
     html+='</div>';
 
