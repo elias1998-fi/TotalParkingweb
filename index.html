@@ -745,6 +745,18 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .cell-user{display:flex; align-items:center; gap:10px}
 /* Käyttäjät-taulukko: vaakascrollattava, solut yhdellä rivillä, toimintonapit
    kiinnitetty pysyvästi oikeaan reunaan (näkyvät scrollatessakin). */
+/* Hinnat ja vyöhykkeet -paneeli: kaupunkiotsikko boldattuna ja
+   alleviivattuna, muokattavat kentät taulukon soluissa. */
+.pz-city{font-size:16px; font-weight:800; text-decoration:underline; text-underline-offset:3px; margin:22px 0 10px; color:var(--ink)}
+.pz-city:first-child{margin-top:4px}
+.pz-wrap{margin-bottom:6px}
+.pz-inp{width:120px; max-width:100%; padding:7px 10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); font:inherit; font-size:13.5px; color:var(--ink)}
+.pz-inp:focus{outline:none; border-color:var(--brand); background:var(--card)}
+.pz-inp.pz-narrow{width:86px}
+.pz-note{padding:14px 2px; color:var(--muted); font-size:14px}
+.pz-note.pz-err{color:#c0392b}
+.pz-save.pz-ok{color:#1d7a3f; border-color:#1d7a3f}
+.pz-save.pz-fail{color:#c0392b; border-color:#c0392b}
 .tbl-wrap.tbl-users{overflow-x:scroll; padding-bottom:0}
 .tbl-users table.tbl{min-width:940px}
 .tbl-users .tbl th,.tbl-users .tbl td{white-space:nowrap}
@@ -1464,6 +1476,7 @@ body.vresizing *{cursor:ns-resize !important}
       <button class="nav-item active" data-panel="a-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</button>
       <div class="grp">Hallinta</div>
       <button class="nav-item" data-panel="a-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>Kartta &amp; alueet</button>
+      <button class="nav-item" data-panel="a-prices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 8.6A4.3 4.3 0 0 0 8.2 12a4.3 4.3 0 0 0 6.8 3.4M6.5 10.6h5.5M6.5 13.4h5.5"/></svg>Hinnat ja vyöhykkeet</button>
       <button class="nav-item" data-panel="a-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Käyttäjät</button>
       <button class="nav-item" data-panel="a-pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Maksuliikenne<span class="badge">3</span></button>
       <button class="nav-item" data-panel="a-biz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Yritykset</button>
@@ -2136,7 +2149,83 @@ body.vresizing *{cursor:ns-resize !important}
       document.body.classList.remove('side-open');
       main.scrollTop=0;
       if(panelId==='a-map') initAdminMap();
+      if(panelId==='a-prices') loadAdminPrices();
       if(panelId==='s-areas') initStaffMap();
+    });
+  });
+
+  /* ---------- Hinnat ja vyöhykkeet (admin) ---------- */
+  /* Lukee parking_prices-taulun ja ryhmittelee rivit kaupungeittain.
+     Kentät ovat muokattavia; Tallenna PATCHaa rivin Supabaseen (id:llä jos
+     taulussa on id-sarake, muuten city+zone_number-yhdistelmällä). */
+  var _pzLoaded=false;
+  function pzEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function loadAdminPrices(force){
+    if(_pzLoaded && !force) return;
+    var body=document.getElementById('pz-body');
+    if(!body) return;
+    body.innerHTML='<div class="pz-note">Ladataan…</div>';
+    var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
+    fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?select=*&order=city.asc,zone_number.asc',{headers:headers})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(rows){
+        _pzLoaded=true;
+        if(!rows.length){ body.innerHTML='<div class="pz-note">parking_prices-taulu on tyhjä.</div>'; return; }
+        var byCity={};
+        rows.forEach(function(r){ var c=(r.city||'—'); (byCity[c]=byCity[c]||[]).push(r); });
+        var html='';
+        Object.keys(byCity).sort(function(a,b){return a.localeCompare(b,'fi');}).forEach(function(city){
+          html+='<h3 class="pz-city">'+pzEsc(city)+'</h3>';
+          html+='<div class="tbl-wrap pz-wrap"><table class="tbl"><thead><tr>'
+              +'<th>Vyöhyke</th><th>Price_per_hour</th><th>price_label</th>'
+              +'<th>Valid_from</th><th>Valid_to</th><th></th></tr></thead><tbody>';
+          byCity[city].forEach(function(r){
+            var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
+            html+='<tr data-pz="'+pzEsc(key)+'">'
+              +'<td class="strong">Vyöhyke '+pzEsc(r.zone_number)+'</td>'
+              +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" value="'+pzEsc(r.price_per_hour)+'"></td>'
+              +'<td><input class="pz-inp" data-f="price_label" value="'+pzEsc(r.price_label)+'"></td>'
+              +'<td><input class="pz-inp pz-narrow" data-f="valid_from" value="'+pzEsc(r.valid_from)+'"></td>'
+              +'<td><input class="pz-inp pz-narrow" data-f="valid_to" value="'+pzEsc(r.valid_to)+'"></td>'
+              +'<td><button class="btn ghost sm pz-save">Tallenna</button></td>'
+              +'</tr>';
+          });
+          html+='</tbody></table></div>';
+        });
+        body.innerHTML=html;
+      })
+      .catch(function(e){ body.innerHTML='<div class="pz-note pz-err">Lataus epäonnistui: '+pzEsc(e.message)+'</div>'; });
+  }
+  document.addEventListener('click',function(e){
+    var rel=e.target.closest && e.target.closest('#pz-reload');
+    if(rel){ loadAdminPrices(true); return; }
+    var btn=e.target.closest && e.target.closest('.pz-save');
+    if(!btn) return;
+    var tr=btn.closest('tr[data-pz]');
+    var key=tr.getAttribute('data-pz');
+    var payload={};
+    tr.querySelectorAll('.pz-inp').forEach(function(inp){
+      var f=inp.getAttribute('data-f'), v=inp.value.trim();
+      if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
+      else payload[f]=(v==='')?null:v;
+    });
+    var filter = key.indexOf('id:')===0
+      ? 'id=eq.'+encodeURIComponent(key.slice(3))
+      : 'city=eq.'+key.split(':')[1]+'&zone_number=eq.'+encodeURIComponent(key.split(':')[2]);
+    btn.disabled=true; btn.textContent='Tallennetaan…';
+    fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices?'+filter,{
+      method:'PATCH',
+      headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,
+               'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify(payload)
+    }).then(function(r){
+      if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t.slice(0,120)); });
+      btn.textContent='Tallennettu ✓'; btn.classList.add('pz-ok');
+      setTimeout(function(){ btn.textContent='Tallenna'; btn.classList.remove('pz-ok'); btn.disabled=false; },1600);
+    }).catch(function(e){
+      btn.textContent='Virhe'; btn.classList.add('pz-fail'); btn.disabled=false;
+      btn.title=e.message;
+      setTimeout(function(){ btn.textContent='Tallenna'; btn.classList.remove('pz-fail'); },2600);
     });
   });
 
@@ -3325,11 +3414,17 @@ body.vresizing *{cursor:ns-resize !important}
     html+='</div>'; /* /web-stats-wrap */
     html+='</div>';
 
+    /* prices & zones — sisältö ladataan Supabasesta avattaessa */
+    html+='<div class="panel" data-id="a-prices">';
+    html+=panelHead('Hinnat ja vyöhykkeet','parking_prices-taulun kaupunkikohtaiset vyöhykehinnat',
+      '<button class="btn ghost sm" id="pz-reload">Päivitä</button>');
+    html+='<div id="pz-body"><div class="pz-note">Ladataan…</div></div>';
+    html+='</div>';
+
     /* tools */
     html+='<div class="panel" data-id="a-tools">';
     html+=panelHead('Asetukset','Master-tason työkalut ja konfiguraatio');
     html+='<div class="cc-grid">'
-      +settingCard('Hinnoittelu &amp; vyöhykkeet','Pysäköintivyöhykkeiden hinnat ja aikarajat','euro')
       +settingCard('Latausoperaattorit','Liittimet, tehot ja kumppaniverkostot','bolt')
       +settingCard('Roolit &amp; oikeudet','Subadminien käyttöoikeudet ja rajaukset','people')
       +settingCard('Maksujen asetukset','Stripe, Apple Pay ja laskutusjaksot','card')
