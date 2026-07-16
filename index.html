@@ -758,6 +758,7 @@ table.tbl{width:100%; border-collapse:collapse; min-width:560px}
 .pz-inp{width:120px; max-width:100%; padding:7px 10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); font:inherit; font-size:13.5px; color:var(--ink)}
 .pz-inp:focus{outline:none; border-color:var(--brand); background:var(--card)}
 .pz-inp.pz-narrow{width:86px}
+.pz-inp.pz-widef{width:160px}
 .pz-note{padding:14px 2px; color:var(--muted); font-size:14px}
 .pz-note.pz-err{color:#c0392b}
 .pz-save.pz-ok{color:#1d7a3f; border-color:#1d7a3f}
@@ -2329,16 +2330,18 @@ body.vresizing *{cursor:ns-resize !important}
           html+='<h3 class="pz-city">'+pzEsc(city)+'</h3>';
           html+='<div class="tbl-wrap pz-wrap"><table class="tbl"><thead><tr>'
               +'<th>Vyöhyke</th><th>Price_per_hour</th><th>price_label</th>'
-              +'<th>Muokattu</th><th></th></tr></thead><tbody>';
+              +'<th>Price_other_times</th><th>Muokattu</th><th></th></tr></thead><tbody>';
           byCity[city].forEach(function(r){
             var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
             html+='<tr data-pz="'+pzEsc(key)+'">'
               +'<td class="strong">Vyöhyke '+pzEsc(r.zone_number)+'</td>'
               +pzFieldCell(r,'price_per_hour','')
-              /* price_label ei ole muokattava: se johdetaan aina
-                 price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h")
-                 ja kirjoitetaan kantaan samassa muodossa tallennettaessa. */
+              /* price_label on puhdas näyttöarvo: johdetaan aina
+                 price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h").
+                 Kannassa sama johto tehdään GENERATED-sarakkeella, joten
+                 arvot eivät voi erota — eikä labelia kirjoiteta koskaan. */
               +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
+              +pzFieldCell(r,'price_other_times','pz-widef')
               +pzEditedCell(r)
               /* Yksi morfaava päänappi pitää paikkansa aina: lukittuna
                  "Muokkaa", auki sininen aktiivichippi, ja muutosten myötä
@@ -2404,9 +2407,9 @@ body.vresizing *{cursor:ns-resize !important}
       if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
       else payload[f]=(v==='')?null:v;
     });
-    if(!_pzCols || _pzCols.indexOf('price_label')>=0){
-      payload.price_label = pzLabelFor(payload.price_per_hour) || null;
-    }
+    // price_label EI kuulu payloadiin: sarake on kannassa GENERATED-tyyppinen
+    // (Postgres johtaa sen price_per_hourista), ja generoituun sarakkeeseen
+    // kirjoittaminen kaataisi PATCHin. Paneelin label on puhdas näyttöarvo.
     // Muokkausjälki: kuka ja milloin. Kirjoitetaan vain jos sarakkeet ovat
     // olemassa, joten tämä toimii sekä ennen migraatiota että sen jälkeen.
     if(_pzCols && _pzCols.indexOf('edited_by')>=0){
