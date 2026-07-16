@@ -789,6 +789,8 @@ tr.pz-editing td{background:#f3f7fe}
 .pz-inp:disabled{background:transparent; border-color:transparent; color:var(--ink); opacity:1}
 .pz-label{font-size:14px; color:var(--ink-soft)}
 .pz-by{font-size:11.5px; color:var(--muted)}
+.pz-unit{font-size:13.5px; color:var(--ink-soft); margin-left:7px; white-space:nowrap}
+.pz-unit.hid{display:none}
 /* table-layout:fixed on VÄLTTÄMÄTÖN: auto-layout mitoittaa sarakkeet kunkin
    taulukon oman sisällön mukaan, joten eri kaupunkien (eri hinta-arvot, eri
    rivimäärät) toimintosarakkeen vasen reuna asettuu eri kohtaan pelkän
@@ -2235,10 +2237,11 @@ body.vresizing *{cursor:ns-resize !important}
         .catch(function(){ return null; });
     }catch(e){ return Promise.resolve(null); }
   }
-  /* Sama label-muoto kuin sovelluksen fallbackissa: desimaalipilkku + " €/h". */
-  function pzLabelFor(v){
-    var n=parseFloat(String(v==null?'':v).trim().replace(',','.'));
-    return isFinite(n) ? String(n).replace('.',',')+' €/h' : '';
+  /* €/h-yksikkö näkyy hintakentän perässä vain kun kentässä on arvo. */
+  function pzSyncUnit(tr){
+    var inp=tr.querySelector('[data-f="price_per_hour"]');
+    var u=tr.querySelector('.pz-unit');
+    if(inp&&u) u.classList.toggle('hid', inp.value.trim()==='');
   }
   /* Muokattu-sarake: edited_at + edited_by luettavassa muodossa. Näytetään
      viiva, jos sarakkeita ei (vielä) ole taulussa tai arvot puuttuvat. */
@@ -2289,11 +2292,8 @@ body.vresizing *{cursor:ns-resize !important}
     if(e.target && e.target.classList && e.target.classList.contains('pz-inp')){
       var tr=e.target.closest('tr[data-pz]');
       if(!tr || !tr.classList.contains('pz-editing')) return;
-      // price_label elää livenä price_per_hour-kentän mukana
-      if(e.target.getAttribute('data-f')==='price_per_hour'){
-        var lbl=tr.querySelector('.pz-label');
-        if(lbl) lbl.textContent=pzLabelFor(e.target.value);
-      }
+      // €/h-yksikkö näkyy vain kun hintakentässä on arvo
+      if(e.target.getAttribute('data-f')==='price_per_hour') pzSyncUnit(tr);
       // Muutokset morfaavat päänapin Peruksi ja tuovat vihreän Tallennan
       // esiin; arvojen palautus käsin kääntää kaiken takaisin.
       var dirty=pzRowDirty(tr);
@@ -2329,18 +2329,17 @@ body.vresizing *{cursor:ns-resize !important}
           html+='<div class="pz-citywrap" data-city="'+pzEsc(String(city).toLowerCase())+'">';
           html+='<h3 class="pz-city">'+pzEsc(city)+'</h3>';
           html+='<div class="tbl-wrap pz-wrap"><table class="tbl"><thead><tr>'
-              +'<th>Vyöhyke</th><th>Price_per_hour</th><th>price_label</th>'
+              +'<th>Vyöhyke</th><th>Price_per_hour</th>'
               +'<th>Price_other_times</th><th>Muokattu</th><th></th></tr></thead><tbody>';
           byCity[city].forEach(function(r){
             var key=(r.id!=null)?('id:'+r.id):('cz:'+encodeURIComponent(r.city||'')+':'+r.zone_number);
             html+='<tr data-pz="'+pzEsc(key)+'">'
               +'<td class="strong">Vyöhyke '+pzEsc(r.zone_number)+'</td>'
-              +pzFieldCell(r,'price_per_hour','')
-              /* price_label on puhdas näyttöarvo: johdetaan aina
-                 price_per_hour-arvosta ("4" -> "4 €/h", "2.5" -> "2,5 €/h").
-                 Kannassa sama johto tehdään GENERATED-sarakkeella, joten
-                 arvot eivät voi erota — eikä labelia kirjoiteta koskaan. */
-              +'<td><span class="pz-label">'+pzEsc(pzLabelFor(r.price_per_hour))+'</span></td>'
+              /* Hinta ja kiinteä €/h-yksikkö samassa solussa. Yksikkö näkyy
+                 vain kun kentässä on arvo (pzSyncUnit) — erillistä
+                 price_label-saraketta ei enää ole kannassa eikä näkymässä. */
+              +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" disabled value="'+pzEsc(r.price_per_hour)+'">'
+                +'<span class="pz-unit'+((r.price_per_hour==null||String(r.price_per_hour).trim()==='')?' hid':'')+'">€/h</span></td>'
               +pzFieldCell(r,'price_other_times','pz-widef')
               +pzEditedCell(r)
               /* Yksi morfaava päänappi pitää paikkansa aina: lukittuna
@@ -2379,8 +2378,7 @@ body.vresizing *{cursor:ns-resize !important}
           tr.querySelectorAll('.pz-inp').forEach(function(i){
             var f=i.getAttribute('data-f'); if(f in o) i.value=o[f];
           });
-          var lbl=tr.querySelector('.pz-label');
-          if(lbl) lbl.textContent=pzLabelFor((o.price_per_hour!=null)?o.price_per_hour:'');
+          pzSyncUnit(tr);
         }
         pzRowState(tr,'locked');
         return;
@@ -2407,9 +2405,8 @@ body.vresizing *{cursor:ns-resize !important}
       if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
       else payload[f]=(v==='')?null:v;
     });
-    // price_label EI kuulu payloadiin: sarake on kannassa GENERATED-tyyppinen
-    // (Postgres johtaa sen price_per_hourista), ja generoituun sarakkeeseen
-    // kirjoittaminen kaataisi PATCHin. Paneelin label on puhdas näyttöarvo.
+    // price_label-saraketta ei enää ole missään: näkymä esittää yksikön
+    // (€/h) hintakentän perässä, sovellus johtaa labelinsa itse.
     // Muokkausjälki: kuka ja milloin. Kirjoitetaan vain jos sarakkeet ovat
     // olemassa, joten tämä toimii sekä ennen migraatiota että sen jälkeen.
     if(_pzCols && _pzCols.indexOf('edited_by')>=0){
