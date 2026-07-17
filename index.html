@@ -367,6 +367,17 @@ body.logged-in #drawer-login{display:none}
 .pop-area-details{display:none; margin-top:10px; padding-top:10px; border-top:1px solid #eee}
 .pop-area.open .pop-area-details{display:block}
 .pop-s .mono{color:var(--brand)}
+/* "Lisää uusi alue" -kaavake: jakaa aedit-tyylit, alla vain omat lisäykset
+   (Voimassaoloaika-rivit kiekkopysäköinnille — Ma–Pe / (La) / Su punaisella) */
+.aadd-vgroup{grid-column:1 / -1; margin-bottom:14px}
+.aadd-vgroup>label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px}
+.aadd-vrow{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+.aadd-vrow:last-child{margin-bottom:0}
+.aadd-vday{flex:0 0 52px; font-size:13.5px; font-weight:700; color:var(--ink)}
+.aadd-vday.su{color:#C62828}
+.aadd-vrow input{flex:1 1 auto; min-width:0; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit; color:var(--ink); background:var(--card); outline:none; margin-bottom:0}
+.aadd-vrow input:focus{border-color:var(--brand)}
+.aadd-vdash{flex:0 0 auto; color:var(--muted); font-size:13px}
 
 /* ---------- Section base ---------- */
 .section{padding:64px 0}
@@ -3130,6 +3141,197 @@ body.vresizing *{cursor:ns-resize !important}
       msg.style.color='#c62828'; msg.textContent='Tallennus ep\u00e4onnistui: '+((err&&err.message)||err);
     }
   }
+  /* ── "Lisää uusi alue" -kaavake ──────────────────────────────────────────
+     Avautuu piirtotilan Valmis-napista. Sama kelluva ulkoasu kuin "Muokkaa
+     alueen tietoja" -kaavakkeessa (aedit-tyylit). Ylimpänä Alueen tyyppi:
+       - Maksullinen alue      -> sama kenttäruudukko kuin muokkauksessa
+                                  (ilman aluetyyppikenttää — valikko määrää sen)
+       - Kiekkopysäköinti      -> Voimassaoloaika (Ma–Pe / (La) / Su) +
+                                  Lisätiedot, kuten sovelluksen "Lisää
+                                  pysäköintialueen tiedot" -näkymässä
+       - Kiekoton ilmaisparkki -> pelkkä Lisätiedot, kuten sovelluksessa
+     Peruuta/✕ palauttaa polygonin piirtonäkymään; syötetyt arvot säilyvät
+     saman piirroksen ajan. Tallennus kirjoittaa uuden rivin parking_master-
+     (maksullinen) tai parking_master_ilmaiset-tauluun (kiekko/ilmainen) ja
+     lisää alueen molemmille kartoille ilman täyttä uudelleenlatausta —
+     samat taulut, joista sovellus lukee alueensa. */
+  var AADD_NUMERIC={zone_number:1,estimated_spots_total:1,max_hours:1,max_minutes:1};
+  function tpAreaAddModal(){
+    var m=document.getElementById('area-add-modal');
+    if(m) return m;
+    m=document.createElement('div'); m.id='area-add-modal'; m.className='aedit-float';
+    m.innerHTML='<div class="aedit-head" id="aadd-head"><span>Lis\u00e4\u00e4 uusi alue</span>'
+      +'<div class="aedit-head-actions">'
+      +'<button class="aedit-close" id="aadd-close" type="button" aria-label="Sulje">\u2715</button>'
+      +'</div></div>'
+      +'<div class="aedit-body">'
+      +'<div id="aadd-sub" class="pop-s" style="margin-bottom:14px"></div>'
+      +'<div class="aedit-field aedit-full"><label>Alueen tyyppi</label>'
+      +'<select id="aadd-type">'
+      +'<option value="">\u2014 Valitse tyyppi \u2014</option>'
+      +'<option value="maksullinen">Maksullinen alue</option>'
+      +'<option value="kiekko">Kiekkopys\u00e4k\u00f6inti</option>'
+      +'<option value="ilmainen">Kiekoton ilmaisparkki</option>'
+      +'</select></div>'
+      +'<div id="aadd-fields" class="aedit-grid"></div>'
+      +'</div>'
+      +'<div class="aedit-foot">'
+      +'<div id="aadd-msg" class="aedit-msg"></div>'
+      +'<div class="aedit-foot-btns">'
+      +'<button class="drawbtn ghost" id="aadd-cancel" type="button">Peruuta</button>'
+      +'<button class="drawbtn ok" id="aadd-save" type="button" disabled>Tallenna</button>'
+      +'</div></div>'
+      +'<div class="aedit-banner" id="aadd-banner"><div class="aedit-banner-card"><div id="aadd-banner-text"></div><div class="aedit-banner-btns" id="aadd-banner-btns"></div></div></div>';
+    document.body.appendChild(m);
+    tpMakeDraggable(m, m.querySelector('#aadd-head'));
+    /* Peruuta/✕ -> takaisin piirtonäkymään; kaavakkeen arvot jäävät talteen. */
+    function backToDraw(){
+      m.querySelector('#aadd-banner').classList.remove('open');
+      m.classList.remove('open');
+      if(typeof m.__onResume==='function') m.__onResume();
+    }
+    m.querySelector('#aadd-close').addEventListener('click', backToDraw);
+    m.querySelector('#aadd-cancel').addEventListener('click', backToDraw);
+    m.querySelector('#aadd-type').addEventListener('change', function(){ tpRenderAreaAddFields(m, this.value); });
+    m.querySelector('#aadd-save').addEventListener('click', function(){
+      if(!m.querySelector('#aadd-type').value) return;
+      var txt=m.querySelector('#aadd-banner-text'), btns=m.querySelector('#aadd-banner-btns');
+      txt.textContent='Olet lis\u00e4\u00e4m\u00e4ss\u00e4 uutta aluetta. Hyv\u00e4ksym\u00e4ll\u00e4 alue tallennetaan tietokantaan.';
+      btns.innerHTML='<button class="drawbtn ghost" id="aadd-b-return" type="button">Palaa takaisin</button>'
+        +'<button class="drawbtn ok" id="aadd-b-accept" type="button">Hyv\u00e4ksy</button>';
+      btns.querySelector('#aadd-b-return').addEventListener('click', function(){ m.querySelector('#aadd-banner').classList.remove('open'); });
+      btns.querySelector('#aadd-b-accept').addEventListener('click', function(){ m.querySelector('#aadd-banner').classList.remove('open'); tpSaveAreaAdd(m); });
+      m.querySelector('#aadd-banner').classList.add('open');
+    });
+    return m;
+  }
+  /* Piirtää tyypin mukaiset kentät. Maksullinen = muokkauskaavakkeen kentät;
+     kiekko/ilmainen = samat kohdat kuin sovelluksen lisäysnäkymässä. */
+  function tpRenderAreaAddFields(m, typ){
+    var box=m.querySelector('#aadd-fields'); box.innerHTML='';
+    m.querySelector('#aadd-msg').textContent='';
+    m.querySelector('#aadd-save').disabled=!typ;
+    if(!typ) return;
+    if(typ==='maksullinen'){
+      var fields=[
+        ['area_name','Alueen nimi','text'],['area_code','Aluekoodi','text'],
+        ['parking_type','Pys\u00e4k\u00f6intityyppi','select'],
+        ['owner_parking_area','Omistaja','select'],['location_city','Kaupunki','select'],
+        ['city_zone','Kaupunkivy\u00f6hyke','text'],['zone_number','Vy\u00f6hykenumero','num'],
+        ['estimated_spots_total','Paikkoja (arvio)','num'],
+        ['max_hours','Max tunnit','num'],['max_minutes','Max minuutit','num'],
+        ['valid_mape_from','Ma\u2013pe alkaa','text'],['valid_mape_to','Ma\u2013pe p\u00e4\u00e4ttyy','text'],
+        ['valid_la_from','La alkaa','text'],['valid_la_to','La p\u00e4\u00e4ttyy','text'],
+        ['valid_su_from','Su alkaa','text'],['valid_su_to','Su p\u00e4\u00e4ttyy','text'],
+        ['data_exceptions','Poikkeukset','area'],['info_additional','Lis\u00e4tiedot','area']
+      ];
+      fields.forEach(function(f){
+        var key=f[0], label=f[1], type=f[2];
+        var wrap=document.createElement('div'); wrap.className='aedit-field'+(type==='area'?' aedit-full':'');
+        var inp;
+        if(type==='select'){
+          var opts=tpDistinctValues(key);
+          var oh='<option value="">\u2014 (ei valittu) \u2014</option>';
+          opts.forEach(function(o){ oh+='<option value="'+tpEsc(o).replace(/"/g,'&quot;')+'">'+tpEsc(o)+'</option>'; });
+          inp='<select data-key="'+key+'">'+oh+'</select>';
+        } else if(type==='area'){
+          inp='<textarea data-key="'+key+'" rows="2"></textarea>';
+        } else {
+          inp='<input data-key="'+key+'" type="'+(type==='num'?'number':'text')+'"'+(type==='num'?' inputmode="numeric" step="any"':'')+'>';
+        }
+        wrap.innerHTML='<label>'+tpEsc(label)+'</label>'+inp;
+        box.appendChild(wrap);
+      });
+    } else {
+      if(typ==='kiekko'){
+        var vg=document.createElement('div'); vg.className='aadd-vgroup';
+        vg.innerHTML='<label>Voimassaoloaika</label>'
+          +'<div class="aadd-vrow"><span class="aadd-vday">Ma\u2013Pe</span><input data-key="valid_mape_from" type="text" inputmode="numeric" placeholder="esim. 8"><span class="aadd-vdash">\u2013</span><input data-key="valid_mape_to" type="text" inputmode="numeric" placeholder="esim. 18"></div>'
+          +'<div class="aadd-vrow"><span class="aadd-vday">(La)</span><input data-key="valid_la_from" type="text" inputmode="numeric" placeholder="esim. 9"><span class="aadd-vdash">\u2013</span><input data-key="valid_la_to" type="text" inputmode="numeric" placeholder="esim. 15"></div>'
+          +'<div class="aadd-vrow"><span class="aadd-vday su">Su</span><input data-key="valid_su_from" type="text" inputmode="numeric" placeholder="\u2014"><span class="aadd-vdash">\u2013</span><input data-key="valid_su_to" type="text" inputmode="numeric" placeholder="\u2014"></div>';
+        box.appendChild(vg);
+      }
+      var lt=document.createElement('div'); lt.className='aedit-field aedit-full';
+      lt.innerHTML='<label>Lis\u00e4tiedot</label><textarea data-key="info_additional" rows="3" placeholder="Vapaaehtoinen lis\u00e4tieto alueesta"></textarea>';
+      box.appendChild(lt);
+    }
+  }
+  function tpOpenAreaAdd(opts){
+    var m=tpAreaAddModal();
+    m.__getGeometry=opts.getGeometry;
+    m.__onResume=opts.onResume;
+    m.__onSaved=opts.onSaved;
+    if(opts.fresh){
+      m.querySelector('#aadd-type').value='';
+      tpRenderAreaAddFields(m,'');
+    }
+    var n=(typeof opts.cornerCount==='function')?opts.cornerCount():0;
+    m.querySelector('#aadd-sub').textContent='Uusi alue \u00b7 '+n+' kulmaa \u00b7 valitse tyyppi ja t\u00e4yt\u00e4 tiedot';
+    m.querySelector('#aadd-msg').textContent='';
+    var sb=m.querySelector('#aadd-save'); sb.disabled=!m.querySelector('#aadd-type').value; sb.textContent='Tallenna';
+    m.querySelector('#aadd-banner').classList.remove('open');
+    m.classList.add('open');
+  }
+  async function tpSaveAreaAdd(m){
+    var msg=m.querySelector('#aadd-msg');
+    var saveBtn=m.querySelector('#aadd-save');
+    var typ=m.querySelector('#aadd-type').value;
+    if(!typ) return;
+    var isFree=typ!=='maksullinen';
+    var table=isFree?'parking_master_ilmaiset':'parking_master';
+    var row={};
+    row.area_type = typ==='maksullinen' ? 'Maksullinen pys\u00e4k\u00f6inti'
+                  : typ==='kiekko' ? 'Kiekkopys\u00e4k\u00f6inti' : 'Kiekoton ilmaispys\u00e4k\u00f6inti';
+    m.querySelectorAll('#aadd-fields [data-key]').forEach(function(el){
+      var key=el.getAttribute('data-key');
+      var v=String(el.value).trim();
+      if(v==='') return;                       /* tyhjät jätetään pois -> NULL kantaan */
+      row[key]=AADD_NUMERIC[key] ? (isNaN(Number(v))?null:Number(v)) : v;
+    });
+    var geom=(typeof m.__getGeometry==='function')?m.__getGeometry():null;
+    if(!geom){ msg.style.color='#c62828'; msg.textContent='Polygonia ei l\u00f6ytynyt \u2014 piirr\u00e4 alue uudelleen.'; return; }
+    row.polygon_coordinates=geom;
+    saveBtn.disabled=true; saveBtn.textContent='Tallennetaan\u2026'; msg.style.color='#666'; msg.textContent='';
+    try{
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table,{
+        method:'POST',
+        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=representation'},
+        body:JSON.stringify(row)
+      });
+      if(!res.ok){ var txt=await res.text().catch(function(){return '';}); throw new Error('HTTP '+res.status+(txt?(' \u2014 '+txt.slice(0,160)):'')); }
+      var rows=await res.json().catch(function(){return null;});
+      var newId=(rows&&rows.length&&rows[0]&&rows[0].id!=null)?rows[0].id:null;
+      /* Lisää alue paikallisesti molemmille kartoille (sama muoto kuin tpLoadAreas tuottaa). */
+      var p={
+        source:tpLegacySource(row.area_type,row.parking_type||'',row.max_hours),
+        id: newId==null ? '' : (isFree?('ilm_'+newId):String(newId)),
+        area_name:row.area_name||'', area_type:row.area_type||'', parking_type:row.parking_type||'',
+        owner_parking_area:row.owner_parking_area||'', location_city:row.location_city||'', city_zone:row.city_zone||'',
+        zone_number:(row.zone_number!=null?row.zone_number:''), estimated_spots_total:(row.estimated_spots_total!=null?row.estimated_spots_total:''),
+        area_code:row.area_code||'',
+        max_hours:(row.max_hours!=null?row.max_hours:''), max_minutes:(row.max_minutes!=null?row.max_minutes:''),
+        valid_mape_from:row.valid_mape_from||'', valid_mape_to:row.valid_mape_to||'',
+        valid_la_from:row.valid_la_from||'', valid_la_to:row.valid_la_to||'',
+        valid_su_from:row.valid_su_from||'', valid_su_to:row.valid_su_to||'',
+        data_exceptions:row.data_exceptions||'', info_additional:row.info_additional||''
+      };
+      if(newId!=null){
+        MASTER_AREA_FEATURES.push({type:'Feature',properties:p,geometry:geom});
+        edSetLocalFeatures();
+      } else {
+        /* id:tä ei saatu vastauksesta -> lataa alueet varmuuden vuoksi uudelleen */
+        try{ await tpLoadAreas(adminMap); if(typeof phoneMap!=='undefined'&&phoneMap) await tpLoadAreas(phoneMap); }catch(e){}
+      }
+      m.classList.remove('open');
+      m.querySelector('#aadd-type').value='';
+      tpRenderAreaAddFields(m,'');
+      if(typeof tpToast==='function') tpToast('Uusi alue tallennettu tietokantaan');
+      if(typeof m.__onSaved==='function') m.__onSaved();
+    }catch(err){
+      saveBtn.disabled=false; saveBtn.textContent='Tallenna';
+      msg.style.color='#c62828'; msg.textContent='Tallennus ep\u00e4onnistui: '+((err&&err.message)||err);
+    }
+  }
   var tpIdSearchPopup=null;
   /* Hae pysäköintialue tietokannan id:llä → zoomaa siihen ja avaa sen tiedot
      samalla tavalla kuin aluetta klikatessa. */
@@ -4513,7 +4715,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(auto){ hintT=setTimeout(function(){ h.classList.remove('open'); }, 5000); }
     }
     /* draw "Lisää alue" */
-    var drawOn=false, pts=[], markers=[], clickH=null, drawBtnRef=null, drawFollow=false;
+    var drawOn=false, drawPaused=false, drawFresh=true, pts=[], markers=[], clickH=null, drawBtnRef=null, drawFollow=false;
     function geo(){
       if(pts.length>=3) return {type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[pts.concat([pts[0]])]}};
       if(pts.length>=2) return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:pts}};
@@ -4629,7 +4831,7 @@ body.vresizing *{cursor:ns-resize !important}
       var panel=panelEl(); if(!panel)return;
       clearModes();
       drawBtnRef=btn; btn.classList.add('active');
-      drawOn=true; adminMap.__drawing=true; clearShape();
+      drawOn=true; drawPaused=false; drawFresh=true; adminMap.__drawing=true; clearShape();
       adminMap.getCanvas().style.cursor='crosshair';
       clickH=function(e){ addCorner(e.lngLat); };
       adminMap.on('click', clickH);
@@ -4637,21 +4839,55 @@ body.vresizing *{cursor:ns-resize !important}
       hint('Piirr\u00e4 alue klikkaamalla karttaa. V\u00e4hint\u00e4\u00e4n 3 kulmaa, sitten Valmis.');
     }
     function endDraw(){
-      drawOn=false; if(adminMap) adminMap.__drawing=false;
+      drawOn=false; drawPaused=false; if(adminMap) adminMap.__drawing=false;
+      var am=document.getElementById('area-add-modal'); if(am) am.classList.remove('open');
       if(adminMap){ adminMap.getCanvas().style.cursor=''; if(clickH){ adminMap.off('click', clickH); clickH=null; } }
       var b=document.getElementById('map-drawbar'); if(b)b.classList.remove('open');
       closeAddRail();
       if(drawBtnRef){ drawBtnRef.classList.remove('active'); drawBtnRef=null; }
       var pb=document.querySelector('#app-admin [data-tool="plus"]'); if(pb)pb.classList.remove('active');
     }
+    /* Valmis: keskeytä piirto (polygoni ja kulmapisteet jäävät näkyviin) ja
+       avaa "Lisää uusi alue" -kaavake. Kaavakkeen Peruuta palaa tähän
+       piirtonäkymään resumeDraw():lla, tallennus siivoaa kaiken onSaved:ssa. */
+    function suspendDraw(){
+      drawPaused=true;
+      if(adminMap){ adminMap.getCanvas().style.cursor=''; if(clickH){ adminMap.off('click', clickH); clickH=null; } }
+      var b=document.getElementById('map-drawbar'); if(b)b.classList.remove('open');
+      closeAddRail();
+      hint(null);
+    }
+    function resumeDraw(){
+      if(!drawOn || !adminMap) return;
+      drawPaused=false;
+      adminMap.getCanvas().style.cursor='crosshair';
+      clickH=function(e){ addCorner(e.lngLat); };
+      adminMap.on('click', clickH);
+      var panel=panelEl();
+      if(panel){ var b=document.getElementById('map-drawbar'); if(b)b.classList.add('open'); buildAddRail(panel); }
+      update();
+      hint('Muokkaa alueen muotoa tai paina Valmis, kun muoto on valmis.');
+    }
     function finishDraw(){
       if(pts.length<3) return;
-      var n=pts.length;
-      markers.forEach(function(m){m.remove();}); markers=[];
-      endDraw();
-      hint('Alue piirretty ('+n+' kulmaa). T\u00e4m\u00e4 on demo \u2014 alueen tallennus tietokantaan lis\u00e4t\u00e4\u00e4n seuraavassa vaiheessa.', true);
+      suspendDraw();
+      tpOpenAreaAdd({
+        fresh:drawFresh,
+        cornerCount:function(){ return pts.length; },
+        getGeometry:function(){ return pts.length>=3 ? {type:'Polygon',coordinates:[pts.concat([pts[0]])]} : null; },
+        onResume:resumeDraw,
+        onSaved:function(){ endDraw(); clearShape(); }
+      });
+      drawFresh=false;
     }
-    function cancelDraw(){ endDraw(); clearShape(); hint(null); }
+    /* Peruuta: tyhjentää piirroksen mutta pysyy piirtonäkymässä — "Lisää alue"
+       -tilasta ei poistuta. Tilasta poistutaan Lisää alue -napista (exitDraw). */
+    function cancelDraw(){
+      if(drawPaused) return;
+      clearShape(); update(); drawFresh=true;
+      hint('Piirros tyhjennetty \u2014 klikkaa karttaa aloittaaksesi uuden alueen.');
+    }
+    function exitDraw(){ endDraw(); clearShape(); hint(null); }
     /* mode buttons */
     function clearModes(){
       $all('#app-admin .map-tools .tool-btn').forEach(function(b){ if(b.getAttribute('data-tool')!=='zone') b.classList.remove('active'); });
@@ -5060,10 +5296,10 @@ body.vresizing *{cursor:ns-resize !important}
       if(!btn.closest('#app-admin')) return;
       var t=btn.getAttribute('data-tool'); e.preventDefault();
       if(t==='zone'){ toggleZones(btn); return; }
-      if(t==='plus'){ if(drawOn) cancelDraw(); else startDraw(btn); return; }
+      if(t==='plus'){ if(drawPaused) return; if(drawOn) exitDraw(); else startDraw(btn); return; }
       if(t==='edit'){ toggleEditMode(btn); return; }
     });
-    document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawOn) cancelDraw(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawOn && !drawPaused) cancelDraw(); });
   })();
 
   /* ---------- Master area editor (Muokkaa: valitse + yhdistä) ----------
