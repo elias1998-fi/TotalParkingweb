@@ -791,6 +791,20 @@ tr.pz-editing td{background:#f3f7fe}
 .pz-by{font-size:11.5px; color:var(--muted)}
 .pz-unit{font-size:13.5px; color:var(--ink-soft); margin-left:7px; white-space:nowrap}
 .pz-unit.hid{display:none}
+/* Lisää uusi kaupunki -nappi ja -modaali */
+.pz-addcity-btn{background:#e7f6ec; color:#1d7a3f; border-color:#bfe3cc; margin-left:8px}
+.pz-addcity-btn:hover{background:#d9f0e1}
+.pzadd-zone{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+.pzadd-zlabel{font-size:13.5px; font-weight:600; width:78px; flex:0 0 auto}
+.pzadd-zone .pz-inp{width:104px; margin-bottom:0}
+.pzadd-zone .pz-widef{width:auto; flex:1 1 auto; min-width:120px}
+.pzadd-zone .pz-unit{margin-left:0}
+.pzadd-zone .pz-inp.pzadd-bad{border-color:#c0392b; background:#fdecea}
+.pzadd-zremove{border:none; background:#fdecea; color:#c0392b; width:26px; height:26px; border-radius:7px; cursor:pointer; font-size:15px; line-height:1; flex:0 0 auto}
+.pzadd-zremove:hover{background:#fbdcd8}
+#pzadd-zones{margin-bottom:8px}
+#pzadd-addzone{margin-bottom:14px}
+#pzadd-err{margin-bottom:12px}
 /* table-layout:fixed on VÄLTTÄMÄTÖN: auto-layout mitoittaa sarakkeet kunkin
    taulukon oman sisällön mukaan, joten eri kaupunkien (eri hinta-arvot, eri
    rivimäärät) toimintosarakkeen vasen reuna asettuu eri kohtaan pelkän
@@ -2214,8 +2228,8 @@ body.vresizing *{cursor:ns-resize !important}
     if(exists) return '<td><input class="pz-inp '+(extra||'')+'" data-f="'+f+'" '+(f==='price_per_hour'?'inputmode="decimal" ':'')+'disabled value="'+pzEsc(r[f])+'"></td>';
     return '<td><input class="pz-inp '+(extra||'')+' pz-missing" disabled title="Saraketta '+f+' ei ole parking_prices-taulussa" value=""></td>';
   }
-  function pzErrMsg(status,t){
-    if(status===401||status===403) return 'HTTP '+status+' — tarkista parking_prices-taulun UPDATE-oikeus (RLS-policy).';
+  function pzErrMsg(status,t,op){
+    if(status===401||status===403) return 'HTTP '+status+' — tarkista parking_prices-taulun '+(op||'UPDATE')+'-oikeus (RLS-policy).';
     return 'HTTP '+status+' '+String(t||'').slice(0,160);
   }
   function pzShowRowError(tr,msg){
@@ -2287,6 +2301,129 @@ body.vresizing *{cursor:ns-resize !important}
     var none=document.getElementById('pz-nohit');
     if(none) none.style.display=(any||!q)?'none':'';
   }
+
+  /* ── Lisää uusi kaupunki ─────────────────────────────────────────────
+     Modaali: kaupungin nimi + dynaaminen vyöhykelista (numerointi juoksee
+     automaattisesti 1..n, myös rivin poiston jälkeen). Tallennus tekee
+     yhden bulk-INSERTin parking_prices-tauluun ja lataa paneelin uusiksi,
+     jolloin uusi kaupunki asettuu aakkosjärjestykseen. Vaatii taululta
+     INSERT-policyn (kuten UPDATE aiemmin). */
+  function pzAddZoneRow(){
+    var wrap=document.getElementById('pzadd-zones');
+    var row=document.createElement('div');
+    row.className='pzadd-zone';
+    row.innerHTML='<span class="pzadd-zlabel"></span>'
+      +'<input class="pz-inp pzadd-price" inputmode="decimal" placeholder="0,00">'
+      +'<span class="pz-unit">€/h</span>'
+      +'<input class="pz-inp pz-widef pzadd-other" placeholder="price_other_times (valinnainen)">'
+      +'<button type="button" class="pzadd-zremove" title="Poista vyöhyke">×</button>';
+    wrap.appendChild(row);
+    pzAddRenumber();
+  }
+  function pzAddRenumber(){
+    document.querySelectorAll('#pzadd-zones .pzadd-zone').forEach(function(z,i){
+      z.querySelector('.pzadd-zlabel').textContent='Vyöhyke '+(i+1);
+    });
+  }
+  function pzOpenAddCity(){
+    var m=document.getElementById('pz-addcity-modal');
+    if(!m){
+      m=document.createElement('div');
+      m.className='uc-modal'; m.id='pz-addcity-modal';
+      m.innerHTML='<div class="uc-backdrop" data-pzadd-close></div>'
+        +'<div class="uc-card">'
+          +'<div class="uc-head"><h3>Lisää uusi kaupunki</h3><button class="uc-close" data-pzadd-close>×</button></div>'
+          +'<label class="uc-lab" for="pzadd-city">Kaupungin nimi</label>'
+          +'<input id="pzadd-city" type="text" placeholder="Esim. Lahti" autocomplete="off">'
+          +'<label class="uc-lab">Maksuvyöhykkeet</label>'
+          +'<div id="pzadd-zones"></div>'
+          +'<button type="button" class="btn ghost sm" id="pzadd-addzone">+ Lisää vyöhyke</button>'
+          +'<div class="pz-note pz-err" id="pzadd-err" style="display:none"></div>'
+          +'<div class="uc-foot">'
+            +'<button type="button" class="btn ghost sm" data-pzadd-close>Peruuta</button>'
+            +'<button type="button" class="btn ghost sm pz-save" id="pzadd-save">Tallenna kaupunki</button>'
+          +'</div>'
+        +'</div>';
+      document.body.appendChild(m);
+    }
+    document.getElementById('pzadd-city').value='';
+    document.getElementById('pzadd-zones').innerHTML='';
+    var err=document.getElementById('pzadd-err'); err.style.display='none';
+    pzAddZoneRow();
+    m.classList.add('open');
+    setTimeout(function(){ document.getElementById('pzadd-city').focus(); },60);
+  }
+  function pzCloseAddCity(){
+    var m=document.getElementById('pz-addcity-modal');
+    if(m) m.classList.remove('open');
+  }
+  function pzAddCitySave(){
+    var err=document.getElementById('pzadd-err');
+    function fail(msg){ err.textContent=msg; err.style.display='block'; }
+    err.style.display='none';
+    var city=document.getElementById('pzadd-city').value.trim();
+    if(!city) return fail('Anna kaupungin nimi.');
+    var dup=false;
+    document.querySelectorAll('#pz-body .pz-citywrap').forEach(function(w){
+      if(w.getAttribute('data-city')===city.toLowerCase()) dup=true;
+    });
+    if(dup) return fail('Kaupunki "'+city+'" on jo listassa — muokkaa sen rivejä suoraan taulukosta.');
+    var zones=document.querySelectorAll('#pzadd-zones .pzadd-zone');
+    if(!zones.length) return fail('Lisää vähintään yksi vyöhyke.');
+    var rows=[], bad=false;
+    zones.forEach(function(z,i){
+      var pin=z.querySelector('.pzadd-price');
+      var n=parseFloat(pin.value.trim().replace(',','.'));
+      if(!isFinite(n)){ bad=true; pin.classList.add('pzadd-bad'); return; }
+      pin.classList.remove('pzadd-bad');
+      var row={ city:city, zone_number:i+1, price_per_hour:n };
+      if(_pzCols && _pzCols.indexOf('price_other_times')>=0){
+        var ot=z.querySelector('.pzadd-other').value.trim();
+        row.price_other_times=ot||null;
+      }
+      if(_pzCols && _pzCols.indexOf('edited_by')>=0){
+        row.edited_by=(typeof sess!=='undefined' && sess && sess.email)?sess.email:null;
+      }
+      if(_pzCols && _pzCols.indexOf('edited_at')>=0){
+        row.edited_at=new Date().toISOString();
+      }
+      rows.push(row);
+    });
+    if(bad) return fail('Tarkista vyöhykkeiden hinnat — jokaiselle tarvitaan numeroarvo.');
+    var btn=document.getElementById('pzadd-save');
+    btn.disabled=true; btn.textContent='Tallennetaan…';
+    pzGetToken().then(function(tok){
+      return fetch(TP_SUPABASE_URL+'/rest/v1/parking_prices',{
+        method:'POST',
+        headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+(tok||TP_SUPABASE_KEY),
+                 'Content-Type':'application/json',Prefer:'return=representation'},
+        body:JSON.stringify(rows)
+      });
+    }).then(function(r){
+      if(!r.ok) return r.text().then(function(t){ throw new Error(pzErrMsg(r.status,t,'INSERT')); });
+      return r.json();
+    }).then(function(ins){
+      if(!ins || !ins.length) throw new Error('Rivit eivät tallentuneet — tarkista parking_prices-taulun INSERT-oikeus (RLS-policy) ja kirjaudu master-tunnuksilla.');
+      btn.textContent='Tallennettu ✓';
+      setTimeout(function(){
+        pzCloseAddCity();
+        btn.textContent='Tallenna kaupunki'; btn.disabled=false;
+        loadAdminPrices(true);   // uusi kaupunki asettuu aakkosjärjestykseen
+      },800);
+    }).catch(function(e){
+      btn.textContent='Tallenna kaupunki'; btn.disabled=false;
+      fail(e.message);
+    });
+  }
+  document.addEventListener('click',function(e){
+    var c=function(sel){ return e.target.closest ? e.target.closest(sel) : null; };
+    if(c('#pz-addcity-open')){ pzOpenAddCity(); return; }
+    if(c('[data-pzadd-close]')){ pzCloseAddCity(); return; }
+    if(c('#pzadd-addzone')){ pzAddZoneRow(); return; }
+    var rm=c('.pzadd-zremove');
+    if(rm){ rm.closest('.pzadd-zone').remove(); pzAddRenumber(); return; }
+    if(c('#pzadd-save')){ pzAddCitySave(); return; }
+  });
   document.addEventListener('input',function(e){
     if(e.target && e.target.id==='pz-search'){ applyPzSearch(); return; }
     if(e.target && e.target.classList && e.target.classList.contains('pz-inp')){
@@ -3640,7 +3777,8 @@ body.vresizing *{cursor:ns-resize !important}
     html+='<div class="panel" data-id="a-prices">';
     html+=panelHead('Hinnat ja vyöhykkeet','parking_prices-taulun kaupunkikohtaiset vyöhykehinnat',
       '<input id="pz-search" class="pz-inp pz-search" type="search" placeholder="Hae kaupunkia…">'
-      +'<button class="btn ghost sm" id="pz-reload">Päivitä</button>');
+      +'<button class="btn ghost sm" id="pz-reload">Päivitä</button>'
+      +'<button class="btn ghost sm pz-addcity-btn" id="pz-addcity-open">+ Lisää uusi kaupunki</button>');
     html+='<div id="pz-body"><div class="pz-note">Ladataan…</div></div>';
     html+='</div>';
 
