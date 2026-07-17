@@ -378,6 +378,8 @@ body.logged-in #drawer-login{display:none}
 .aadd-vrow input{flex:1 1 auto; min-width:0; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit; color:var(--ink); background:var(--card); outline:none; margin-bottom:0}
 .aadd-vrow input:focus{border-color:var(--brand)}
 .aadd-vdash{flex:0 0 auto; color:var(--muted); font-size:13px}
+.aadd-toggle-row{grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 13px; border:1px solid var(--line); border-radius:12px; background:var(--paper); margin-top:2px}
+.aadd-toggle-row .aadd-toggle-label{font-size:13.5px; font-weight:600; color:var(--ink)}
 
 /* ---------- Section base ---------- */
 .section{padding:64px 0}
@@ -3242,6 +3244,13 @@ body.vresizing *{cursor:ns-resize !important}
         wrap.innerHTML='<label>'+tpEsc(label)+'</label>'+inp;
         box.appendChild(wrap);
       });
+      /* Iso aluekokonaisuus: sovellus renderöi p-merkin alla tällaisen alueen
+         pehmeämmin (punainen ulkoreuna + 40%% punainen täyttö) kokonaan
+         punaisen sijaan. Arvo tallentuu parking_masterin large_area-sarakkeeseen. */
+      var tr=document.createElement('div'); tr.className='aadd-toggle-row';
+      tr.innerHTML='<span class="aadd-toggle-label">Iso aluekokonaisuus</span>'
+        +'<label class="pf-switch"><input type="checkbox" id="aadd-large-area"><span class="pf-slider"></span></label>';
+      box.appendChild(tr);
     } else {
       if(typ==='kiekko'){
         var vg=document.createElement('div'); vg.className='aadd-vgroup';
@@ -3288,6 +3297,8 @@ body.vresizing *{cursor:ns-resize !important}
       if(v==='') return;                       /* tyhjät jätetään pois -> NULL kantaan */
       row[key]=AADD_NUMERIC[key] ? (isNaN(Number(v))?null:Number(v)) : v;
     });
+    var laEl=m.querySelector('#aadd-large-area');
+    if(laEl && laEl.checked) row.large_area=true;   /* vain päällä -> mukaan; edellyttää large_area-saraketta parking_masterissa */
     var geom=(typeof m.__getGeometry==='function')?m.__getGeometry():null;
     if(!geom){ msg.style.color='#c62828'; msg.textContent='Polygonia ei l\u00f6ytynyt \u2014 piirr\u00e4 alue uudelleen.'; return; }
     row.polygon_coordinates=geom;
