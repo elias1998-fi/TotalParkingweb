@@ -2815,7 +2815,9 @@ body.vresizing *{cursor:ns-resize !important}
       var headers={apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY};
       var SEL='id,area_name,area_type,parking_type,owner_parking_area,location_city,city_zone,zone_number,estimated_spots_total,area_code,max_hours,max_minutes,valid_mape_from,valid_mape_to,valid_la_from,valid_la_to,valid_su_from,valid_su_to,data_exceptions,info_additional,polygon_coordinates';
       var both=await Promise.all([
-        tpFetchAllRows('parking_master',SEL,headers),
+        /* Maksullisilla on lisäksi large_area-lippu (Iso aluekokonaisuus); jos
+           saraketta ei vielä ole, ladataan ilman sitä. Ilmaisilla lippua ei ole. */
+        tpFetchAllRows('parking_master',SEL+',large_area',headers).catch(function(){ return tpFetchAllRows('parking_master',SEL,headers); }),
         tpFetchAllRows('parking_master_ilmaiset',SEL,headers).catch(function(){return [];})
       ]);
       /* Ilmaisten id:t etuliitetään 'ilm_', jotta ne eivät törmää maksullisten
@@ -2826,6 +2828,7 @@ body.vresizing *{cursor:ns-resize !important}
       var features=rows.filter(function(r){return r.polygon_coordinates&&(r.polygon_coordinates.type==='Polygon'||r.polygon_coordinates.type==='MultiPolygon')&&r.parking_type!=='Pysäköintihalli';})
         .map(function(r){return {type:'Feature',properties:{
           source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),
+          large_area:r.large_area===true,
           id:String(r.id), area_name:r.area_name||'', area_type:r.area_type||'', parking_type:r.parking_type||'',
           owner_parking_area:r.owner_parking_area||'', location_city:r.location_city||'', city_zone:r.city_zone||'',
           zone_number:r.zone_number||'', estimated_spots_total:r.estimated_spots_total||'', area_code:r.area_code||'',
@@ -3011,6 +3014,8 @@ body.vresizing *{cursor:ns-resize !important}
           var ov=(o[k]!=null?String(o[k]):'').trim();
           if(String(el.value).trim()!==ov) d=true;
         });
+        var la=m.querySelector('#aedit-large-area');
+        if(la && la.checked!==(m.__origLarge===true)) d=true;
         return d;
       };
       m.__updateDirty=function(){ var r=m.querySelector('#aedit-reset'); if(r) r.classList.toggle('show', m.__isDirty()); };
@@ -3040,6 +3045,7 @@ body.vresizing *{cursor:ns-resize !important}
       m.querySelector('#aedit-reset').addEventListener('click', function(){
         var o=m.__origVals||{};
         m.querySelectorAll('[data-key]').forEach(function(el){ var k=el.getAttribute('data-key'); el.value=(o[k]!=null?String(o[k]):''); });
+        var la=m.querySelector('#aedit-large-area'); if(la) la.checked=(m.__origLarge===true);
         var mg=m.querySelector('#aedit-msg'); if(mg) mg.textContent='';
         m.__updateDirty();
       });
@@ -3083,6 +3089,18 @@ body.vresizing *{cursor:ns-resize !important}
       ctl.addEventListener('input', function(){ m.__updateDirty(); });
       ctl.addEventListener('change', function(){ m.__updateDirty(); });
     });
+    /* Iso aluekokonaisuus -kytkin vain maksullisille (id ei 'ilm_'), kuten
+       lisäyskaavakkeessa. Ilmaisilla ei ole large_area-saraketta. */
+    if(String(props.id).indexOf('ilm_')!==0){
+      var _lrow=document.createElement('div'); _lrow.className='aadd-toggle-row';
+      _lrow.innerHTML='<span class="aadd-toggle-label">Iso aluekokonaisuus</span>'
+        +'<label class="pf-switch"><input type="checkbox" id="aedit-large-area"><span class="pf-slider"></span></label>';
+      box.appendChild(_lrow);
+      var _lchk=_lrow.querySelector('#aedit-large-area');
+      _lchk.checked=(props.large_area===true);
+      _lchk.addEventListener('change', function(){ m.__updateDirty(); });
+    }
+    m.__origLarge=(props.large_area===true);
     m.__origVals=origVals;
     m.__props=props;
     m.querySelector('#aedit-sub').textContent='ID '+props.id+(props.area_name?(' \u00b7 '+props.area_name):'');
@@ -3110,6 +3128,8 @@ body.vresizing *{cursor:ns-resize !important}
       if(NUMERIC[key]){ patch[key]= v==='' ? null : (isNaN(Number(v)) ? null : Number(v)); }
       else { patch[key]= v==='' ? null : v; }   /* tyhjä -> null (kelpaa myös kokonaisluku-sarakkeisiin) */
     });
+    var _la=modal.querySelector('#aedit-large-area');
+    if(_la && (_la.checked===true)!==(props.large_area===true)) patch.large_area=(_la.checked===true);
     if(Object.keys(patch).length===0){ msg.style.color='#666'; msg.textContent='Ei muutoksia tallennettavaksi.'; return; }
     var isFree=String(props.id).indexOf('ilm_')===0;
     var table=isFree?'parking_master_ilmaiset':'parking_master';
@@ -3140,7 +3160,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(typeof tpToast==='function') tpToast('Alueen tiedot p\u00e4ivitetty tietokantaan');
     }catch(err){
       saveBtn.disabled=false; saveBtn.textContent='Tallenna';
-      msg.style.color='#c62828'; msg.textContent='Tallennus ep\u00e4onnistui: '+((err&&err.message)||err);
+      msg.style.color='#c62828'; msg.textContent=tpSaveErrText(err);
     }
   }
   /* ── "Lisää uusi alue" -kaavake ──────────────────────────────────────────
@@ -3157,6 +3177,15 @@ body.vresizing *{cursor:ns-resize !important}
      (maksullinen) tai parking_master_ilmaiset-tauluun (kiekko/ilmainen) ja
      lisää alueen molemmille kartoille ilman täyttä uudelleenlatausta —
      samat taulut, joista sovellus lukee alueensa. */
+  /* Muotoilee tallennusvirheen luettavaksi. Tunnistaa puuttuvan large_area-
+     sarakkeen (PostgREST PGRST204) ja kertoo tarkalleen mitä pit\u00e4\u00e4 tehd\u00e4. */
+  function tpSaveErrText(err){
+    var m=(err&&err.message)?String(err.message):String(err);
+    if(/large_area/.test(m) && (/PGRST204/.test(m) || /schema cache/i.test(m) || /find the/i.test(m) || /column/i.test(m))){
+      return 'Tietokannasta puuttuu large_area-sarake. Lis\u00e4\u00e4 se Supabasen SQL-editorissa: alter table parking_master add column large_area boolean default false;  \u2014 sen j\u00e4lkeen tallennus toimii.';
+    }
+    return 'Tallennus ep\u00e4onnistui: '+m;
+  }
   var AADD_NUMERIC={zone_number:1,estimated_spots_total:1,max_hours:1,max_minutes:1};
   function tpAreaAddModal(){
     var m=document.getElementById('area-add-modal');
@@ -3315,6 +3344,7 @@ body.vresizing *{cursor:ns-resize !important}
       /* Lisää alue paikallisesti molemmille kartoille (sama muoto kuin tpLoadAreas tuottaa). */
       var p={
         source:tpLegacySource(row.area_type,row.parking_type||'',row.max_hours),
+        large_area: row.large_area===true,
         id: newId==null ? '' : (isFree?('ilm_'+newId):String(newId)),
         area_name:row.area_name||'', area_type:row.area_type||'', parking_type:row.parking_type||'',
         owner_parking_area:row.owner_parking_area||'', location_city:row.location_city||'', city_zone:row.city_zone||'',
@@ -3340,7 +3370,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(typeof m.__onSaved==='function') m.__onSaved();
     }catch(err){
       saveBtn.disabled=false; saveBtn.textContent='Tallenna';
-      msg.style.color='#c62828'; msg.textContent='Tallennus ep\u00e4onnistui: '+((err&&err.message)||err);
+      msg.style.color='#c62828'; msg.textContent=tpSaveErrText(err);
     }
   }
   var tpIdSearchPopup=null;
@@ -3353,7 +3383,9 @@ body.vresizing *{cursor:ns-resize !important}
       var table=isFree?'parking_master_ilmaiset':'parking_master';
       var realId=isFree?q.slice(4):q;
       var SEL='id,area_name,area_type,parking_type,owner_parking_area,location_city,city_zone,zone_number,estimated_spots_total,area_code,max_hours,max_minutes,valid_mape_from,valid_mape_to,valid_la_from,valid_la_to,valid_su_from,valid_su_to,data_exceptions,info_additional,polygon_coordinates';
-      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+SEL+'&id=eq.'+encodeURIComponent(realId),{headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY}});
+      var _sel=SEL+(isFree?'':',large_area');   /* large_area vain maksullisilla */
+      var res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+_sel+'&id=eq.'+encodeURIComponent(realId),{headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY}});
+      if(!res.ok && !isFree){ res=await fetch(TP_SUPABASE_URL+'/rest/v1/'+table+'?select='+SEL+'&id=eq.'+encodeURIComponent(realId),{headers:{apikey:TP_SUPABASE_KEY,Authorization:'Bearer '+TP_SUPABASE_KEY}}); }
       if(!res.ok) return null;
       var rows=await res.json();
       if(!rows || !rows.length) return null;
@@ -3361,6 +3393,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(!r.polygon_coordinates || (r.polygon_coordinates.type!=='Polygon' && r.polygon_coordinates.type!=='MultiPolygon')) return null;
       return {type:'Feature', properties:{
         source:tpLegacySource(r.area_type,r.parking_type,r.max_hours),
+        large_area:r.large_area===true,
         id:String(r.id), area_name:r.area_name||'', area_type:r.area_type||'', parking_type:r.parking_type||'',
         owner_parking_area:r.owner_parking_area||'', location_city:r.location_city||'', city_zone:r.city_zone||'',
         zone_number:r.zone_number||'', estimated_spots_total:r.estimated_spots_total||'', area_code:r.area_code||'',
