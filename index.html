@@ -2228,6 +2228,16 @@ body.vresizing *{cursor:ns-resize !important}
     if(exists) return '<td><input class="pz-inp '+(extra||'')+'" data-f="'+f+'" '+(f==='price_per_hour'?'inputmode="decimal" ':'')+'disabled value="'+pzEsc(r[f])+'"></td>';
     return '<td><input class="pz-inp '+(extra||'')+' pz-missing" disabled title="Saraketta '+f+' ei ole parking_prices-taulussa" value=""></td>';
   }
+  /* Kuten pzFieldCell mutta price_other_times -sarakkeelle: kentän perään
+     €/h-yksikkö, joka näkyy vain kun kentässä on arvo (tyhjänä piiloon). */
+  function pzOtherCell(r){
+    var exists=!_pzCols || _pzCols.indexOf('price_other_times')>=0;
+    if(!exists) return '<td><input class="pz-inp pz-widef pz-missing" disabled title="Saraketta price_other_times ei ole parking_prices-taulussa" value=""></td>';
+    var val=r.price_other_times;
+    var empty=(val==null || String(val).trim()==='');
+    return '<td><input class="pz-inp pz-widef" data-f="price_other_times" inputmode="decimal" disabled value="'+pzEsc(val)+'">'
+      +'<span class="pz-unit'+(empty?' hid':'')+'">€/h</span></td>';
+  }
   function pzErrMsg(status,t,op){
     if(status===401||status===403) return 'HTTP '+status+' — tarkista parking_prices-taulun '+(op||'UPDATE')+'-oikeus (RLS-policy).';
     return 'HTTP '+status+' '+String(t||'').slice(0,160);
@@ -2251,11 +2261,16 @@ body.vresizing *{cursor:ns-resize !important}
         .catch(function(){ return null; });
     }catch(e){ return Promise.resolve(null); }
   }
-  /* €/h-yksikkö näkyy hintakentän perässä vain kun kentässä on arvo. */
+  /* €/h-yksikkö näkyy sekä hinta- että "muut ajat" -kentän perässä vain kun
+     kyseisessä kentässä on arvo. Yksikkö haetaan saman solun (parentNode)
+     sisältä, joten sama funktio hoitaa molemmat sarakkeet yhdellä kutsulla. */
   function pzSyncUnit(tr){
-    var inp=tr.querySelector('[data-f="price_per_hour"]');
-    var u=tr.querySelector('.pz-unit');
-    if(inp&&u) u.classList.toggle('hid', inp.value.trim()==='');
+    ['price_per_hour','price_other_times'].forEach(function(f){
+      var inp=tr.querySelector('[data-f="'+f+'"]');
+      if(!inp) return;
+      var u=inp.parentNode.querySelector('.pz-unit');
+      if(u) u.classList.toggle('hid', inp.value.trim()==='');
+    });
   }
   /* Muokattu-sarake: edited_at + edited_by luettavassa muodossa. Näytetään
      viiva, jos sarakkeita ei (vielä) ole taulussa tai arvot puuttuvat. */
@@ -2316,6 +2331,7 @@ body.vresizing *{cursor:ns-resize !important}
       +'<input class="pz-inp pzadd-price" inputmode="decimal" placeholder="0,00">'
       +'<span class="pz-unit">€/h</span>'
       +'<input class="pz-inp pz-widef pzadd-other" placeholder="price_other_times (valinnainen)">'
+      +'<span class="pz-unit hid">€/h</span>'
       +'<button type="button" class="pzadd-zremove" title="Poista vyöhyke">×</button>';
     wrap.appendChild(row);
     pzAddRenumber();
@@ -2378,7 +2394,7 @@ body.vresizing *{cursor:ns-resize !important}
       pin.classList.remove('pzadd-bad');
       var row={ city:city, zone_number:i+1, price_per_hour:n };
       if(_pzCols && _pzCols.indexOf('price_other_times')>=0){
-        var ot=z.querySelector('.pzadd-other').value.trim();
+        var ot=z.querySelector('.pzadd-other').value.trim().replace(',','.');
         row.price_other_times=ot||null;
       }
       if(_pzCols && _pzCols.indexOf('edited_by')>=0){
@@ -2426,11 +2442,18 @@ body.vresizing *{cursor:ns-resize !important}
   });
   document.addEventListener('input',function(e){
     if(e.target && e.target.id==='pz-search'){ applyPzSearch(); return; }
+    // Modaalin "muut ajat" -kentän €/h näkyy vain kun kentässä on sisältöä.
+    // (.pzadd-other on myös .pz-inp, joten tämä tarkistetaan ENNEN rivihaaraa.)
+    if(e.target && e.target.classList && e.target.classList.contains('pzadd-other')){
+      var pu=e.target.parentNode.querySelector('.pz-unit');
+      if(pu) pu.classList.toggle('hid', e.target.value.trim()==='');
+      return;
+    }
     if(e.target && e.target.classList && e.target.classList.contains('pz-inp')){
       var tr=e.target.closest('tr[data-pz]');
       if(!tr || !tr.classList.contains('pz-editing')) return;
-      // €/h-yksikkö näkyy vain kun hintakentässä on arvo
-      if(e.target.getAttribute('data-f')==='price_per_hour') pzSyncUnit(tr);
+      // €/h-yksiköt (hinta + muut ajat) näkyvät vain kun kentässä on arvo
+      pzSyncUnit(tr);
       // Muutokset morfaavat päänapin Peruksi ja tuovat vihreän Tallennan
       // esiin; arvojen palautus käsin kääntää kaiken takaisin.
       var dirty=pzRowDirty(tr);
@@ -2477,7 +2500,7 @@ body.vresizing *{cursor:ns-resize !important}
                  price_label-saraketta ei enää ole kannassa eikä näkymässä. */
               +'<td><input class="pz-inp" data-f="price_per_hour" inputmode="decimal" disabled value="'+pzEsc(r.price_per_hour)+'">'
                 +'<span class="pz-unit'+((r.price_per_hour==null||String(r.price_per_hour).trim()==='')?' hid':'')+'">€/h</span></td>'
-              +pzFieldCell(r,'price_other_times','pz-widef')
+              +pzOtherCell(r)
               +pzEditedCell(r)
               /* Yksi morfaava päänappi pitää paikkansa aina: lukittuna
                  "Muokkaa", auki sininen aktiivichippi, ja muutosten myötä
@@ -2540,6 +2563,7 @@ body.vresizing *{cursor:ns-resize !important}
       if(_pzCols && _pzCols.indexOf(f)<0) return;
       var v=inp.value.trim();
       if(f==='price_per_hour'){ var n=parseFloat(v.replace(',','.')); payload[f]=isFinite(n)?n:null; }
+      else if(f==='price_other_times'){ payload[f]=(v==='')?null:v.replace(',','.'); }
       else payload[f]=(v==='')?null:v;
     });
     // price_label-saraketta ei enää ole missään: näkymä esittää yksikön
